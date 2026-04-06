@@ -19,13 +19,15 @@ Reference project for structural inspiration:
 
 We use that project as a module and layering reference, not as a source of domain decisions.
 
+Domain diagram from earlier analysis is also kept in the repository:
+- [hotel_reservation_diagram.png](./hotel_reservation_diagram.png)
+
 ## Modules
 
 - `application/domain` - domain model, use cases, ports
 - `application/api-spec` - OpenAPI contract and generated API/DTO classes
 - `application/inbound-controller-rest` - REST inbound adapter
 - `application/outbound-repository-jpa` - JPA outbound adapter
-- `application/outbound-integration` - external integrations
 - `application/springboot` - runtime bootstrapping and configuration
 
 ## First implementation target
