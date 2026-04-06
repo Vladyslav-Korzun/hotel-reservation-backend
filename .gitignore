@@ -1,0 +1,29 @@
+# Maven
+target/
+**/target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local secrets and scratch files
+pass
+*.secret
+*.env
+.env
+
+# Java crash logs
+hs_err_pid*
+replay_pid*

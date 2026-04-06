@@ -1,0 +1,35 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.4</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.hotel.reservation</groupId>
+    <artifactId>parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>hotel-reservation-backend</name>
+    <description>Hotel Reservation Application backend</description>
+
+    <properties>
+        <java.version>25</java.version>
+        <org.mapstruct.version>1.6.3</org.mapstruct.version>
+        <springdoc.version>2.8.6</springdoc.version>
+        <openapi.generator.version>7.13.0</openapi.generator.version>
+    </properties>
+
+    <modules>
+        <module>application/domain</module>
+        <module>application/api-spec</module>
+        <module>application/inbound-controller-rest</module>
+        <module>application/outbound-repository-jpa</module>
+        <module>application/springboot</module>
+    </modules>
+</project>

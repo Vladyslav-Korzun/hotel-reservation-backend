@@ -1,0 +1,305 @@
+openapi: 3.0.3
+info:
+  title: Hotel Reservation API
+  version: 1.0.0
+  description: |
+    Hotel Reservation backend API for the first workshop submission.
+
+    The current vertical slice covers secured reservation creation, retrieval and deletion.
+servers:
+  - url: http://localhost:8080
+paths:
+  /reservations:
+    post:
+      tags:
+        - Reservations
+      operationId: createReservation
+      summary: Create reservation
+      description: Creates a new hotel reservation for an authenticated user with a valid JWT token.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReservationRequest'
+            examples:
+              basicReservation:
+                summary: Basic reservation request
+                value:
+                  hotelId: 1
+                  roomTypeId: 2
+                  checkIn: '2026-05-10'
+                  checkOut: '2026-05-12'
+                  guestCount: 2
+      responses:
+        '201':
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateReservationResponse'
+              examples:
+                created:
+                  summary: Reservation successfully created
+                  value:
+                    reservationId: af884cad-7b10-4e17-ad82-551a23020ffe
+                    hotelId: 1
+                    roomTypeId: 2
+                    checkIn: '2026-05-10'
+                    checkOut: '2026-05-12'
+                    guestCount: 2
+                    status: PENDING
+                    createdAt: '2026-04-07T20:15:30Z'
+                    createdBy: guest1
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidDates:
+                  summary: Invalid stay period
+                  value:
+                    type: about:blank
+                    title: Validation failed
+                    status: 400
+                    detail: checkOut must be after checkIn
+                    instance: /reservations
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingToken:
+                  summary: Missing or invalid token
+                  value:
+                    type: about:blank
+                    title: Authentication required
+                    status: 401
+                    detail: Authentication required
+                    instance: /reservations
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                accessDenied:
+                  summary: Authenticated but not allowed
+                  value:
+                    type: about:blank
+                    title: Access denied
+                    status: 403
+                    detail: Access denied
+                    instance: /reservations
+  /reservations/{reservationId}:
+    get:
+      tags:
+        - Reservations
+      operationId: getReservation
+      summary: Get reservation by id
+      description: Returns reservation details for an authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reservation found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationResponse'
+              examples:
+                found:
+                  summary: Existing reservation
+                  value:
+                    reservationId: af884cad-7b10-4e17-ad82-551a23020ffe
+                    hotelId: 1
+                    roomTypeId: 2
+                    checkIn: '2026-05-10'
+                    checkOut: '2026-05-12'
+                    guestCount: 2
+                    status: PENDING
+                    createdAt: '2026-04-07T20:15:30Z'
+                    createdBy: guest1
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Reservation not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingReservation:
+                  summary: Reservation does not exist
+                  value:
+                    type: about:blank
+                    title: Not found
+                    status: 404
+                    detail: 'Reservation not found: missing-id'
+                    instance: /reservations/missing-id
+    delete:
+      tags:
+        - Reservations
+      operationId: deleteReservation
+      summary: Delete reservation by id
+      description: Deletes reservation for an authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Reservation deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Reservation not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateReservationRequest:
+      type: object
+      required:
+        - hotelId
+        - roomTypeId
+        - checkIn
+        - checkOut
+        - guestCount
+      properties:
+        hotelId:
+          type: integer
+          format: int64
+        roomTypeId:
+          type: integer
+          format: int64
+        checkIn:
+          type: string
+          format: date
+        checkOut:
+          type: string
+          format: date
+        guestCount:
+          type: integer
+          format: int32
+          minimum: 1
+      example:
+        hotelId: 1
+        roomTypeId: 2
+        checkIn: '2026-05-10'
+        checkOut: '2026-05-12'
+        guestCount: 2
+    CreateReservationResponse:
+      allOf:
+        - $ref: '#/components/schemas/ReservationResponse'
+    ReservationResponse:
+      type: object
+      required:
+        - reservationId
+        - hotelId
+        - roomTypeId
+        - checkIn
+        - checkOut
+        - guestCount
+        - status
+        - createdAt
+        - createdBy
+      properties:
+        reservationId:
+          type: string
+        hotelId:
+          type: integer
+          format: int64
+        roomTypeId:
+          type: integer
+          format: int64
+        checkIn:
+          type: string
+          format: date
+        checkOut:
+          type: string
+          format: date
+        guestCount:
+          type: integer
+          format: int32
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+      example:
+        reservationId: af884cad-7b10-4e17-ad82-551a23020ffe
+        hotelId: 1
+        roomTypeId: 2
+        checkIn: '2026-05-10'
+        checkOut: '2026-05-12'
+        guestCount: 2
+        status: PENDING
+        createdAt: '2026-04-07T20:15:30Z'
+        createdBy: guest1
+    ErrorResponse:
+      type: object
+      description: RFC 7807 problem details response returned by the REST layer.
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+          example: Validation failed
+        status:
+          type: integer
+          format: int32
+          example: 400
+        detail:
+          type: string
+          example: checkOut must be after checkIn
+        instance:
+          type: string
+          example: /reservations

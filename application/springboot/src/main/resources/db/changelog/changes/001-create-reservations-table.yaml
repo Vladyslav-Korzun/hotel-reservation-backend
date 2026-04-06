@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-reservations-table
+      author: codex
+      changes:
+        - createTable:
+            tableName: reservations
+            columns:
+              - column:
+                  name: id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: hotel_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: room_type_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: check_in
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: check_out
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guest_count
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: reservations
+            indexName: idx_reservations_hotel_id
+            columns:
+              - column:
+                  name: hotel_id
+        - createIndex:
+            tableName: reservations
+            indexName: idx_reservations_room_type_id
+            columns:
+              - column:
+                  name: room_type_id
+        - createIndex:
+            tableName: reservations
+            indexName: idx_reservations_created_by
+            columns:
+              - column:
+                  name: created_by

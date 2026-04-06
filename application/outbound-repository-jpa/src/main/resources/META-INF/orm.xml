@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_1.xsd"
+                 version="3.1">
+
+    <entity class="com.hotel.reservation.jpa.ReservationJpaEntity" access="FIELD">
+        <table name="reservations"/>
+        <attributes>
+            <id name="id">
+                <column name="id" length="64" nullable="false"/>
+            </id>
+            <basic name="hotelId">
+                <column name="hotel_id" nullable="false"/>
+            </basic>
+            <basic name="roomTypeId">
+                <column name="room_type_id" nullable="false"/>
+            </basic>
+            <basic name="checkIn">
+                <column name="check_in" nullable="false"/>
+            </basic>
+            <basic name="checkOut">
+                <column name="check_out" nullable="false"/>
+            </basic>
+            <basic name="guestCount">
+                <column name="guest_count" nullable="false"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" length="32"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false"/>
+            </basic>
+            <basic name="createdBy">
+                <column name="created_by" nullable="false" length="128"/>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>
