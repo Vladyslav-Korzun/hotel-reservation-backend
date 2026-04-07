@@ -1,6 +1,7 @@
 package com.hotel.reservation;
 
 import com.hotel.reservation.jpa.ReservationSpringDataRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -17,9 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -50,12 +49,15 @@ class CreateReservationFlowIntegrationTest {
         registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
     }
 
+    @BeforeEach
+    void setUp() {
+        reservationRepository.deleteAll();
+    }
+
     @Test
     void shouldCreateReservationThroughSecuredEndpoint() throws Exception {
-        var createResult = mockMvc.perform(post("/reservations")
-                        .with(jwt()
-                                .jwt(jwt -> jwt.subject("guest-demo").claim("roles", List.of("GUEST")))
-                                .authorities(new SimpleGrantedAuthority("ROLE_GUEST")))
+        mockMvc.perform(post("/reservations")
+                        .with(jwtFor("guest-demo", "GUEST"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -77,21 +79,86 @@ class CreateReservationFlowIntegrationTest {
         assertThat(savedReservation.getCreatedBy()).isEqualTo("guest-demo");
 
         mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
-                        .with(jwt()
-                                .jwt(jwt -> jwt.subject("guest-demo").claim("roles", List.of("GUEST")))
-                                .authorities(new SimpleGrantedAuthority("ROLE_GUEST"))))
+                        .with(jwtFor("guest-demo", "GUEST")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reservationId").value(savedReservation.getId()))
                 .andExpect(jsonPath("$.hotelId").value(1))
                 .andExpect(jsonPath("$.status").value("PENDING"));
 
-        mockMvc.perform(delete("/reservations/{reservationId}", savedReservation.getId())
-                        .with(csrf())
-                        .with(jwt()
-                                .jwt(jwt -> jwt.subject("guest-demo").claim("roles", List.of("GUEST")))
-                                .authorities(new SimpleGrantedAuthority("ROLE_GUEST"))))
+        mockMvc.perform(post("/reservations/{reservationId}/cancel", savedReservation.getId())
+                        .with(jwtFor("guest-demo", "GUEST")))
                 .andExpect(status().isNoContent());
 
-        assertThat(reservationRepository.findById(savedReservation.getId())).isEmpty();
+        var cancelledReservation = reservationRepository.findById(savedReservation.getId()).orElseThrow();
+        assertThat(cancelledReservation.getStatus()).isEqualTo("CANCELLED");
+        assertThat(cancelledReservation.getCancelledAt()).isNotNull();
+
+        mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
+                        .with(jwtFor("guest-demo", "GUEST")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.cancelledAt").isNotEmpty());
+    }
+
+    @Test
+    void shouldRejectAccessToReservationOwnedByAnotherUser() throws Exception {
+        mockMvc.perform(post("/reservations")
+                        .with(jwtFor("owner-user", "GUEST"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "hotelId": 1,
+                                  "roomTypeId": 2,
+                                  "checkIn": "2026-05-10",
+                                  "checkOut": "2026-05-12",
+                                  "guestCount": 2
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        var savedReservation = reservationRepository.findAll().getFirst();
+
+        mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
+                        .with(jwtFor("other-user", "GUEST")))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/reservations/{reservationId}/cancel", savedReservation.getId())
+                        .with(jwtFor("other-user", "GUEST")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldAllowAdminToAccessAnotherUsersReservation() throws Exception {
+        mockMvc.perform(post("/reservations")
+                        .with(jwtFor("owner-user", "GUEST"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "hotelId": 1,
+                                  "roomTypeId": 2,
+                                  "checkIn": "2026-05-10",
+                                  "checkOut": "2026-05-12",
+                                  "guestCount": 2
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        var savedReservation = reservationRepository.findAll().getFirst();
+
+        mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
+                        .with(jwtFor("admin-user", "ADMIN")))
+                .andExpect(status().isOk());
+    }
+
+    private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor jwtFor(
+            String username,
+            String role
+    ) {
+        return jwt()
+                .jwt(jwt -> jwt
+                        .subject(username + "-sub")
+                        .claim("preferred_username", username)
+                        .claim("roles", List.of(role)))
+                .authorities(new SimpleGrantedAuthority("ROLE_" + role));
     }
 }

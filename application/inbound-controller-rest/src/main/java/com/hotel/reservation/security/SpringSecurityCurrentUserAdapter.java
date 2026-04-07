@@ -28,7 +28,11 @@ public class SpringSecurityCurrentUserAdapter implements CurrentUserPort {
                     .map(GrantedAuthority::getAuthority)
                     .map(authority -> authority.startsWith("ROLE_") ? authority.substring(5) : authority)
                     .collect(Collectors.toSet());
-            return new AuthenticatedUser(jwt.getSubject(), roles);
+            String preferredUsername = jwt.getClaimAsString("preferred_username");
+            String userId = preferredUsername != null && !preferredUsername.isBlank()
+                    ? preferredUsername
+                    : jwt.getSubject();
+            return new AuthenticatedUser(userId, roles);
         }
 
         throw new IllegalStateException("Authenticated JWT principal is required");

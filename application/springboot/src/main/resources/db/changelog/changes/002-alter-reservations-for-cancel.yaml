@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-alter-reservations-for-cancel
+      author: codex
+      changes:
+        - addColumn:
+            tableName: reservations
+            columns:
+              - column:
+                  name: cancelled_at
+                  type: timestamp with time zone
+        - sql:
+            sql: |
+              alter table reservations
+              add constraint chk_reservations_status
+              check (status in ('PENDING', 'CANCELLED'));
+        - sql:
+            sql: |
+              alter table reservations
+              add constraint chk_reservations_cancelled_at
+              check (
+                (status = 'CANCELLED' and cancelled_at is not null)
+                or
+                (status <> 'CANCELLED' and cancelled_at is null)
+              );

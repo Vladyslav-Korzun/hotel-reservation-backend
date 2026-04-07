@@ -36,8 +36,9 @@ class SecurityConfiguration {
 
     private void configureAuthorizationRules(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
         auth
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/health", "/h2-console/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.POST, "/reservations").hasAnyRole("GUEST", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/reservations/*/cancel").hasAnyRole("GUEST", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/reservations/*").hasAnyRole("GUEST", "ADMIN")
                 .anyRequest().authenticated();
     }

@@ -16,6 +16,7 @@ public class ReservationJpaEntity {
     private Integer guestCount;
     private String status;
     private Instant createdAt;
+    private Instant cancelledAt;
     private String createdBy;
 
     public String getId() {
@@ -80,6 +81,14 @@ public class ReservationJpaEntity {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Instant getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(Instant cancelledAt) {
+        this.cancelledAt = cancelledAt;
     }
 
     public String getCreatedBy() {

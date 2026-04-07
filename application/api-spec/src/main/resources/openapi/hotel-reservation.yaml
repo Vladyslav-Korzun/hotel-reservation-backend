@@ -5,7 +5,7 @@ info:
   description: |
     Hotel Reservation backend API for the first workshop submission.
 
-    The current vertical slice covers secured reservation creation, retrieval and deletion.
+    The current vertical slice covers secured reservation creation, retrieval and cancellation.
 servers:
   - url: http://localhost:8080
 paths:
@@ -52,6 +52,7 @@ paths:
                     guestCount: 2
                     status: PENDING
                     createdAt: '2026-04-07T20:15:30Z'
+                    cancelledAt:
                     createdBy: guest1
         '400':
           description: Validation error
@@ -104,7 +105,7 @@ paths:
         - Reservations
       operationId: getReservation
       summary: Get reservation by id
-      description: Returns reservation details for an authenticated user.
+      description: Returns reservation details for the reservation owner or an administrator.
       security:
         - bearerAuth: []
       parameters:
@@ -132,6 +133,7 @@ paths:
                     guestCount: 2
                     status: PENDING
                     createdAt: '2026-04-07T20:15:30Z'
+                    cancelledAt:
                     createdBy: guest1
         '401':
           description: Unauthorized
@@ -145,6 +147,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                foreignReservation:
+                  summary: Reservation belongs to another user
+                  value:
+                    type: about:blank
+                    title: Access denied
+                    status: 403
+                    detail: Access to this reservation is denied
+                    instance: /reservations/af884cad-7b10-4e17-ad82-551a23020ffe
         '404':
           description: Reservation not found
           content:
@@ -160,12 +171,13 @@ paths:
                     status: 404
                     detail: 'Reservation not found: missing-id'
                     instance: /reservations/missing-id
-    delete:
+  /reservations/{reservationId}/cancel:
+    post:
       tags:
         - Reservations
-      operationId: deleteReservation
-      summary: Delete reservation by id
-      description: Deletes reservation for an authenticated user.
+      operationId: cancelReservation
+      summary: Cancel reservation by id
+      description: Cancels reservation for the reservation owner or an administrator. The reservation remains persisted with status CANCELLED.
       security:
         - bearerAuth: []
       parameters:
@@ -176,7 +188,7 @@ paths:
             type: string
       responses:
         '204':
-          description: Reservation deleted
+          description: Reservation cancelled
         '401':
           description: Unauthorized
           content:
@@ -189,6 +201,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                foreignReservationCancel:
+                  summary: Reservation belongs to another user
+                  value:
+                    type: about:blank
+                    title: Access denied
+                    status: 403
+                    detail: Access to this reservation is denied
+                    instance: /reservations/af884cad-7b10-4e17-ad82-551a23020ffe/cancel
         '404':
           description: Reservation not found
           content:
@@ -271,6 +292,10 @@ components:
         createdAt:
           type: string
           format: date-time
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
         createdBy:
           type: string
       example:
@@ -282,6 +307,7 @@ components:
         guestCount: 2
         status: PENDING
         createdAt: '2026-04-07T20:15:30Z'
+        cancelledAt:
         createdBy: guest1
     ErrorResponse:
       type: object

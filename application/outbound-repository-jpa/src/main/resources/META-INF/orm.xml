@@ -31,6 +31,9 @@
             <basic name="createdAt">
                 <column name="created_at" nullable="false"/>
             </basic>
+            <basic name="cancelledAt">
+                <column name="cancelled_at" nullable="true"/>
+            </basic>
             <basic name="createdBy">
                 <column name="created_by" nullable="false" length="128"/>
             </basic>

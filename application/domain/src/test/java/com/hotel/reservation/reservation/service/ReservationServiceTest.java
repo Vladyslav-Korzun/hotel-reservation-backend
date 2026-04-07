@@ -3,12 +3,17 @@ package com.hotel.reservation.reservation.service;
 import com.hotel.reservation.reservation.Reservation;
 import com.hotel.reservation.reservation.ReservationRepository;
 import com.hotel.reservation.reservation.ReservationStatus;
+import com.hotel.reservation.shared.exception.ForbiddenException;
 import com.hotel.reservation.shared.exception.NotFoundException;
 import com.hotel.reservation.shared.exception.ValidationException;
 import com.hotel.reservation.shared.port.ClockPort;
 import com.hotel.reservation.shared.port.CurrentUserPort;
 import com.hotel.reservation.shared.security.AuthenticatedUser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -17,30 +22,32 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class ReservationServiceTest {
+
+    @Mock
+    private ReservationRepository repository;
+
+    @Mock
+    private ClockPort clockPort;
+
+    @Mock
+    private CurrentUserPort currentUserPort;
+
+    @InjectMocks
+    private ReservationService facade;
 
     @Test
     void shouldCreateReservationForAuthenticatedUser() {
-        ReservationRepository repository = new ReservationRepository() {
-            @Override
-            public Reservation save(Reservation reservation) {
-                return reservation;
-            }
+        when(clockPort.now()).thenReturn(Instant.parse("2026-04-03T12:00:00Z"));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST")));
+        when(repository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            @Override
-            public Optional<Reservation> findById(String reservationId) {
-                return Optional.empty();
-            }
-
-            @Override
-            public void deleteById(String reservationId) {
-            }
-        };
-        ClockPort clockPort = () -> Instant.parse("2026-04-03T12:00:00Z");
-        CurrentUserPort currentUserPort = () -> new AuthenticatedUser("guest-123", Set.of("GUEST"));
-
-        var facade = new ReservationService(repository, clockPort, currentUserPort);
         var result = facade.createReservation(new CreateReservationCommand(
                 1L,
                 2L,
@@ -57,25 +64,7 @@ class ReservationServiceTest {
 
     @Test
     void shouldRejectInvalidStayPeriod() {
-        ReservationRepository repository = new ReservationRepository() {
-            @Override
-            public Reservation save(Reservation reservation) {
-                return reservation;
-            }
-
-            @Override
-            public Optional<Reservation> findById(String reservationId) {
-                return Optional.empty();
-            }
-
-            @Override
-            public void deleteById(String reservationId) {
-            }
-        };
-        ClockPort clockPort = Instant::now;
-        CurrentUserPort currentUserPort = () -> new AuthenticatedUser("guest-123", Set.of("GUEST"));
-
-        var facade = new ReservationService(repository, clockPort, currentUserPort);
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST")));
 
         assertThrows(ValidationException.class, () -> facade.createReservation(new CreateReservationCommand(
                 1L,
@@ -84,11 +73,12 @@ class ReservationServiceTest {
                 LocalDate.parse("2026-05-10"),
                 2
         )));
+        verify(repository, never()).save(any());
     }
 
     @Test
     void shouldReturnReservationById() {
-        Reservation reservation = new Reservation(
+        Reservation reservation = Reservation.rehydrate(
                 "reservation-1",
                 1L,
                 2L,
@@ -97,28 +87,11 @@ class ReservationServiceTest {
                 2,
                 ReservationStatus.PENDING,
                 Instant.parse("2026-04-03T12:00:00Z"),
+                null,
                 "guest-123"
         );
-
-        ReservationRepository repository = new ReservationRepository() {
-            @Override
-            public Reservation save(Reservation value) {
-                return value;
-            }
-
-            @Override
-            public Optional<Reservation> findById(String reservationId) {
-                return Optional.of(reservation);
-            }
-
-            @Override
-            public void deleteById(String reservationId) {
-            }
-        };
-        ClockPort clockPort = Instant::now;
-        CurrentUserPort currentUserPort = () -> new AuthenticatedUser("guest-123", Set.of("GUEST"));
-
-        var facade = new ReservationService(repository, clockPort, currentUserPort);
+        when(repository.findById("reservation-1")).thenReturn(Optional.of(reservation));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST")));
         var result = facade.getReservation("reservation-1");
 
         assertEquals("reservation-1", result.reservationId());
@@ -127,32 +100,14 @@ class ReservationServiceTest {
 
     @Test
     void shouldThrowWhenReservationNotFound() {
-        ReservationRepository repository = new ReservationRepository() {
-            @Override
-            public Reservation save(Reservation reservation) {
-                return reservation;
-            }
-
-            @Override
-            public Optional<Reservation> findById(String reservationId) {
-                return Optional.empty();
-            }
-
-            @Override
-            public void deleteById(String reservationId) {
-            }
-        };
-        ClockPort clockPort = Instant::now;
-        CurrentUserPort currentUserPort = () -> new AuthenticatedUser("guest-123", Set.of("GUEST"));
-
-        var facade = new ReservationService(repository, clockPort, currentUserPort);
+        when(repository.findById("missing")).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> facade.getReservation("missing"));
     }
 
     @Test
-    void shouldDeleteReservationWhenFound() {
-        Reservation reservation = new Reservation(
+    void shouldCancelReservationWhenFound() {
+        Reservation reservation = Reservation.rehydrate(
                 "reservation-1",
                 1L,
                 2L,
@@ -161,58 +116,65 @@ class ReservationServiceTest {
                 2,
                 ReservationStatus.PENDING,
                 Instant.parse("2026-04-03T12:00:00Z"),
+                null,
                 "guest-123"
         );
+        when(repository.findById("reservation-1")).thenReturn(Optional.of(reservation));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST")));
+        when(clockPort.now()).thenReturn(Instant.parse("2026-04-04T10:00:00Z"));
+        when(repository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        boolean[] deleted = {false};
-        ReservationRepository repository = new ReservationRepository() {
-            @Override
-            public Reservation save(Reservation value) {
-                return value;
-            }
+        facade.cancelReservation("reservation-1");
 
-            @Override
-            public Optional<Reservation> findById(String reservationId) {
-                return Optional.of(reservation);
-            }
-
-            @Override
-            public void deleteById(String reservationId) {
-                deleted[0] = true;
-            }
-        };
-        ClockPort clockPort = Instant::now;
-        CurrentUserPort currentUserPort = () -> new AuthenticatedUser("guest-123", Set.of("GUEST"));
-
-        var facade = new ReservationService(repository, clockPort, currentUserPort);
-
-        facade.deleteReservation("reservation-1");
-
-        assertEquals(true, deleted[0]);
+        verify(repository).save(any(Reservation.class));
     }
 
     @Test
-    void shouldThrowWhenDeletingMissingReservation() {
-        ReservationRepository repository = new ReservationRepository() {
-            @Override
-            public Reservation save(Reservation reservation) {
-                return reservation;
-            }
+    void shouldThrowWhenCancellingMissingReservation() {
+        when(repository.findById("missing")).thenReturn(Optional.empty());
 
-            @Override
-            public Optional<Reservation> findById(String reservationId) {
-                return Optional.empty();
-            }
+        assertThrows(NotFoundException.class, () -> facade.cancelReservation("missing"));
+    }
 
-            @Override
-            public void deleteById(String reservationId) {
-            }
-        };
-        ClockPort clockPort = Instant::now;
-        CurrentUserPort currentUserPort = () -> new AuthenticatedUser("guest-123", Set.of("GUEST"));
+    @Test
+    void shouldRejectAccessToReservationOwnedByAnotherUser() {
+        Reservation reservation = Reservation.rehydrate(
+                "reservation-1",
+                1L,
+                2L,
+                LocalDate.parse("2026-05-10"),
+                LocalDate.parse("2026-05-12"),
+                2,
+                ReservationStatus.PENDING,
+                Instant.parse("2026-04-03T12:00:00Z"),
+                null,
+                "guest-123"
+        );
+        when(repository.findById("reservation-1")).thenReturn(Optional.of(reservation));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-999", Set.of("GUEST")));
 
-        var facade = new ReservationService(repository, clockPort, currentUserPort);
+        assertThrows(ForbiddenException.class, () -> facade.getReservation("reservation-1"));
+        verify(repository, never()).save(any());
+    }
 
-        assertThrows(NotFoundException.class, () -> facade.deleteReservation("missing"));
+    @Test
+    void shouldRejectCancellingAlreadyCancelledReservation() {
+        Reservation reservation = Reservation.rehydrate(
+                "reservation-1",
+                1L,
+                2L,
+                LocalDate.parse("2026-05-10"),
+                LocalDate.parse("2026-05-12"),
+                2,
+                ReservationStatus.CANCELLED,
+                Instant.parse("2026-04-03T12:00:00Z"),
+                Instant.parse("2026-04-04T10:00:00Z"),
+                "guest-123"
+        );
+        when(repository.findById("reservation-1")).thenReturn(Optional.of(reservation));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST")));
+
+        assertThrows(ValidationException.class, () -> facade.cancelReservation("reservation-1"));
+        verify(repository, never()).save(any());
     }
 }

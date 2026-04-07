@@ -29,7 +29,7 @@ class JwtConverter extends AbstractAuthenticationToken {
 
     @Override
     public Object getPrincipal() {
-        return new AuthenticatedUser(source.getSubject(), extractRoles(source));
+        return new AuthenticatedUser(extractUserId(source), extractRoles(source));
     }
 
     private static Collection<? extends GrantedAuthority> toAuthorities(Jwt source) {
@@ -53,5 +53,13 @@ class JwtConverter extends AbstractAuthenticationToken {
         }
 
         return Set.of();
+    }
+
+    private static String extractUserId(Jwt source) {
+        String preferredUsername = source.getClaimAsString("preferred_username");
+        if (preferredUsername != null && !preferredUsername.isBlank()) {
+            return preferredUsername;
+        }
+        return source.getSubject();
     }
 }

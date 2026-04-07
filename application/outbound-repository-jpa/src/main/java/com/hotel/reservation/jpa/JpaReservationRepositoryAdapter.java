@@ -27,10 +27,11 @@ public class JpaReservationRepositoryAdapter implements ReservationRepository {
         entity.setGuestCount(reservation.guestCount());
         entity.setStatus(reservation.status().name());
         entity.setCreatedAt(reservation.createdAt());
+        entity.setCancelledAt(reservation.cancelledAt());
         entity.setCreatedBy(reservation.createdBy());
 
         var savedEntity = springDataReservationRepository.save(entity);
-        return new Reservation(
+        return Reservation.rehydrate(
                 savedEntity.getId(),
                 savedEntity.getHotelId(),
                 savedEntity.getRoomTypeId(),
@@ -39,6 +40,7 @@ public class JpaReservationRepositoryAdapter implements ReservationRepository {
                 savedEntity.getGuestCount(),
                 ReservationStatus.valueOf(savedEntity.getStatus()),
                 savedEntity.getCreatedAt(),
+                savedEntity.getCancelledAt(),
                 savedEntity.getCreatedBy()
         );
     }
@@ -46,7 +48,7 @@ public class JpaReservationRepositoryAdapter implements ReservationRepository {
     @Override
     public Optional<Reservation> findById(String reservationId) {
         return springDataReservationRepository.findById(reservationId)
-                .map(savedEntity -> new Reservation(
+                .map(savedEntity -> Reservation.rehydrate(
                         savedEntity.getId(),
                         savedEntity.getHotelId(),
                         savedEntity.getRoomTypeId(),
@@ -55,12 +57,8 @@ public class JpaReservationRepositoryAdapter implements ReservationRepository {
                         savedEntity.getGuestCount(),
                         ReservationStatus.valueOf(savedEntity.getStatus()),
                         savedEntity.getCreatedAt(),
+                        savedEntity.getCancelledAt(),
                         savedEntity.getCreatedBy()
                 ));
-    }
-
-    @Override
-    public void deleteById(String reservationId) {
-        springDataReservationRepository.deleteById(reservationId);
     }
 }

@@ -40,7 +40,7 @@ The goal of the application is to simplify hotel reservation management and impr
 | Izba            | Room               | Samostatný priestor v hoteli určený na ubytovanie jednej alebo viacerých osôb. |
 | Hosť            | Guest              | Osoba, ktorá využíva alebo plánuje využiť služby ubytovania v hoteli. |
 | Rezervácia      | Reservation        | Záznam o pridelení konkrétnej izby hosťovi na vopred určené časové obdobie. |
-| Platba          | Payment            | Finančné vyrovnanie ceny rezervácie alebo pobytu hosťa.|
+| Platba          | Payment            | Finančné vyrovnanie ceny rezervácie alebo pobytu hosťa. |
 | Personál        | Staff              | Zamestnanci hotela, ktorí zabezpečujú prevádzku hotela a komunikáciu s hosťami. |
 | Administrátor   | Administrator      | Používateľ systému, ktorý spravuje údaje o hoteloch, izbách a ďalších častiach systému. |
 | Stav izby       | Room Status        | Označenie aktuálneho prevádzkového stavu izby v systéme. |

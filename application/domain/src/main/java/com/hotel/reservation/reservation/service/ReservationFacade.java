@@ -6,5 +6,5 @@ public interface ReservationFacade {
 
     GetReservationResult getReservation(String reservationId);
 
-    void deleteReservation(String reservationId);
+    void cancelReservation(String reservationId);
 }

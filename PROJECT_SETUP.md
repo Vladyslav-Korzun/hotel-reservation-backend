@@ -1,58 +1,107 @@
 # Hotel Reservation Backend Setup
 
-Modular monolith starter for a hotel reservation backend based on hexagonal architecture.
+Technical setup notes for the current project state.
 
-## Baseline
+## Current Scope
 
-- Java 25
-- Maven multi-module project
-- Spring Boot runtime
+The current implementation is intentionally a single secured vertical slice for reservations:
+
+- create reservation
+- get reservation by id
+- cancel reservation
+
+The goal is to demonstrate one complete flow end-to-end:
+
+- OpenAPI contract
+- generated API interface and DTOs
+- REST controller
+- domain/application layer
+- JPA persistence with XML ORM mapping
 - PostgreSQL + Liquibase
-- OpenAPI-first workflow
-
-## Architecture
-
-The target architecture is documented in [ARCHITECTURE.md](./ARCHITECTURE.md).
-
-Reference project for structural inspiration:
-`C:\Users\Vlad\Desktop\start\Пример\FSA-hexagonal-architecture-master`
-
-We use that project as a module and layering reference, not as a source of domain decisions.
-
-Domain diagram from earlier analysis is also kept in the repository:
-- [hotel_reservation_diagram.png](./hotel_reservation_diagram.png)
+- JWT security via Keycloak
 
 ## Modules
 
-- `application/domain` - domain model, use cases, ports
-- `application/api-spec` - OpenAPI contract and generated API/DTO classes
-- `application/inbound-controller-rest` - REST inbound adapter
-- `application/outbound-repository-jpa` - JPA outbound adapter
-- `application/springboot` - runtime bootstrapping and configuration
-
-## First implementation target
-
-The current first submission covers a secured end-to-end reservation flow:
-
-- OpenAPI contract
-- generated interface
-- REST controller
-- domain facade
-- JPA persistence
-- JWT security
-- PostgreSQL + Liquibase migration
+- `application/domain`
+  Domain model, use cases, ports, shared exceptions and security abstractions.
+- `application/api-spec`
+  OpenAPI YAML and generated Spring API / DTO classes.
+- `application/inbound-controller-rest`
+  REST controllers, mappers, security layer, REST exception handling.
+- `application/outbound-repository-jpa`
+  JPA adapter, Spring Data repository, JPA entity, XML ORM mapping.
+- `application/springboot`
+  Main application, bean wiring, runtime configuration, Liquibase migrations.
 
 ## Implemented API
 
-- `POST /reservations` - create reservation
-- `GET /reservations/{reservationId}` - get reservation by id
-- `DELETE /reservations/{reservationId}` - delete reservation by id
+- `POST /reservations`
+  Creates a reservation for the authenticated user.
+- `GET /reservations/{reservationId}`
+  Returns reservation details for the owner or an admin.
+- `POST /reservations/{reservationId}/cancel`
+  Cancels the reservation for the owner or an admin.
 
 OpenAPI source:
 - [application/api-spec/src/main/resources/openapi/hotel-reservation.yaml](./application/api-spec/src/main/resources/openapi/hotel-reservation.yaml)
 
-Swagger UI after startup:
+Swagger UI:
 - `http://localhost:8080/swagger-ui/index.html`
+
+## Security
+
+The backend is configured as a JWT resource server.
+
+- JWT issuer: Keycloak realm `hotel-reservation`
+- roles currently used:
+  - `GUEST`
+  - `ADMIN`
+  - `STAFF` is prepared in Keycloak, but not yet used by reservation endpoints
+
+Current reservation security rules:
+
+- `POST /reservations` -> `GUEST` or `ADMIN`
+- `GET /reservations/{reservationId}` -> `GUEST` or `ADMIN`
+- `POST /reservations/{reservationId}/cancel` -> `GUEST` or `ADMIN`
+
+Application-level ownership check:
+
+- owner can access own reservation
+- admin can access any reservation
+
+## Domain Notes
+
+`Reservation` is modeled as a domain entity, not just a transport record.
+
+Current invariants inside the aggregate:
+
+- `reservationId` must be present
+- `hotelId` must be present
+- `roomTypeId` must be present
+- `checkOut` must be after `checkIn`
+- `guestCount` must be greater than zero
+- `cancelledAt` must be present only for `CANCELLED` reservations
+
+Current domain behavior:
+
+- create pending reservation
+- ownership assertion
+- cancellation
+
+## Persistence
+
+Database:
+- PostgreSQL
+
+Liquibase:
+- creates the `reservations` table
+- adds `cancelled_at`
+- enforces status and cancellation consistency with DB constraints
+
+JPA:
+- persistence model is separated from domain model
+- ORM mapping is defined in XML:
+  [application/outbound-repository-jpa/src/main/resources/META-INF/orm.xml](./application/outbound-repository-jpa/src/main/resources/META-INF/orm.xml)
 
 ## Run
 
@@ -63,24 +112,36 @@ docker compose up -d
 ```
 
 This starts:
+
 - PostgreSQL on `localhost:5432`
 - Keycloak on `localhost:8081`
 
-### 2. Start the backend
+### 2. Start backend
 
 From IntelliJ:
+
 - run `HotelReservationApplication`
-- set `Active profiles` to `keycloak`
 
 From terminal:
 
 ```powershell
-mvn -pl application/springboot -am spring-boot:run -Dspring-boot.run.profiles=keycloak
+mvn -pl application/springboot -am spring-boot:run
 ```
 
-The backend uses PostgreSQL by default.
+## PostgreSQL
 
-## Keycloak Setup
+JDBC URL:
+
+```text
+jdbc:postgresql://localhost:5432/hotel_reservation
+```
+
+Credentials:
+
+- username: `hotel_user`
+- password: `hotel_password`
+
+## Keycloak
 
 Realm:
 - `hotel-reservation`
@@ -144,32 +205,28 @@ GET http://localhost:8080/reservations/{reservationId}
 Authorization: Bearer <access_token>
 ```
 
-### 4. Delete reservation
+### 4. Cancel reservation
 
 ```http
-DELETE http://localhost:8080/reservations/{reservationId}
+POST http://localhost:8080/reservations/{reservationId}/cancel
 Authorization: Bearer <access_token>
 ```
 
-## Database
-
-PostgreSQL connection:
-
-```text
-jdbc:postgresql://localhost:5432/hotel_reservation
-```
-
-Credentials:
-- username: `hotel_user`
-- password: `hotel_password`
-
-Liquibase changelog:
-- [application/springboot/src/main/resources/db/changelog/db.changelog-master.yaml](./application/springboot/src/main/resources/db/changelog/db.changelog-master.yaml)
-
 ## Verification
 
-Run tests:
+Fast local verification:
+
+```powershell
+mvn -pl application/domain test
+mvn -pl application/springboot -am -DskipTests compile
+```
+
+Full test suite:
 
 ```powershell
 mvn test
 ```
+
+Note:
+- integration tests use Testcontainers
+- Docker must be running for the full suite

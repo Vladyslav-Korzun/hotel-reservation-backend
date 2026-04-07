@@ -38,8 +38,8 @@ public class ReservationsController implements ReservationsApi {
     }
 
     @Override
-    public ResponseEntity<Void> deleteReservation(String reservationId) {
-        reservationFacade.deleteReservation(reservationId);
+    public ResponseEntity<Void> cancelReservation(String reservationId) {
+        reservationFacade.cancelReservation(reservationId);
         return ResponseEntity.noContent().build();
     }
 }

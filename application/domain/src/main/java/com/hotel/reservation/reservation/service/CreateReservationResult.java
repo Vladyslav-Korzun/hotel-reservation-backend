@@ -13,6 +13,7 @@ public record CreateReservationResult(
         int guestCount,
         String status,
         Instant createdAt,
+        Instant cancelledAt,
         String createdBy
 ) {
 }
