@@ -1,0 +1,12 @@
+.git
+.idea
+.vscode
+target
+**/target
+*.log
+*.env
+.env
+pass
+Dockerfile
+docker-compose.yml
+hotel_reservation_diagram.png

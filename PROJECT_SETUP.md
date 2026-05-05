@@ -4,18 +4,22 @@ Technical setup notes for the current project state.
 
 ## Current Scope
 
-The current implementation is intentionally a single secured vertical slice for reservations:
+The current implementation covers multiple secured flows:
 
 - create reservation
 - get reservation by id
 - cancel reservation
+- list reservations
+- search available rooms
+- check in reservation
+- check out reservation
 
-The goal is to demonstrate one complete flow end-to-end:
+The goal is to keep one coherent end-to-end architecture:
 
 - OpenAPI contract
 - generated API interface and DTOs
 - REST controller
-- domain/application layer
+- domain/service layer
 - JPA persistence with XML ORM mapping
 - PostgreSQL + Liquibase
 - JWT security via Keycloak
@@ -23,7 +27,7 @@ The goal is to demonstrate one complete flow end-to-end:
 ## Modules
 
 - `application/domain`
-  Domain model, use cases, ports, shared exceptions and security abstractions.
+  Domain module with `domain.*` model, `service.*` facades, services, ports, exceptions, and security abstractions.
 - `application/api-spec`
   OpenAPI YAML and generated Spring API / DTO classes.
 - `application/inbound-controller-rest`
@@ -37,10 +41,18 @@ The goal is to demonstrate one complete flow end-to-end:
 
 - `POST /reservations`
   Creates a reservation for the authenticated user.
+- `GET /rooms/search`
+  Returns room types with available inventory.
 - `GET /reservations/{reservationId}`
-  Returns reservation details for the owner or an admin.
+  Returns reservation details for the owner, staff, or an admin.
+- `GET /reservations`
+  Returns reservations for staff and admin users.
 - `POST /reservations/{reservationId}/cancel`
   Cancels the reservation for the owner or an admin.
+- `POST /staff/reservations/{reservationId}/check-in`
+  Checks in a reservation and occupies an assigned room.
+- `POST /staff/reservations/{reservationId}/check-out`
+  Checks out a reservation and marks the room for cleaning.
 
 OpenAPI source:
 - [application/api-spec/src/main/resources/openapi/hotel-reservation.yaml](./application/api-spec/src/main/resources/openapi/hotel-reservation.yaml)
@@ -55,18 +67,23 @@ The backend is configured as a JWT resource server.
 - JWT issuer: Keycloak realm `hotel-reservation`
 - roles currently used:
   - `GUEST`
+  - `STAFF`
   - `ADMIN`
-  - `STAFF` is prepared in Keycloak, but not yet used by reservation endpoints
 
 Current reservation security rules:
 
+- `GET /rooms/search` -> `GUEST`, `STAFF`, or `ADMIN`
 - `POST /reservations` -> `GUEST` or `ADMIN`
-- `GET /reservations/{reservationId}` -> `GUEST` or `ADMIN`
+- `GET /reservations/{reservationId}` -> `GUEST`, `STAFF`, or `ADMIN`
+- `GET /reservations` -> `STAFF` or `ADMIN`
 - `POST /reservations/{reservationId}/cancel` -> `GUEST` or `ADMIN`
+- `POST /staff/reservations/{reservationId}/check-in` -> `STAFF` or `ADMIN`
+- `POST /staff/reservations/{reservationId}/check-out` -> `STAFF` or `ADMIN`
 
 Application-level ownership check:
 
 - owner can access own reservation
+- staff can access all reservations and perform stay operations
 - admin can access any reservation
 
 ## Domain Notes
@@ -79,14 +96,17 @@ Current invariants inside the aggregate:
 - `hotelId` must be present
 - `roomTypeId` must be present
 - `checkOut` must be after `checkIn`
-- `guestCount` must be greater than zero
+- `GuestCount` must be greater than zero
 - `cancelledAt` must be present only for `CANCELLED` reservations
+- checked-in and checked-out reservations must have an assigned room
 
 Current domain behavior:
 
 - create pending reservation
 - ownership assertion
 - cancellation
+- check-in
+- check-out
 
 ## Persistence
 
@@ -96,6 +116,9 @@ Database:
 Liquibase:
 - creates the `reservations` table
 - adds `cancelled_at`
+- creates the hotel / room catalog tables
+- adds reservation foreign keys and room assignment constraints
+- seeds demo hotels, room types, and rooms on an empty database
 - enforces status and cancellation consistency with DB constraints
 
 JPA:
@@ -115,6 +138,14 @@ This starts:
 
 - PostgreSQL on `localhost:5432`
 - Keycloak on `localhost:8081`
+
+If you previously ran an older schema version and startup fails on Liquibase foreign keys,
+reset the local PostgreSQL volume:
+
+```powershell
+docker compose down -v
+docker compose up -d
+```
 
 ### 2. Start backend
 
@@ -150,6 +181,14 @@ Client:
 - `hotel-reservation-client`
 - `Client authentication` = `On`
 - `Direct access grants` = `On`
+- secret: `hotel-reservation-secret`
+
+Frontend SPA client:
+- `hotel-reservation-frontend`
+- public client
+- standard flow enabled
+- redirect URI: `http://localhost:4200/*`
+- web origin: `http://localhost:4200`
 
 Realm roles:
 - `GUEST`
@@ -160,6 +199,15 @@ Example user:
 - username: `guest1`
 - password: `guest123`
 - role: `GUEST`
+
+Additional users imported automatically:
+- `staff1` / `staff123` with role `STAFF`
+- `admin1` / `admin123` with role `ADMIN`
+
+Realm import:
+- file: [keycloak/realms/hotel-reservation-realm.json](./keycloak/realms/hotel-reservation-realm.json)
+- imported automatically by `docker compose up`
+- includes both backend/Postman client and Angular SPA client
 
 ## Postman Flow
 
@@ -175,7 +223,7 @@ Body:
 ```text
 grant_type=password
 client_id=hotel-reservation-client
-client_secret=<client secret>
+client_secret=hotel-reservation-secret
 username=guest1
 password=guest123
 ```

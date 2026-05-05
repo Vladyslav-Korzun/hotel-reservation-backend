@@ -1,192 +1,108 @@
 # Hotel Reservation Application
 
-This application will allow users to search for hotel rooms available for reservation in different cities or hotels. Hotel guests will be able to filter available rooms by date of stay, number of guests or price and create reservations online.
+Backend application for hotel room availability search, reservation management, and staff stay operations.
 
-Hotel staff will be able to manage reservations, perform check-in and check-out of guests and update the status of rooms (available, occupied, cleaning or maintenance). The system will help hotel staff keep track of room availability and current hotel occupancy.
+## Project Scope
 
-The system may also support dynamic price adjustments during holidays or periods of high demand.
+The current implementation covers these backend capabilities:
 
-The goal of the application is to simplify hotel reservation management and improve the experience of guests when searching for accommodation.
+- search available room types by city or by specific hotel
+- create a reservation for an authenticated guest or administrator
+- view reservation details
+- cancel a reservation
+- list all reservations for staff and administrators
+- perform guest check-in
+- perform guest check-out
 
+The codebase is organized as a modular Spring Boot application with these layers:
 
-# Zber požiadaviek
+- `application/domain` for `domain.*`, `service.*` facades, services, ports, and exceptions
+- `application/api-spec` for OpenAPI-generated contracts
+- `application/inbound-controller-rest` for REST controllers and security
+- `application/outbound-repository-jpa` for persistence adapters
+- `application/springboot` for application wiring, Liquibase, and integration tests
 
-- **RQ01** Systém umožní vyhľadávať hotely podľa mesta alebo názvu.
-- **RQ02** Systém umožní zobraziť dostupné izby v hoteli.
-- **RQ03** Systém umožní filtrovať izby podľa dátumu pobytu, počtu hostí a ceny.
-- **RQ04** Systém umožní zobraziť detail izby.
-- **RQ05** Systém umožní vytvoriť rezerváciu izby.
-- **RQ06** Systém zaeviduje k rezervácii hosťa, dátum príchodu, dátum odchodu a izbu.
-- **RQ07** Systém zabezpečí, aby jedna izba nebola rezervovaná viackrát v rovnakom termíne.
-- **RQ08** Systém umožní zobraziť detail rezervácie.
-- **RQ09** Systém umožní spravovať rezervácie.
-- **RQ10** Systém umožní vykonať check-in hosťa.
-- **RQ11** Systém umožní vykonať check-out hosťa.
-- **RQ12** Systém umožní meniť stav izby.
-- **RQ13** Systém eviduje stav izby (AVAILABLE, OCCUPIED, CLEANING, MAINTENANCE).
-- **RQ14** Systém umožní sledovať dostupnosť izieb.
-- **RQ15** Systém umožní sledovať obsadenosť hotela.
-- **RQ16** Systém umožní evidovať platbu za rezerváciu.
-- **RQ17** Systém eviduje stav rezervácie (CREATED, CONFIRMED, CHECKED_IN, CHECKED_OUT, CANCELLED).
-- **RQ18** Systém umožní vytvárať a upravovať hotely.
-- **RQ19** Systém umožní pridávať izby do hotela.
-- **RQ20** Systém môže upravovať cenu izieb počas zvýšeného dopytu.
+## Main Concepts
 
-# Slovník pojmov
+### Room Status
 
-| Pojem           | Anglický názov     | Definícia |
-|-----------------|--------------------|------------|
-| Hotel           | Hotel              | Ubytovacie zariadenie, ktoré poskytuje služby krátkodobého ubytovania pre hostí. |
-| Izba            | Room               | Samostatný priestor v hoteli určený na ubytovanie jednej alebo viacerých osôb. |
-| Hosť            | Guest              | Osoba, ktorá využíva alebo plánuje využiť služby ubytovania v hoteli. |
-| Rezervácia      | Reservation        | Záznam o pridelení konkrétnej izby hosťovi na vopred určené časové obdobie. |
-| Platba          | Payment            | Finančné vyrovnanie ceny rezervácie alebo pobytu hosťa. |
-| Personál        | Staff              | Zamestnanci hotela, ktorí zabezpečujú prevádzku hotela a komunikáciu s hosťami. |
-| Administrátor   | Administrator      | Používateľ systému, ktorý spravuje údaje o hoteloch, izbách a ďalších častiach systému. |
-| Stav izby       | Room Status        | Označenie aktuálneho prevádzkového stavu izby v systéme. |
-| Stav rezervácie | Reservation Status | Označenie aktuálneho stavu rezervácie v systéme. |
-| Dostupnosť      | Availability       | Informácia o tom, či je izba voľná na ubytovanie v konkrétnom časovom období. |
-| Obsadenosť      | Occupancy          | Počet alebo podiel izieb, ktoré sú v danom čase obsadené hosťami. |
-| Check-in        | Check-in           | Proces príchodu hosťa do hotela, pri ktorom hosť začína svoj pobyt. |
-| Check-out       | Check-out          | Proces odchodu hosťa z hotela, pri ktorom sa pobyt ukončuje. |
+- `AVAILABLE`
+- `OCCUPIED`
+- `CLEANING`
+- `MAINTENANCE`
+- `OUT_OF_SERVICE`
 
+### Reservation Status
 
-# Prípady použitia
+- `PENDING`
+- `CONFIRMED`
+- `CHECKED_IN`
+- `CHECKED_OUT`
+- `CANCELLED`
+- `NO_SHOW`
 
-## UC01 – Vytvorenie rezervácie izby
+## Implemented Use Cases
 
-**Účel**  
-Vytvoriť novú rezerváciu izby pre zvolené obdobie pobytu.
+### UC01 Create Reservation
 
-**Používateľ**  
-Hosť
+Authenticated guest selects hotel, stay dates, room type, and guest count. The system validates hotel and room type, checks room inventory for the selected period, and creates a reservation in status `PENDING`.
 
-**Vstupné podmienky**  
-V systéme sú zaevidované hotely a izby.  
-Používateľ má prístup k systému.
+### UC02 Check-In
 
-**Výstup**  
-V systéme je vytvorená nová rezervácia pre vybranú izbu a zadaný termín pobytu.
+Staff or administrator checks in a reservation on the allowed date. The system locks the reservation, selects an available room of the requested type, assigns the room to the reservation, and changes:
 
-**Postup**
-1. Používateľ zadá mesto alebo názov hotela. Systém vyhľadá zodpovedajúce hotely.  
+- reservation status to `CHECKED_IN`
+- room status to `OCCUPIED`
 
-2. Používateľ vyberie konkrétny hotel. Systém zobrazí izby patriace do hotela a zobrazí pri každej izbe základné informácie o kapacite, cene a stave.  
+### UC03 Check-Out
 
-3. Používateľ zadá dátum príchodu, dátum odchodu a počet hostí. Systém vyfiltruje vhodné izby podľa zadaných podmienok.  
+Staff or administrator checks out a reservation that is currently checked in. The system locks the reservation, completes the stay, and changes:
 
-4. Používateľ vyberie konkrétnu izbu. Systém zobrazí detail izby, pripraví rezerváciu pre zadaný termín a umožní zadať údaje hosťa.  
+- reservation status to `CHECKED_OUT`
+- room status to `CLEANING`
 
-5. Používateľ zadá potrebné údaje a potvrdí rezerváciu. Systém overí dostupnosť izby v zadanom termíne, vytvorí rezerváciu a nastaví jej stav.
+## Business Rules
 
-**Alternatívy**
-- 1a. Nebol zadaný žiadny vyhľadávací údaj.  
-- 1a1. Systém vyzve používateľa na zadanie mesta alebo názvu hotela.  
+- `checkOut` must be after `checkIn`
+- `guestCount` must be greater than zero
+- reservation can only be created for an active hotel
+- reservation can only be created for a room type that can host the requested guest count
+- active overlapping reservations consume room inventory
+- cancelled, checked-in, checked-out, and no-show reservations cannot be cancelled arbitrarily
+- checked-in and checked-out reservations must have an assigned room
+- only staff or administrators can perform stay operations
+- guests can access only their own reservations
+- staff and administrators can access all reservations
 
-- 3a. Pre zadané podmienky nie sú dostupné žiadne izby.  
-- 3a1. Systém zobrazí informáciu o nedostupnosti izieb. UC končí.  
+## Local Run
 
-- 5a. Izba už nie je dostupná v zadanom termíne.  
-- 5a1. Systém informuje používateľa a umožní mu zvoliť inú izbu alebo iný termín. UC končí.  
+Infrastructure for local development is defined in [docker-compose.yml](docker-compose.yml):
 
-- 5b. Používateľ nevyplní povinné údaje.  
-- 5b1. Systém zobrazí chybové hlásenie a vyžiada doplnenie údajov.
+- PostgreSQL on `localhost:5432`
+- Keycloak on `localhost:8081`
+- realm import from [keycloak/realms/hotel-reservation-realm.json](./keycloak/realms/hotel-reservation-realm.json)
+- demo hotel catalog seeded automatically on an empty database
 
+Application defaults are in `application/springboot/src/main/resources/application.yaml`.
 
-## UC02 – Check-in hosťa
+If local startup fails during Liquibase because of old dev data and foreign keys, reset the
+local PostgreSQL volume and start again:
 
-**Účel**  
-Zaznamenať príchod hosťa a začať jeho pobyt.
+```powershell
+docker compose down -v
+docker compose up -d
+```
 
-**Používateľ**  
-Personál hotela
+If your Keycloak realm was created manually before these changes, recreate Keycloak once so the
+project-managed realm import is applied:
 
-**Vstupné podmienky**  
-V systéme existuje rezervácia pre hosťa.  
-Rezervácia nie je zrušená ani ukončená.
+```powershell
+docker compose down -v
+docker compose up -d
+```
 
-**Výstup**  
-Rezervácia má stav CHECKED_IN a izba má stav OCCUPIED.
+## Testing
 
-**Postup**
-1. Používateľ otvorí evidenciu rezervácií. Systém zobrazí zoznam rezervácií.  
-
-2. Používateľ vyhľadá konkrétnu rezerváciu. Systém zobrazí zodpovedajúce rezervácie a zobrazí pri nich základné údaje o hosťovi, termíne pobytu a stave rezervácie.  
-
-3. Používateľ vyberie jednu rezerváciu. Systém zobrazí detail rezervácie vrátane údajov o hosťovi a priradenej izbe.  
-
-4. Používateľ zvolí vykonanie check-in. Systém overí stav rezervácie, overí pripravenosť izby na ubytovanie a vyhodnotí, či je check-in možné vykonať.  
-
-5. Používateľ potvrdí check-in hosťa. Systém zmení stav rezervácie na CHECKED_IN a zmení stav izby na OCCUPIED.
-
-**Alternatívy**
-- 2a. Vyhľadávaná rezervácia neexistuje.  
-- 2a1. Systém informuje používateľa, že rezervácia nebola nájdená. UC končí.  
-
-- 4a. Rezervácia je v stave CANCELLED alebo CHECKED_OUT.  
-- 4a1. Systém informuje používateľa, že check-in nie je možné vykonať. UC končí.  
-
-- 4b. Izba je v stave CLEANING alebo MAINTENANCE.  
-- 4b1. Systém informuje používateľa, že izba nie je pripravená na ubytovanie. UC končí.  
-
-- 5a. Používateľ zruší vykonanie check-in.  
-- 5a1. Systém nevykoná žiadnu zmenu. UC končí.
-
-
-## UC03 – Check-out hosťa
-
-**Účel**  
-Ukončiť pobyt hosťa a uvoľniť izbu na ďalšie použitie.
-
-**Používateľ**  
-Personál hotela
-
-**Vstupné podmienky**  
-V systéme existuje rezervácia v stave CHECKED_IN.
-
-**Výstup**  
-Rezervácia má stav CHECKED_OUT a izba má nový stav podľa rozhodnutia personálu.
-
-**Postup**
-1. Používateľ otvorí evidenciu aktívnych pobytov. Systém zobrazí zoznam rezervácií, pri ktorých hosť aktuálne býva v hoteli.  
-
-2. Používateľ vyhľadá konkrétnu rezerváciu. Systém zobrazí detail rezervácie a zobrazí údaje o hosťovi, izbe a termíne pobytu.  
-
-3. Používateľ skontroluje ukončenie pobytu. Systém zobrazí informáciu o platbe alebo o stave úhrady.  
-
-4. Používateľ podľa potreby zaeviduje platbu. Systém overí správnosť údajov o platbe, uloží platbu k rezervácii a aktualizuje stav úhrady.  
-
-5. Používateľ potvrdí check-out a zvolí nový stav izby. Systém zmení stav rezervácie na CHECKED_OUT a uloží nový stav izby.
-
-**Alternatívy**
-- 2a. Rezervácia neexistuje.  
-- 2a1. Systém informuje používateľa, že rezervácia nebola nájdená. UC končí.  
-
-- 4a. Údaje o platbe nie sú správne alebo nie sú úplné.  
-- 4a1. Systém zobrazí chybové hlásenie a vyžiada opravu údajov.  
-
-- 5a. Rezervácia nie je v stave CHECKED_IN.  
-- 5a1. Systém informuje používateľa, že check-out nie je možné vykonať. UC končí.  
-
-- 5b. Používateľ nezvolí nový stav izby.  
-- 5b1. Systém vyžiada zvolenie stavu izby.  
-
-- 5c. Používateľ zruší vykonanie check-out.  
-- 5c1. Systém nevykoná žiadnu zmenu. UC končí.
-
-
-# Ostatné prípady použitia
-
-- UC04 Vyhľadávanie hotelov  
-- UC05 Filtrovanie izieb  
-- UC06 Zobrazenie detailu izby  
-- UC07 Zobrazenie rezervácie  
-- UC08 Správa rezervácií  
-- UC09 Zmena stavu izby  
-- UC10 Evidencia platby  
-- UC11 Správa hotelov  
-- UC12 Pridanie izby do hotela  
-- UC13 Úprava údajov hotela  
-- UC14 Sledovanie dostupnosti izieb  
-- UC15 Sledovanie obsadenosti hotela  
-- UC16 Dynamická úprava cien
+- domain and module tests run with Maven
+- integration coverage is provided by `CreateReservationFlowIntegrationTest`
+- integration test execution requires Docker because it uses Testcontainers with PostgreSQL

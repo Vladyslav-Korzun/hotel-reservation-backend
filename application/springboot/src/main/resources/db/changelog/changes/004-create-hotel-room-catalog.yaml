@@ -1,0 +1,178 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-hotel-room-catalog
+      author: codex
+      changes:
+        - createTable:
+            tableName: hotels
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: city
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: country
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: stars
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(1000)
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: room_types
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: hotel_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_room_types_hotel
+                    references: hotels(id)
+              - column:
+                  name: name
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: base_capacity
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: base_price_amount
+                  type: numeric(12, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: base_price_currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(1000)
+        - createTable:
+            tableName: rooms
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: hotel_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_rooms_hotel
+                    references: hotels(id)
+              - column:
+                  name: room_number
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: room_type_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_rooms_room_type
+                    references: room_types(id)
+              - column:
+                  name: capacity
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: rooms
+            columnNames: hotel_id, room_number
+            constraintName: uq_rooms_hotel_number
+        - createIndex:
+            tableName: hotels
+            indexName: idx_hotels_city
+            columns:
+              - column:
+                  name: city
+        - createIndex:
+            tableName: rooms
+            indexName: idx_rooms_hotel_status
+            columns:
+              - column:
+                  name: hotel_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: room_types
+            indexName: idx_room_types_hotel
+            columns:
+              - column:
+                  name: hotel_id
+        - sql:
+            sql: |
+              alter table hotels
+              add constraint chk_hotels_status
+              check (status in ('ACTIVE', 'INACTIVE'));
+        - sql:
+            sql: |
+              alter table hotels
+              add constraint chk_hotels_stars
+              check (stars between 1 and 5);
+        - sql:
+            sql: |
+              alter table room_types
+              add constraint chk_room_types_capacity
+              check (base_capacity > 0);
+        - sql:
+            sql: |
+              alter table room_types
+              add constraint chk_room_types_price
+              check (base_price_amount >= 0);
+        - sql:
+            sql: |
+              alter table rooms
+              add constraint chk_rooms_status
+              check (status in ('AVAILABLE', 'OCCUPIED', 'CLEANING', 'MAINTENANCE', 'OUT_OF_SERVICE'));
+        - sql:
+            sql: |
+              alter table rooms
+              add constraint chk_rooms_capacity
+              check (capacity > 0);

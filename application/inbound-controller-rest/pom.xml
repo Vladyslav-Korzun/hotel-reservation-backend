@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.hotel.reservation</groupId>
+        <groupId>com.hotel.management</groupId>
         <artifactId>parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
@@ -14,12 +14,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hotel.reservation</groupId>
+            <groupId>com.hotel.management</groupId>
             <artifactId>domain</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.hotel.reservation</groupId>
+            <groupId>com.hotel.management</groupId>
             <artifactId>api-spec</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -63,11 +63,11 @@
                             <rules>
                                 <bannedDependencies>
                                     <excludes>
-                                        <exclude>com.hotel.reservation:*</exclude>
+                                        <exclude>com.hotel.management:*</exclude>
                                     </excludes>
                                     <includes>
-                                        <include>com.hotel.reservation:domain</include>
-                                        <include>com.hotel.reservation:api-spec</include>
+                                        <include>com.hotel.management:domain</include>
+                                        <include>com.hotel.management:api-spec</include>
                                     </includes>
                                 </bannedDependencies>
                             </rules>

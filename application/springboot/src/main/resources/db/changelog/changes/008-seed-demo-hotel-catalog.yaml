@@ -1,0 +1,265 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-seed-demo-hotel-catalog
+      author: codex
+      preConditions:
+        - sqlCheck:
+            onFail: MARK_RAN
+            expectedResult: "0"
+            sql: select count(*) from hotels
+      changes:
+        - insert:
+            tableName: hotels
+            columns:
+              - column: { name: id, valueNumeric: 1001 }
+              - column: { name: name, value: Danube Grand Hotel }
+              - column: { name: city, value: Bratislava }
+              - column: { name: country, value: Slovakia }
+              - column: { name: address, value: Riverside 12 }
+              - column: { name: stars, valueNumeric: 4 }
+              - column: { name: description, value: City hotel near the Danube riverfront }
+              - column: { name: status, value: ACTIVE }
+        - insert:
+            tableName: hotels
+            columns:
+              - column: { name: id, valueNumeric: 1002 }
+              - column: { name: name, value: Tatry Mountain Resort }
+              - column: { name: city, value: Poprad }
+              - column: { name: country, value: Slovakia }
+              - column: { name: address, value: Panorama 8 }
+              - column: { name: stars, valueNumeric: 5 }
+              - column: { name: description, value: Resort hotel for mountain stays and family trips }
+              - column: { name: status, value: ACTIVE }
+        - insert:
+            tableName: hotels
+            columns:
+              - column: { name: id, valueNumeric: 1003 }
+              - column: { name: name, value: Kosice Business Hotel }
+              - column: { name: city, value: Kosice }
+              - column: { name: country, value: Slovakia }
+              - column: { name: address, value: Main Street 44 }
+              - column: { name: stars, valueNumeric: 4 }
+              - column: { name: description, value: Business-focused hotel in the city center }
+              - column: { name: status, value: ACTIVE }
+
+        - insert:
+            tableName: room_types
+            columns:
+              - column: { name: id, valueNumeric: 1101 }
+              - column: { name: hotel_id, valueNumeric: 1001 }
+              - column: { name: name, value: Single }
+              - column: { name: base_capacity, valueNumeric: 1 }
+              - column: { name: base_price_amount, valueNumeric: 89.00 }
+              - column: { name: base_price_currency, value: EUR }
+              - column: { name: description, value: Compact room for one guest }
+        - insert:
+            tableName: room_types
+            columns:
+              - column: { name: id, valueNumeric: 1102 }
+              - column: { name: hotel_id, valueNumeric: 1001 }
+              - column: { name: name, value: Double }
+              - column: { name: base_capacity, valueNumeric: 2 }
+              - column: { name: base_price_amount, valueNumeric: 129.00 }
+              - column: { name: base_price_currency, value: EUR }
+              - column: { name: description, value: Standard room for two guests }
+        - insert:
+            tableName: room_types
+            columns:
+              - column: { name: id, valueNumeric: 1103 }
+              - column: { name: hotel_id, valueNumeric: 1001 }
+              - column: { name: name, value: Family }
+              - column: { name: base_capacity, valueNumeric: 4 }
+              - column: { name: base_price_amount, valueNumeric: 199.00 }
+              - column: { name: base_price_currency, value: EUR }
+              - column: { name: description, value: Family room with extra sofa bed }
+
+        - insert:
+            tableName: room_types
+            columns:
+              - column: { name: id, valueNumeric: 2101 }
+              - column: { name: hotel_id, valueNumeric: 1002 }
+              - column: { name: name, value: Double Mountain }
+              - column: { name: base_capacity, valueNumeric: 2 }
+              - column: { name: base_price_amount, valueNumeric: 149.00 }
+              - column: { name: base_price_currency, value: EUR }
+              - column: { name: description, value: Double room with mountain view }
+        - insert:
+            tableName: room_types
+            columns:
+              - column: { name: id, valueNumeric: 2102 }
+              - column: { name: hotel_id, valueNumeric: 1002 }
+              - column: { name: name, value: Junior Suite }
+              - column: { name: base_capacity, valueNumeric: 3 }
+              - column: { name: base_price_amount, valueNumeric: 219.00 }
+              - column: { name: base_price_currency, value: EUR }
+              - column: { name: description, value: Spacious suite for couples or small families }
+        - insert:
+            tableName: room_types
+            columns:
+              - column: { name: id, valueNumeric: 2103 }
+              - column: { name: hotel_id, valueNumeric: 1002 }
+              - column: { name: name, value: Family Suite }
+              - column: { name: base_capacity, valueNumeric: 5 }
+              - column: { name: base_price_amount, valueNumeric: 289.00 }
+              - column: { name: base_price_currency, value: EUR }
+              - column: { name: description, value: Large suite for bigger groups }
+
+        - insert:
+            tableName: room_types
+            columns:
+              - column: { name: id, valueNumeric: 3101 }
+              - column: { name: hotel_id, valueNumeric: 1003 }
+              - column: { name: name, value: Economy }
+              - column: { name: base_capacity, valueNumeric: 1 }
+              - column: { name: base_price_amount, valueNumeric: 79.00 }
+              - column: { name: base_price_currency, value: EUR }
+              - column: { name: description, value: Entry-level room for business travel }
+        - insert:
+            tableName: room_types
+            columns:
+              - column: { name: id, valueNumeric: 3102 }
+              - column: { name: hotel_id, valueNumeric: 1003 }
+              - column: { name: name, value: Standard }
+              - column: { name: base_capacity, valueNumeric: 2 }
+              - column: { name: base_price_amount, valueNumeric: 119.00 }
+              - column: { name: base_price_currency, value: EUR }
+              - column: { name: description, value: Standard city room for two guests }
+        - insert:
+            tableName: room_types
+            columns:
+              - column: { name: id, valueNumeric: 3103 }
+              - column: { name: hotel_id, valueNumeric: 1003 }
+              - column: { name: name, value: Apartment }
+              - column: { name: base_capacity, valueNumeric: 4 }
+              - column: { name: base_price_amount, valueNumeric: 239.00 }
+              - column: { name: base_price_currency, value: EUR }
+              - column: { name: description, value: Apartment with workspace and living area }
+
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 1201 }
+              - column: { name: hotel_id, valueNumeric: 1001 }
+              - column: { name: room_number, value: "101" }
+              - column: { name: room_type_id, valueNumeric: 1101 }
+              - column: { name: capacity, valueNumeric: 1 }
+              - column: { name: status, value: AVAILABLE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 1202 }
+              - column: { name: hotel_id, valueNumeric: 1001 }
+              - column: { name: room_number, value: "102" }
+              - column: { name: room_type_id, valueNumeric: 1101 }
+              - column: { name: capacity, valueNumeric: 1 }
+              - column: { name: status, value: AVAILABLE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 1203 }
+              - column: { name: hotel_id, valueNumeric: 1001 }
+              - column: { name: room_number, value: "201" }
+              - column: { name: room_type_id, valueNumeric: 1102 }
+              - column: { name: capacity, valueNumeric: 2 }
+              - column: { name: status, value: AVAILABLE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 1204 }
+              - column: { name: hotel_id, valueNumeric: 1001 }
+              - column: { name: room_number, value: "202" }
+              - column: { name: room_type_id, valueNumeric: 1102 }
+              - column: { name: capacity, valueNumeric: 2 }
+              - column: { name: status, value: CLEANING }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 1205 }
+              - column: { name: hotel_id, valueNumeric: 1001 }
+              - column: { name: room_number, value: "301" }
+              - column: { name: room_type_id, valueNumeric: 1103 }
+              - column: { name: capacity, valueNumeric: 4 }
+              - column: { name: status, value: AVAILABLE }
+
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 2201 }
+              - column: { name: hotel_id, valueNumeric: 1002 }
+              - column: { name: room_number, value: "101" }
+              - column: { name: room_type_id, valueNumeric: 2101 }
+              - column: { name: capacity, valueNumeric: 2 }
+              - column: { name: status, value: AVAILABLE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 2202 }
+              - column: { name: hotel_id, valueNumeric: 1002 }
+              - column: { name: room_number, value: "102" }
+              - column: { name: room_type_id, valueNumeric: 2101 }
+              - column: { name: capacity, valueNumeric: 2 }
+              - column: { name: status, value: AVAILABLE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 2203 }
+              - column: { name: hotel_id, valueNumeric: 1002 }
+              - column: { name: room_number, value: "201" }
+              - column: { name: room_type_id, valueNumeric: 2102 }
+              - column: { name: capacity, valueNumeric: 3 }
+              - column: { name: status, value: AVAILABLE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 2204 }
+              - column: { name: hotel_id, valueNumeric: 1002 }
+              - column: { name: room_number, value: "301" }
+              - column: { name: room_type_id, valueNumeric: 2103 }
+              - column: { name: capacity, valueNumeric: 5 }
+              - column: { name: status, value: AVAILABLE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 2205 }
+              - column: { name: hotel_id, valueNumeric: 1002 }
+              - column: { name: room_number, value: "302" }
+              - column: { name: room_type_id, valueNumeric: 2103 }
+              - column: { name: capacity, valueNumeric: 5 }
+              - column: { name: status, value: MAINTENANCE }
+
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 3201 }
+              - column: { name: hotel_id, valueNumeric: 1003 }
+              - column: { name: room_number, value: "101" }
+              - column: { name: room_type_id, valueNumeric: 3101 }
+              - column: { name: capacity, valueNumeric: 1 }
+              - column: { name: status, value: AVAILABLE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 3202 }
+              - column: { name: hotel_id, valueNumeric: 1003 }
+              - column: { name: room_number, value: "201" }
+              - column: { name: room_type_id, valueNumeric: 3102 }
+              - column: { name: capacity, valueNumeric: 2 }
+              - column: { name: status, value: AVAILABLE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 3203 }
+              - column: { name: hotel_id, valueNumeric: 1003 }
+              - column: { name: room_number, value: "202" }
+              - column: { name: room_type_id, valueNumeric: 3102 }
+              - column: { name: capacity, valueNumeric: 2 }
+              - column: { name: status, value: OUT_OF_SERVICE }
+        - insert:
+            tableName: rooms
+            columns:
+              - column: { name: id, valueNumeric: 3204 }
+              - column: { name: hotel_id, valueNumeric: 1003 }
+              - column: { name: room_number, value: "301" }
+              - column: { name: room_type_id, valueNumeric: 3103 }
+              - column: { name: capacity, valueNumeric: 4 }
+              - column: { name: status, value: AVAILABLE }

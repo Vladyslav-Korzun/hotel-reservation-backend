@@ -25,7 +25,11 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_LOG_LEVEL: info
-    command: ["start-dev"]
+    command: ["start-dev", "--import-realm"]
+    volumes:
+      - ./keycloak/realms:/opt/keycloak/data/import
+      - hotel-keycloak-data:/opt/keycloak/data
 
 volumes:
   hotel-postgres-data:
+  hotel-keycloak-data:

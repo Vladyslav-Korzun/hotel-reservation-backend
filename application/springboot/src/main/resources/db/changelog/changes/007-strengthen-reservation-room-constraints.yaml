@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-strengthen-reservation-room-constraints
+      author: codex
+      changes:
+        - addUniqueConstraint:
+            tableName: rooms
+            columnNames: id, hotel_id, room_type_id
+            constraintName: uq_rooms_id_hotel_room_type
+        - addForeignKeyConstraint:
+            baseTableName: reservations
+            baseColumnNames: room_id, hotel_id, room_type_id
+            constraintName: fk_reservations_assigned_room_scope
+            referencedTableName: rooms
+            referencedColumnNames: id, hotel_id, room_type_id
+        - sql:
+            sql: |
+              alter table reservations
+              add constraint chk_reservations_checked_status_room
+              check (
+                status not in ('CHECKED_IN', 'CHECKED_OUT')
+                or room_id is not null
+              );

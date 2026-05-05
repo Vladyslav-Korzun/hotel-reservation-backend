@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.hotel.reservation</groupId>
+        <groupId>com.hotel.management</groupId>
         <artifactId>parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
@@ -14,18 +14,22 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hotel.reservation</groupId>
+            <groupId>com.hotel.management</groupId>
             <artifactId>inbound-controller-rest</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.hotel.reservation</groupId>
+            <groupId>com.hotel.management</groupId>
             <artifactId>outbound-repository-jpa</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>

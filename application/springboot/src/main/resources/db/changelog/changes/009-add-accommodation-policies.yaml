@@ -1,0 +1,204 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-add-accommodation-policies
+      author: codex
+      changes:
+        - addColumn:
+            tableName: hotels
+            columns:
+              - column:
+                  name: children_allowed
+                  type: boolean
+                  defaultValueBoolean: true
+              - column:
+                  name: pets_allowed
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: infant_max_age
+                  type: int
+                  defaultValueNumeric: 2
+              - column:
+                  name: child_max_age
+                  type: int
+                  defaultValueNumeric: 11
+        - addColumn:
+            tableName: room_types
+            columns:
+              - column:
+                  name: max_adults
+                  type: int
+              - column:
+                  name: max_children
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: max_infants
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: max_total_guests
+                  type: int
+              - column:
+                  name: pets_allowed
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: max_pets
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: allowed_pet_types_json
+                  type: varchar(2000)
+                  defaultValue: '[]'
+              - column:
+                  name: max_pet_weight_kg
+                  type: numeric(10, 2)
+              - column:
+                  name: pet_fee_amount
+                  type: numeric(12, 2)
+              - column:
+                  name: pet_fee_currency
+                  type: varchar(3)
+        - sql:
+            sql: |
+              update room_types
+              set max_adults = base_capacity,
+                  max_total_guests = base_capacity
+              where max_adults is null
+                 or max_total_guests is null;
+        - addColumn:
+            tableName: reservations
+            columns:
+              - column:
+                  name: adults_count
+                  type: int
+              - column:
+                  name: children_ages_json
+                  type: varchar(2000)
+                  defaultValue: '[]'
+              - column:
+                  name: pets_json
+                  type: varchar(4000)
+                  defaultValue: '[]'
+        - sql:
+            sql: |
+              update reservations
+              set adults_count = guest_count
+              where adults_count is null;
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: children_allowed
+            columnDataType: boolean
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: pets_allowed
+            columnDataType: boolean
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: infant_max_age
+            columnDataType: int
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: child_max_age
+            columnDataType: int
+        - addNotNullConstraint:
+            tableName: room_types
+            columnName: max_adults
+            columnDataType: int
+        - addNotNullConstraint:
+            tableName: room_types
+            columnName: max_children
+            columnDataType: int
+        - addNotNullConstraint:
+            tableName: room_types
+            columnName: max_infants
+            columnDataType: int
+        - addNotNullConstraint:
+            tableName: room_types
+            columnName: max_total_guests
+            columnDataType: int
+        - addNotNullConstraint:
+            tableName: room_types
+            columnName: pets_allowed
+            columnDataType: boolean
+        - addNotNullConstraint:
+            tableName: room_types
+            columnName: max_pets
+            columnDataType: int
+        - addNotNullConstraint:
+            tableName: room_types
+            columnName: allowed_pet_types_json
+            columnDataType: varchar(2000)
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: adults_count
+            columnDataType: int
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: children_ages_json
+            columnDataType: varchar(2000)
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: pets_json
+            columnDataType: varchar(4000)
+        - dropColumn:
+            tableName: reservations
+            columnName: guest_count
+        - dropColumn:
+            tableName: room_types
+            columnName: base_capacity
+        - sql:
+            sql: |
+              alter table hotels
+              add constraint chk_hotels_child_ages
+              check (infant_max_age >= 0 and child_max_age >= infant_max_age);
+        - sql:
+            sql: |
+              alter table room_types
+              add constraint chk_room_types_occupancy
+              check (
+                max_adults > 0
+                and max_children >= 0
+                and max_infants >= 0
+                and max_total_guests >= max_adults
+                and max_pets >= 0
+              );
+        - sql:
+            sql: |
+              update hotels
+              set pets_allowed = true
+              where id in (1001, 1002, 1003);
+        - sql:
+            sql: |
+              update room_types
+              set max_children = 1,
+                  max_infants = 1,
+                  max_total_guests = 3,
+                  pets_allowed = true,
+                  max_pets = 1,
+                  allowed_pet_types_json = '["DOG","CAT"]',
+                  max_pet_weight_kg = 15.00,
+                  pet_fee_amount = 20.00,
+                  pet_fee_currency = 'EUR'
+              where id in (1102, 2101, 3102);
+        - sql:
+            sql: |
+              update room_types
+              set max_children = 2,
+                  max_infants = 2,
+                  max_total_guests = 4
+              where id in (1103, 2102, 3103);
+        - sql:
+            sql: |
+              update room_types
+              set max_children = 3,
+                  max_infants = 2,
+                  max_total_guests = 5,
+                  pets_allowed = true,
+                  max_pets = 1,
+                  allowed_pet_types_json = '["DOG","CAT"]',
+                  max_pet_weight_kg = 20.00,
+                  pet_fee_amount = 25.00,
+                  pet_fee_currency = 'EUR'
+              where id = 2103;

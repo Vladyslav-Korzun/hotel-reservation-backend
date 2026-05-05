@@ -4,13 +4,12 @@
 
 The project is built as a modular monolith with hexagonal architecture and an API-first workflow.
 
-For the current submission, the implemented scope is intentionally narrow:
+For the current project state, the implemented scope now includes:
 
-- one business area: `reservation`
-- one complete secured vertical slice
+- reservation creation, retrieval, cancellation, and listing
+- room availability search
+- staff stay operations: check-in and check-out
 - full flow from HTTP request to PostgreSQL persistence
-
-This is deliberate. The project is not trying to implement the full hotel system yet. It is trying to implement one slice cleanly and in a way that can be extended later.
 
 ## Architectural Formula
 
@@ -29,7 +28,7 @@ In this project that means:
 All runtime modules live under `application/`.
 
 - `application/domain`
-  Core business model and application use cases.
+  Domain module that contains both `com.hotel.management.domain.*` and `com.hotel.management.service.*`.
 - `application/api-spec`
   OpenAPI contract and generated interfaces / DTOs.
 - `application/inbound-controller-rest`
@@ -68,21 +67,23 @@ Important rules:
 
 Contains:
 
-- `Reservation`
-- `ReservationStatus`
-- `ReservationRepository`
-- `ReservationFacade`
-- `ReservationService`
-- request/result models for use cases
-- shared exceptions
-- shared ports such as `ClockPort` and `CurrentUserPort`
+- domain entities, repositories, and value objects under `com.hotel.management.domain.*`
+- use case orchestration and ports under `com.hotel.management.service.*`
+- service exceptions under `com.hotel.management.service.exception`
+- domain exceptions and value objects under `com.hotel.management.domain.shared.*`
 - security-neutral user abstraction `AuthenticatedUser`
+- facade interfaces:
+  - `ReservationFacade`
+  - `SearchAvailabilityFacade`
+  - `StaffReservationFacade`
 
-The domain/application layer currently owns:
+The domain/service layer currently owns:
 
 - reservation creation rules
 - reservation ownership checks
 - cancellation behavior
+- room availability calculation
+- stay operation orchestration
 - use case orchestration
 
 ### `application/api-spec`
@@ -113,7 +114,7 @@ Responsibilities:
 
 - receive HTTP requests
 - map DTO -> use case input
-- call the domain/application layer
+- call the domain/service layer
 - map result -> HTTP response
 
 Controllers stay thin by design.
@@ -149,21 +150,25 @@ It should not contain business logic.
 
 ## Current Reservation Slice
 
-The current implemented use case is:
+The current request flow is:
 
 1. authenticated user sends HTTP request
 2. REST controller accepts OpenAPI-generated DTO
 3. mapper converts DTO to use case input
-4. `ReservationService` executes the use case
-5. `ReservationRepository` port is used from the domain/application layer
-6. JPA adapter persists the reservation in PostgreSQL
+4. a facade interface is invoked from the REST layer
+5. service implementation orchestrates domain rules and ports
+6. JPA adapters persist and query PostgreSQL
 7. result is mapped back to an API response
 
 Implemented endpoints:
 
+- `GET /rooms/search`
 - `POST /reservations`
+- `GET /reservations`
 - `GET /reservations/{reservationId}`
 - `POST /reservations/{reservationId}/cancel`
+- `POST /staff/reservations/{reservationId}/check-in`
+- `POST /staff/reservations/{reservationId}/check-out`
 
 ## Domain Design Decisions
 
@@ -175,13 +180,13 @@ Current aggregate responsibilities:
 
 - validate creation invariants
 - ensure valid stay period
-- ensure valid `guestCount`
+- ensure valid `GuestCount`
 - enforce consistency between `status` and `cancelledAt`
 - expose domain behavior for cancellation
 
 ### Ownership and Security
 
-Ownership is checked in the application layer:
+Ownership is checked in the service layer:
 
 - normal user can access only own reservation
 - admin can access any reservation
@@ -231,9 +236,25 @@ Current setup:
 Security is split into two levels:
 
 1. endpoint-level access in Spring Security
-2. ownership/business access in the application layer
+2. ownership/business access in the service layer
 
 This is intentional. Endpoint access and business ownership are not the same concern.
+
+## Why `application/domain`
+
+The project keeps `domain.*` and `service.*` in one Maven module on purpose.
+
+Reasons:
+
+- it keeps the module graph simple for an academic modular monolith
+- it still keeps code separation explicit through packages
+- inbound and outbound adapters depend on one stable domain module
+- Spring, REST, and JPA stay outside this module
+
+Inside the module the rule is:
+
+- `com.hotel.management.domain.*` contains entities, value objects, repositories, and domain exceptions
+- `com.hotel.management.service.*` contains facades, services, ports, security abstractions, and service exceptions
 
 ## Why This Architecture Is Enough for the First Submission
 
@@ -245,9 +266,7 @@ The assignment asks for:
 - hexagonal architecture
 - OpenAPI documentation and generated interface
 
-The current project fulfills that with one strong vertical slice instead of many incomplete features.
-
-That is the right tradeoff for the first submission.
+The current project now goes beyond the original first slice, but still keeps the same architectural shape: modular monolith, API-first contract, clean core, inbound REST adapters, and outbound JPA adapters.
 
 ## Next Natural Extensions
 

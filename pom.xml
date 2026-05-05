@@ -10,7 +10,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.hotel.reservation</groupId>
+    <groupId>com.hotel.management</groupId>
     <artifactId>parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>

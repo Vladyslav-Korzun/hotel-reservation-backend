@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-extend-reservation-statuses
+      author: codex
+      changes:
+        - sql:
+            sql: |
+              alter table reservations
+              drop constraint if exists chk_reservations_status;
+        - sql:
+            sql: |
+              alter table reservations
+              add constraint chk_reservations_status
+              check (status in ('PENDING', 'CONFIRMED', 'CANCELLED', 'CHECKED_IN', 'CHECKED_OUT', 'NO_SHOW'));

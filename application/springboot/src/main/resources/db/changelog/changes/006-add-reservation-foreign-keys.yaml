@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-add-reservation-foreign-keys
+      author: codex
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: reservations
+            baseColumnNames: hotel_id
+            constraintName: fk_reservations_hotel
+            referencedTableName: hotels
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: reservations
+            baseColumnNames: room_type_id
+            constraintName: fk_reservations_room_type
+            referencedTableName: room_types
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: reservations
+            baseColumnNames: room_id
+            constraintName: fk_reservations_room
+            referencedTableName: rooms
+            referencedColumnNames: id
+        - createIndex:
+            tableName: reservations
+            indexName: idx_reservations_room_dates
+            columns:
+              - column:
+                  name: room_id
+              - column:
+                  name: check_in
+              - column:
+                  name: check_out

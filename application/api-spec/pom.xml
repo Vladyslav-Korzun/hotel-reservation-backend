@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.hotel.reservation</groupId>
+        <groupId>com.hotel.management</groupId>
         <artifactId>parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
@@ -56,8 +56,8 @@
                             <inputSpec>${project.basedir}/src/main/resources/openapi/hotel-reservation.yaml</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-boot</library>
-                            <apiPackage>com.hotel.reservation.api</apiPackage>
-                            <modelPackage>com.hotel.reservation.api.dto</modelPackage>
+                            <apiPackage>com.hotel.management.api</apiPackage>
+                            <modelPackage>com.hotel.management.api.dto</modelPackage>
                             <generateSupportingFiles>false</generateSupportingFiles>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>

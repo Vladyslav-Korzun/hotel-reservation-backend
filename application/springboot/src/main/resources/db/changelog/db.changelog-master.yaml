@@ -3,3 +3,17 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-reservations-table.yaml
   - include:
       file: db/changelog/changes/002-alter-reservations-for-cancel.yaml
+  - include:
+      file: db/changelog/changes/003-extend-reservation-statuses.yaml
+  - include:
+      file: db/changelog/changes/004-create-hotel-room-catalog.yaml
+  - include:
+      file: db/changelog/changes/005-add-reservation-room-assignment.yaml
+  - include:
+      file: db/changelog/changes/006-add-reservation-foreign-keys.yaml
+  - include:
+      file: db/changelog/changes/007-strengthen-reservation-room-constraints.yaml
+  - include:
+      file: db/changelog/changes/008-seed-demo-hotel-catalog.yaml
+  - include:
+      file: db/changelog/changes/009-add-accommodation-policies.yaml

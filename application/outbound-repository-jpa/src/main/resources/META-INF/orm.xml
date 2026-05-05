@@ -4,7 +4,7 @@
                  xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_1.xsd"
                  version="3.1">
 
-    <entity class="com.hotel.reservation.jpa.ReservationJpaEntity" access="FIELD">
+    <entity class="com.hotel.management.jpa.reservation.JpaReservationEntity" access="FIELD">
         <table name="reservations"/>
         <attributes>
             <id name="id">
@@ -12,6 +12,9 @@
             </id>
             <basic name="hotelId">
                 <column name="hotel_id" nullable="false"/>
+            </basic>
+            <basic name="roomId">
+                <column name="room_id" nullable="true"/>
             </basic>
             <basic name="roomTypeId">
                 <column name="room_type_id" nullable="false"/>
@@ -22,8 +25,14 @@
             <basic name="checkOut">
                 <column name="check_out" nullable="false"/>
             </basic>
-            <basic name="guestCount">
-                <column name="guest_count" nullable="false"/>
+            <basic name="adultsCount">
+                <column name="adults_count" nullable="false"/>
+            </basic>
+            <basic name="childrenAgesJson">
+                <column name="children_ages_json" nullable="false" length="2000"/>
+            </basic>
+            <basic name="petsJson">
+                <column name="pets_json" nullable="false" length="4000"/>
             </basic>
             <basic name="status">
                 <column name="status" nullable="false" length="32"/>
@@ -36,6 +45,126 @@
             </basic>
             <basic name="createdBy">
                 <column name="created_by" nullable="false" length="128"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.hotel.management.jpa.hotel.JpaHotelEntity" access="FIELD">
+        <table name="hotels"/>
+        <attributes>
+            <id name="id">
+                <column name="id" nullable="false"/>
+            </id>
+            <basic name="name">
+                <column name="name" nullable="false" length="160"/>
+            </basic>
+            <basic name="city">
+                <column name="city" nullable="false" length="120"/>
+            </basic>
+            <basic name="country">
+                <column name="country" nullable="false" length="120"/>
+            </basic>
+            <basic name="address">
+                <column name="address" nullable="false" length="255"/>
+            </basic>
+            <basic name="stars">
+                <column name="stars" nullable="false"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="true" length="1000"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" length="32"/>
+            </basic>
+            <basic name="childrenAllowed">
+                <column name="children_allowed" nullable="false"/>
+            </basic>
+            <basic name="petsAllowed">
+                <column name="pets_allowed" nullable="false"/>
+            </basic>
+            <basic name="infantMaxAge">
+                <column name="infant_max_age" nullable="false"/>
+            </basic>
+            <basic name="childMaxAge">
+                <column name="child_max_age" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.hotel.management.jpa.room.JpaRoomTypeEntity" access="FIELD">
+        <table name="room_types"/>
+        <attributes>
+            <id name="id">
+                <column name="id" nullable="false"/>
+            </id>
+            <basic name="hotelId">
+                <column name="hotel_id" nullable="false"/>
+            </basic>
+            <basic name="name">
+                <column name="name" nullable="false" length="120"/>
+            </basic>
+            <basic name="maxAdults">
+                <column name="max_adults" nullable="false"/>
+            </basic>
+            <basic name="maxChildren">
+                <column name="max_children" nullable="false"/>
+            </basic>
+            <basic name="maxInfants">
+                <column name="max_infants" nullable="false"/>
+            </basic>
+            <basic name="maxTotalGuests">
+                <column name="max_total_guests" nullable="false"/>
+            </basic>
+            <basic name="petsAllowed">
+                <column name="pets_allowed" nullable="false"/>
+            </basic>
+            <basic name="maxPets">
+                <column name="max_pets" nullable="false"/>
+            </basic>
+            <basic name="allowedPetTypesJson">
+                <column name="allowed_pet_types_json" nullable="false" length="2000"/>
+            </basic>
+            <basic name="maxPetWeightKg">
+                <column name="max_pet_weight_kg" nullable="true" precision="10" scale="2"/>
+            </basic>
+            <basic name="petFeeAmount">
+                <column name="pet_fee_amount" nullable="true" precision="12" scale="2"/>
+            </basic>
+            <basic name="petFeeCurrency">
+                <column name="pet_fee_currency" nullable="true" length="3"/>
+            </basic>
+            <basic name="basePriceAmount">
+                <column name="base_price_amount" nullable="false" precision="12" scale="2"/>
+            </basic>
+            <basic name="basePriceCurrency">
+                <column name="base_price_currency" nullable="false" length="3"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="true" length="1000"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.hotel.management.jpa.room.JpaRoomEntity" access="FIELD">
+        <table name="rooms"/>
+        <attributes>
+            <id name="id">
+                <column name="id" nullable="false"/>
+            </id>
+            <basic name="hotelId">
+                <column name="hotel_id" nullable="false"/>
+            </basic>
+            <basic name="number">
+                <column name="room_number" nullable="false" length="32"/>
+            </basic>
+            <basic name="roomTypeId">
+                <column name="room_type_id" nullable="false"/>
+            </basic>
+            <basic name="capacity">
+                <column name="capacity" nullable="false"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" length="32"/>
             </basic>
         </attributes>
     </entity>

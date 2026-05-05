@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-add-reservation-room-assignment
+      author: codex
+      changes:
+        - addColumn:
+            tableName: reservations
+            columns:
+              - column:
+                  name: room_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+        - createIndex:
+            tableName: reservations
+            indexName: idx_reservations_room_id
+            columns:
+              - column:
+                  name: room_id
