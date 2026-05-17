@@ -10,4 +10,6 @@ public interface ReservationRepository {
     Optional<Reservation> findById(String reservationId);
 
     List<Reservation> findAll(int limit);
+
+    List<Reservation> findByCreatedBy(String createdBy, int limit);
 }

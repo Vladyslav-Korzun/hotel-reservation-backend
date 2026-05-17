@@ -43,6 +43,19 @@ public final class Hotel {
         return status == HotelStatus.ACTIVE;
     }
 
+    public Hotel updateDetails(
+            String name,
+            String city,
+            String country,
+            String address,
+            int stars,
+            String description,
+            HotelStatus status,
+            HotelPolicy policy
+    ) {
+        return new Hotel(id, name, city, country, address, stars, description, status, policy);
+    }
+
     public Long id() {
         return id;
     }

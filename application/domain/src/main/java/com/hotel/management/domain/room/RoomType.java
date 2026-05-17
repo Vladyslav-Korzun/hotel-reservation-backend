@@ -31,6 +31,16 @@ public final class RoomType {
         this.description = description;
     }
 
+    public RoomType updateDetails(
+            String name,
+            OccupancyPolicy occupancyPolicy,
+            PetPolicy petPolicy,
+            Money basePrice,
+            String description
+    ) {
+        return new RoomType(id, hotelId, name, occupancyPolicy, petPolicy, basePrice, description);
+    }
+
     public Long id() {
         return id;
     }

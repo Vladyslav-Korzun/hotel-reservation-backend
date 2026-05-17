@@ -5,6 +5,8 @@ import java.util.Optional;
 
 public interface HotelRepository {
 
+    Hotel save(Hotel hotel);
+
     Optional<Hotel> findById(Long hotelId);
 
     List<Hotel> findAllActive();

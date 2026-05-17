@@ -24,4 +24,8 @@ public record StayPeriod(LocalDate checkIn, LocalDate checkOut) {
         }
         return checkIn.isBefore(other.checkOut) && checkOut.isAfter(other.checkIn);
     }
+
+    public int nights() {
+        return Math.toIntExact(java.time.temporal.ChronoUnit.DAYS.between(checkIn, checkOut));
+    }
 }

@@ -41,8 +41,49 @@ public final class Room {
         return withStatus(RoomStatus.CLEANING);
     }
 
+    public Room markAvailable() {
+        if (status == RoomStatus.OCCUPIED) {
+            throw new ValidationException("Occupied room cannot be marked as available");
+        }
+        if (status == RoomStatus.OUT_OF_SERVICE) {
+            throw new ValidationException("Out-of-service room cannot be marked as available directly");
+        }
+        return withStatus(RoomStatus.AVAILABLE);
+    }
+
+    public Room markCleaning() {
+        if (status == RoomStatus.OCCUPIED) {
+            throw new ValidationException("Occupied room cannot be moved to cleaning manually");
+        }
+        return withStatus(RoomStatus.CLEANING);
+    }
+
+    public Room markMaintenance() {
+        if (status == RoomStatus.OCCUPIED) {
+            throw new ValidationException("Occupied room cannot be moved to maintenance without emergency flow");
+        }
+        return withStatus(RoomStatus.MAINTENANCE);
+    }
+
+    public Room markOutOfService() {
+        if (status == RoomStatus.OCCUPIED) {
+            throw new ValidationException("Occupied room cannot be moved out of service without emergency flow");
+        }
+        return withStatus(RoomStatus.OUT_OF_SERVICE);
+    }
+
     public Room withStatus(RoomStatus nextStatus) {
         return new Room(id, hotelId, number, roomTypeId, capacity, require(nextStatus, "roomStatus is required"));
+    }
+
+    public Room updateDetails(Long hotelId, String number, Long roomTypeId, int capacity, RoomStatus status) {
+        if (this.status == RoomStatus.OCCUPIED) {
+            throw new ValidationException("Occupied room cannot be updated through room administration");
+        }
+        if (status == RoomStatus.OCCUPIED) {
+            throw new ValidationException("Room can become occupied only through check-in flow");
+        }
+        return new Room(id, hotelId, number, roomTypeId, capacity, status);
     }
 
     public Long id() {
