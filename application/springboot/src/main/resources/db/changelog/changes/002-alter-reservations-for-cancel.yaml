@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 002-alter-reservations-for-cancel
-      author: codex
+      author: Vladyslav Korzun
       changes:
         - addColumn:
             tableName: reservations

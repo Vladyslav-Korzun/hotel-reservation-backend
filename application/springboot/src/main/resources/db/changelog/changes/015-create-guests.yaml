@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: 015-create-guests
+      author: Vladyslav Korzun
+      changes:
+        - createTable:
+            tableName: guests
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_guests
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone
+                  type: varchar(64)
+        - addUniqueConstraint:
+            tableName: guests
+            columnNames: email
+            constraintName: uk_guests_email
+        - insert:
+            tableName: guests
+            columns:
+              - column: { name: id, valueNumeric: 10 }
+              - column: { name: first_name, value: Demo }
+              - column: { name: last_name, value: Guest }
+              - column: { name: email, value: demo.guest@example.com }
+              - column: { name: phone, value: "+421900000000" }
+        - addForeignKeyConstraint:
+            baseTableName: reservations
+            baseColumnNames: guest_id
+            constraintName: fk_reservations_guest
+            referencedTableName: guests
+            referencedColumnNames: id

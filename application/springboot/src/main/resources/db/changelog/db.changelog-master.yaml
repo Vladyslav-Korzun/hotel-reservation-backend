@@ -17,3 +17,19 @@ databaseChangeLog:
       file: db/changelog/changes/008-seed-demo-hotel-catalog.yaml
   - include:
       file: db/changelog/changes/009-add-accommodation-policies.yaml
+  - include:
+      file: db/changelog/changes/010-add-service-offerings-and-price-snapshot.yaml
+  - include:
+      file: db/changelog/changes/011-create-audit-log.yaml
+  - include:
+      file: db/changelog/changes/012-extend-hotel-statuses.yaml
+  - include:
+      file: db/changelog/changes/014-add-reservation-guest-id.yaml
+  - include:
+      file: db/changelog/changes/015-create-guests.yaml
+  - include:
+      file: db/changelog/changes/016-create-stays.yaml
+  - include:
+      file: db/changelog/changes/017-seed-ui-working-data.yaml
+  - include:
+      file: db/changelog/changes/018-add-adult-equivalent-age.yaml

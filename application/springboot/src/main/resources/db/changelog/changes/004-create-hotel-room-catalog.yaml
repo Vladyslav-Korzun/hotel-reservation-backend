@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 004-create-hotel-room-catalog
-      author: codex
+      author: Vladyslav Korzun
       changes:
         - createTable:
             tableName: hotels

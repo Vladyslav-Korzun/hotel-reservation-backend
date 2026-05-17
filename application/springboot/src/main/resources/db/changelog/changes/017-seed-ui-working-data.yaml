@@ -1,0 +1,220 @@
+databaseChangeLog:
+  - changeSet:
+      id: 017-seed-ui-working-data
+      author: Vladyslav Korzun
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              insert into hotels (
+                id, name, city, country, address, stars, description, status,
+                children_allowed, pets_allowed, infant_max_age, child_max_age
+              )
+              values
+                (4001, 'Trnava City Hotel', 'Trnava', 'Slovakia', 'Station Square 5', 4,
+                 'Practical city hotel for frontend smoke testing', 'ACTIVE', true, true, 2, 12),
+                (5001, 'Zilina Riverside Inn', 'Zilina', 'Slovakia', 'Riverside Avenue 9', 3,
+                 'Small regional hotel with simple rooms and services', 'ACTIVE', true, false, 2, 12),
+                (6001, 'Nitra Wellness Hotel', 'Nitra', 'Slovakia', 'Spa Road 14', 5,
+                 'Wellness hotel used for admin and catalog testing', 'ACTIVE', true, true, 2, 14)
+              on conflict (id) do update
+              set name = excluded.name,
+                  city = excluded.city,
+                  country = excluded.country,
+                  address = excluded.address,
+                  stars = excluded.stars,
+                  description = excluded.description,
+                  status = excluded.status,
+                  children_allowed = excluded.children_allowed,
+                  pets_allowed = excluded.pets_allowed,
+                  infant_max_age = excluded.infant_max_age,
+                  child_max_age = excluded.child_max_age;
+
+              insert into room_types (
+                id, hotel_id, name, base_price_amount, base_price_currency, description,
+                max_adults, max_children, max_infants, max_total_guests,
+                pets_allowed, max_pets, allowed_pet_types_json, max_pet_weight_kg,
+                pet_fee_amount, pet_fee_currency
+              )
+              values
+                (4101, 4001, 'Business Single', 74.00, 'EUR', 'Single room with desk', 1, 0, 0, 1, false, 0, '[]', null, null, null),
+                (4102, 4001, 'City Double', 112.00, 'EUR', 'Double room for short city stays', 2, 1, 1, 3, true, 1, '["DOG","CAT"]', 12.00, 18.00, 'EUR'),
+                (4103, 4001, 'Family Studio', 168.00, 'EUR', 'Studio room for families', 3, 2, 1, 5, true, 1, '["DOG","CAT"]', 18.00, 22.00, 'EUR'),
+                (5101, 5001, 'Compact Twin', 69.00, 'EUR', 'Twin room near the river', 2, 0, 0, 2, false, 0, '[]', null, null, null),
+                (5102, 5001, 'Comfort Double', 99.00, 'EUR', 'Comfort double room', 2, 1, 1, 3, false, 0, '[]', null, null, null),
+                (6101, 6001, 'Wellness Double', 149.00, 'EUR', 'Double room with wellness access', 2, 1, 1, 3, true, 1, '["DOG"]', 10.00, 25.00, 'EUR'),
+                (6102, 6001, 'Spa Suite', 249.00, 'EUR', 'Suite with living area', 2, 2, 1, 4, true, 1, '["DOG","CAT"]', 15.00, 30.00, 'EUR')
+              on conflict (id) do update
+              set hotel_id = excluded.hotel_id,
+                  name = excluded.name,
+                  base_price_amount = excluded.base_price_amount,
+                  base_price_currency = excluded.base_price_currency,
+                  description = excluded.description,
+                  max_adults = excluded.max_adults,
+                  max_children = excluded.max_children,
+                  max_infants = excluded.max_infants,
+                  max_total_guests = excluded.max_total_guests,
+                  pets_allowed = excluded.pets_allowed,
+                  max_pets = excluded.max_pets,
+                  allowed_pet_types_json = excluded.allowed_pet_types_json,
+                  max_pet_weight_kg = excluded.max_pet_weight_kg,
+                  pet_fee_amount = excluded.pet_fee_amount,
+                  pet_fee_currency = excluded.pet_fee_currency;
+
+              insert into rooms (id, hotel_id, room_number, room_type_id, capacity, status)
+              values
+                (4201, 4001, '101', 4101, 1, 'AVAILABLE'),
+                (4202, 4001, '102', 4101, 1, 'AVAILABLE'),
+                (4203, 4001, '201', 4102, 2, 'AVAILABLE'),
+                (4204, 4001, '202', 4102, 2, 'CLEANING'),
+                (4205, 4001, '301', 4103, 5, 'AVAILABLE'),
+                (5201, 5001, '101', 5101, 2, 'AVAILABLE'),
+                (5202, 5001, '102', 5101, 2, 'MAINTENANCE'),
+                (5203, 5001, '201', 5102, 3, 'AVAILABLE'),
+                (6201, 6001, '101', 6101, 3, 'AVAILABLE'),
+                (6202, 6001, '102', 6101, 3, 'AVAILABLE'),
+                (6203, 6001, '201', 6102, 4, 'AVAILABLE'),
+                (6204, 6001, '202', 6102, 4, 'OUT_OF_SERVICE')
+              on conflict (id) do update
+              set hotel_id = excluded.hotel_id,
+                  room_number = excluded.room_number,
+                  room_type_id = excluded.room_type_id,
+                  capacity = excluded.capacity,
+                  status = excluded.status;
+
+              insert into hotel_service_offerings (
+                id, hotel_id, code, name, description, price_amount, price_currency, active, availability_rule
+              )
+              values
+                (10002, 1001, 'PARKING', 'Parking', 'Garage parking spot', 12.00, 'EUR', true, 'Per night'),
+                (10003, 1001, 'AIRPORT_TRANSFER', 'Airport transfer', 'One-way airport transfer', 35.00, 'EUR', true, 'Per stay'),
+                (20001, 1002, 'BREAKFAST', 'Breakfast', 'Mountain breakfast buffet', 18.00, 'EUR', true, 'Per guest per night'),
+                (20002, 1002, 'SKI_STORAGE', 'Ski storage', 'Heated ski storage locker', 9.00, 'EUR', true, 'Per night'),
+                (30001, 1003, 'BREAKFAST', 'Breakfast', 'Business breakfast', 14.00, 'EUR', true, 'Per guest per night'),
+                (30002, 1003, 'LATE_CHECKOUT', 'Late checkout', 'Checkout until 16:00', 25.00, 'EUR', true, 'Per stay'),
+                (40001, 4001, 'BREAKFAST', 'Breakfast', 'City breakfast buffet', 13.00, 'EUR', true, 'Per guest per night'),
+                (40002, 4001, 'PARKING', 'Parking', 'Outdoor parking', 8.00, 'EUR', true, 'Per night'),
+                (50001, 5001, 'BREAKFAST', 'Breakfast', 'Continental breakfast', 11.00, 'EUR', true, 'Per guest per night'),
+                (60001, 6001, 'WELLNESS', 'Wellness access', 'Pool and sauna access', 29.00, 'EUR', true, 'Per guest per day'),
+                (60002, 6001, 'MASSAGE', 'Massage', 'Classic 30 minute massage', 45.00, 'EUR', true, 'Per service')
+              on conflict (id) do update
+              set hotel_id = excluded.hotel_id,
+                  code = excluded.code,
+                  name = excluded.name,
+                  description = excluded.description,
+                  price_amount = excluded.price_amount,
+                  price_currency = excluded.price_currency,
+                  active = excluded.active,
+                  availability_rule = excluded.availability_rule;
+
+              insert into guests (id, first_name, last_name, email, phone)
+              values
+                (11, 'Anna', 'Tester', 'anna.tester@example.com', '+421900000011'),
+                (12, 'Martin', 'Smoke', 'martin.smoke@example.com', '+421900000012'),
+                (13, 'Eva', 'Family', 'eva.family@example.com', '+421900000013')
+              on conflict (id) do update
+              set first_name = excluded.first_name,
+                  last_name = excluded.last_name,
+                  email = excluded.email,
+                  phone = excluded.phone;
+
+              update rooms
+              set status = case id
+                when 1202 then 'AVAILABLE'
+                when 1203 then 'AVAILABLE'
+                when 1204 then 'CLEANING'
+                when 2201 then 'OCCUPIED'
+                when 2202 then 'AVAILABLE'
+                when 2203 then 'AVAILABLE'
+                when 3202 then 'AVAILABLE'
+                else status
+              end
+              where id in (1202, 1203, 1204, 2201, 2202, 2203, 3202);
+
+              delete from reservation_service_items
+              where reservation_id in (
+                'demo-future-bratislava',
+                'demo-today-checkin',
+                'demo-poprad-family',
+                'demo-active-stay',
+                'demo-completed-stay',
+                'demo-cancelled',
+                'demo-no-show'
+              );
+
+              delete from stays
+              where reservation_id in (
+                'demo-active-stay',
+                'demo-completed-stay'
+              );
+
+              insert into reservations (
+                id, hotel_id, room_type_id, check_in, check_out, status, created_at, created_by,
+                cancelled_at, room_id, adults_count, children_ages_json, pets_json,
+                base_price_amount, base_price_currency, services_price_amount, services_price_currency,
+                discount_amount, discount_currency, final_price_amount, final_price_currency, guest_id
+              )
+              values
+                ('demo-future-bratislava', 1001, 1102, date '2026-06-15', date '2026-06-17', 'CONFIRMED',
+                 timestamp with time zone '2026-05-13 09:00:00+00', 'guest1', null, null, 2, '[]', '[]',
+                 258.00, 'EUR', 54.00, 'EUR', 0.00, 'EUR', 312.00, 'EUR', 11),
+                ('demo-today-checkin', 1001, 1101, date '2026-05-13', date '2026-05-14', 'CONFIRMED',
+                 timestamp with time zone '2026-05-13 09:15:00+00', 'guest1', null, null, 1, '[]', '[]',
+                 89.00, 'EUR', 0.00, 'EUR', 0.00, 'EUR', 89.00, 'EUR', 11),
+                ('demo-poprad-family', 1002, 2103, date '2026-07-20', date '2026-07-23', 'PENDING',
+                 timestamp with time zone '2026-05-13 09:30:00+00', 'guest1', null, null, 2, '[6,10]',
+                 '[{"type":"DOG","size":"SMALL","weightKg":5}]',
+                 867.00, 'EUR', 108.00, 'EUR', 0.00, 'EUR', 975.00, 'EUR', 13),
+                ('demo-active-stay', 1002, 2101, date '2026-05-12', date '2026-05-14', 'CHECKED_IN',
+                 timestamp with time zone '2026-05-12 08:20:00+00', 'staff1', null, 2201, 2, '[]', '[]',
+                 298.00, 'EUR', 72.00, 'EUR', 0.00, 'EUR', 370.00, 'EUR', 12),
+                ('demo-completed-stay', 1003, 3102, date '2026-05-09', date '2026-05-11', 'CHECKED_OUT',
+                 timestamp with time zone '2026-05-09 07:40:00+00', 'staff1', null, 3202, 2, '[]', '[]',
+                 238.00, 'EUR', 28.00, 'EUR', 0.00, 'EUR', 266.00, 'EUR', 12),
+                ('demo-cancelled', 4001, 4102, date '2026-06-22', date '2026-06-24', 'CANCELLED',
+                 timestamp with time zone '2026-05-13 10:00:00+00', 'guest1',
+                 timestamp with time zone '2026-05-13 10:20:00+00', null, 2, '[]', '[]',
+                 224.00, 'EUR', 0.00, 'EUR', 0.00, 'EUR', 224.00, 'EUR', 11),
+                ('demo-no-show', 5001, 5101, date '2026-05-10', date '2026-05-11', 'NO_SHOW',
+                 timestamp with time zone '2026-05-09 18:00:00+00', 'staff1', null, null, 1, '[]', '[]',
+                 69.00, 'EUR', 11.00, 'EUR', 0.00, 'EUR', 80.00, 'EUR', 12)
+              on conflict (id) do update
+              set hotel_id = excluded.hotel_id,
+                  room_type_id = excluded.room_type_id,
+                  check_in = excluded.check_in,
+                  check_out = excluded.check_out,
+                  status = excluded.status,
+                  created_at = excluded.created_at,
+                  created_by = excluded.created_by,
+                  cancelled_at = excluded.cancelled_at,
+                  room_id = excluded.room_id,
+                  adults_count = excluded.adults_count,
+                  children_ages_json = excluded.children_ages_json,
+                  pets_json = excluded.pets_json,
+                  base_price_amount = excluded.base_price_amount,
+                  base_price_currency = excluded.base_price_currency,
+                  services_price_amount = excluded.services_price_amount,
+                  services_price_currency = excluded.services_price_currency,
+                  discount_amount = excluded.discount_amount,
+                  discount_currency = excluded.discount_currency,
+                  final_price_amount = excluded.final_price_amount,
+                  final_price_currency = excluded.final_price_currency,
+                  guest_id = excluded.guest_id;
+
+              insert into reservation_service_items (
+                reservation_id, service_offering_id, service_name_snapshot, price_amount, price_currency, quantity
+              )
+              values
+                ('demo-future-bratislava', 10001, 'Breakfast', 15.00, 'EUR', 2),
+                ('demo-future-bratislava', 10002, 'Parking', 12.00, 'EUR', 2),
+                ('demo-poprad-family', 20001, 'Breakfast', 18.00, 'EUR', 6),
+                ('demo-active-stay', 20001, 'Breakfast', 18.00, 'EUR', 4),
+                ('demo-completed-stay', 30001, 'Breakfast', 14.00, 'EUR', 2),
+                ('demo-no-show', 50001, 'Breakfast', 11.00, 'EUR', 1);
+
+              insert into stays (reservation_id, room_id, checked_in_at, checked_out_at, status)
+              values
+                ('demo-active-stay', 2201, timestamp with time zone '2026-05-12 13:00:00+00', null, 'ACTIVE'),
+                ('demo-completed-stay', 3202, timestamp with time zone '2026-05-09 14:00:00+00',
+                 timestamp with time zone '2026-05-11 09:30:00+00', 'COMPLETED');

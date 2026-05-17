@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 006-add-reservation-foreign-keys
-      author: codex
+      author: Vladyslav Korzun
       changes:
         - addForeignKeyConstraint:
             baseTableName: reservations

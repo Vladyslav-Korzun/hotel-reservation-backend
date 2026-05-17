@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-extend-hotel-statuses
+      author: Vladyslav Korzun
+      changes:
+        - sql:
+            sql: |
+              alter table hotels
+              drop constraint if exists chk_hotels_status;
+        - sql:
+            sql: |
+              alter table hotels
+              add constraint chk_hotels_status
+              check (status in ('ACTIVE', 'INACTIVE', 'UNDER_MAINTENANCE'));

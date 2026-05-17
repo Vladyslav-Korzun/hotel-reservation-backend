@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-create-audit-log
+      author: Vladyslav Korzun
+      changes:
+        - createTable:
+            tableName: audit_log
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: actor_id
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: actor_role
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: action_type
+                  type: varchar(80)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_type
+                  type: varchar(80)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_id
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: details
+                  type: varchar(2000)
+        - createIndex:
+            tableName: audit_log
+            indexName: idx_audit_log_entity
+            columns:
+              - column:
+                  name: entity_type
+              - column:
+                  name: entity_id
+        - createIndex:
+            tableName: audit_log
+            indexName: idx_audit_log_actor
+            columns:
+              - column:
+                  name: actor_id
+        - createIndex:
+            tableName: audit_log
+            indexName: idx_audit_log_created_at
+            columns:
+              - column:
+                  name: created_at

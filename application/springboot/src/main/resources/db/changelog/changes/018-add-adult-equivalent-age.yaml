@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 018-add-adult-equivalent-age
+      author: Vladyslav Korzun
+      changes:
+        - addColumn:
+            tableName: hotels
+            columns:
+              - column:
+                  name: adult_equivalent_age
+                  type: int
+                  defaultValueNumeric: 13
+        - sql:
+            sql: |
+              update hotels
+              set child_max_age = 12
+              where child_max_age < 12;
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: adult_equivalent_age
+            columnDataType: int
+        - sql:
+            sql: |
+              alter table hotels
+              add constraint chk_hotels_adult_equivalent_age
+              check (
+                adult_equivalent_age > infant_max_age
+                and adult_equivalent_age < 18
+              );

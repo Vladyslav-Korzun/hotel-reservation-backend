@@ -1,0 +1,236 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-add-service-offerings-and-price-snapshot
+      author: Vladyslav Korzun
+      changes:
+        - addColumn:
+            tableName: reservations
+            columns:
+              - column:
+                  name: base_price_amount
+                  type: numeric(12, 2)
+                  defaultValueNumeric: 0
+              - column:
+                  name: base_price_currency
+                  type: varchar(3)
+                  defaultValue: EUR
+              - column:
+                  name: services_price_amount
+                  type: numeric(12, 2)
+                  defaultValueNumeric: 0
+              - column:
+                  name: services_price_currency
+                  type: varchar(3)
+                  defaultValue: EUR
+              - column:
+                  name: discount_amount
+                  type: numeric(12, 2)
+                  defaultValueNumeric: 0
+              - column:
+                  name: discount_currency
+                  type: varchar(3)
+                  defaultValue: EUR
+              - column:
+                  name: final_price_amount
+                  type: numeric(12, 2)
+                  defaultValueNumeric: 0
+              - column:
+                  name: final_price_currency
+                  type: varchar(3)
+                  defaultValue: EUR
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: base_price_amount
+            columnDataType: numeric(12, 2)
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: base_price_currency
+            columnDataType: varchar(3)
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: services_price_amount
+            columnDataType: numeric(12, 2)
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: services_price_currency
+            columnDataType: varchar(3)
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: discount_amount
+            columnDataType: numeric(12, 2)
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: discount_currency
+            columnDataType: varchar(3)
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: final_price_amount
+            columnDataType: numeric(12, 2)
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: final_price_currency
+            columnDataType: varchar(3)
+        - createTable:
+            tableName: hotel_service_offerings
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: hotel_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(1000)
+              - column:
+                  name: price_amount
+                  type: numeric(12, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price_currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: availability_rule
+                  type: varchar(255)
+        - addUniqueConstraint:
+            tableName: hotel_service_offerings
+            columnNames: hotel_id, code
+            constraintName: uk_hotel_service_offerings_hotel_code
+        - addForeignKeyConstraint:
+            baseTableName: hotel_service_offerings
+            baseColumnNames: hotel_id
+            referencedTableName: hotels
+            referencedColumnNames: id
+            constraintName: fk_hotel_service_offerings_hotel
+        - createIndex:
+            tableName: hotel_service_offerings
+            indexName: idx_hotel_service_offerings_hotel_active
+            columns:
+              - column:
+                  name: hotel_id
+              - column:
+                  name: active
+        - createTable:
+            tableName: reservation_service_items
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: reservation_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_offering_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_name_snapshot
+                  type: varchar(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price_amount
+                  type: numeric(12, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price_currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity
+                  type: int
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: reservation_service_items
+            baseColumnNames: reservation_id
+            referencedTableName: reservations
+            referencedColumnNames: id
+            constraintName: fk_reservation_service_items_reservation
+        - addForeignKeyConstraint:
+            baseTableName: reservation_service_items
+            baseColumnNames: service_offering_id
+            referencedTableName: hotel_service_offerings
+            referencedColumnNames: id
+            constraintName: fk_reservation_service_items_service_offering
+        - createIndex:
+            tableName: reservation_service_items
+            indexName: idx_reservation_service_items_reservation
+            columns:
+              - column:
+                  name: reservation_id
+        - sql:
+            sql: |
+              alter table reservations
+              add constraint chk_reservations_price_snapshot
+              check (
+                base_price_amount >= 0
+                and services_price_amount >= 0
+                and discount_amount >= 0
+                and final_price_amount >= 0
+              );
+        - sql:
+            sql: |
+              alter table reservation_service_items
+              add constraint chk_reservation_service_items_quantity
+              check (quantity > 0 and price_amount >= 0);
+        - insert:
+            tableName: hotel_service_offerings
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: 10001
+              - column:
+                  name: hotel_id
+                  valueNumeric: 1001
+              - column:
+                  name: code
+                  value: BREAKFAST
+              - column:
+                  name: name
+                  value: Breakfast
+              - column:
+                  name: description
+                  value: Buffet breakfast
+              - column:
+                  name: price_amount
+                  valueNumeric: 15.00
+              - column:
+                  name: price_currency
+                  value: EUR
+              - column:
+                  name: active
+                  valueBoolean: true

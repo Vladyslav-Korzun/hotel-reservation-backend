@@ -1,0 +1,79 @@
+databaseChangeLog:
+  - changeSet:
+      id: 016-create-stays
+      author: Vladyslav Korzun
+      changes:
+        - createTable:
+            tableName: stays
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_stays
+                    nullable: false
+              - column:
+                  name: reservation_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: room_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: checked_in_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: checked_out_at
+                  type: timestamp with time zone
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: stays
+            baseColumnNames: reservation_id
+            constraintName: fk_stays_reservation
+            referencedTableName: reservations
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: stays
+            baseColumnNames: room_id
+            constraintName: fk_stays_room
+            referencedTableName: rooms
+            referencedColumnNames: id
+        - createIndex:
+            tableName: stays
+            indexName: idx_stays_reservation
+            columns:
+              - column:
+                  name: reservation_id
+        - createIndex:
+            tableName: stays
+            indexName: idx_stays_room_status
+            columns:
+              - column:
+                  name: room_id
+              - column:
+                  name: status
+        - sql:
+            sql: |
+              alter table stays
+                add constraint chk_stays_status
+                check (status in ('ACTIVE', 'COMPLETED'));
+              alter table stays
+                add constraint chk_stays_checkout
+                check (
+                  (status = 'ACTIVE' and checked_out_at is null)
+                  or (status = 'COMPLETED' and checked_out_at is not null and checked_out_at >= checked_in_at)
+                );
+              create unique index uk_stays_active_reservation
+                on stays (reservation_id)
+                where status = 'ACTIVE';

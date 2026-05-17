@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 005-add-reservation-room-assignment
-      author: codex
+      author: Vladyslav Korzun
       changes:
         - addColumn:
             tableName: reservations

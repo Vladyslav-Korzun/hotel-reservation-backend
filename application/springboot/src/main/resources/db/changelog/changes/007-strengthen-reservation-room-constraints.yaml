@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 007-strengthen-reservation-room-constraints
-      author: codex
+      author: Vladyslav Korzun
       changes:
         - addUniqueConstraint:
             tableName: rooms

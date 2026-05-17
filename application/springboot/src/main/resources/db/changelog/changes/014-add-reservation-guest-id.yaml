@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 014-add-reservation-guest-id
+      author: Vladyslav Korzun
+      changes:
+        - addColumn:
+            tableName: reservations
+            columns:
+              - column:
+                  name: guest_id
+                  type: bigint
+        - update:
+            tableName: reservations
+            columns:
+              - column:
+                  name: guest_id
+                  valueNumeric: 10
+            where: guest_id IS NULL
+        - addNotNullConstraint:
+            tableName: reservations
+            columnName: guest_id
+            columnDataType: bigint
+        - createIndex:
+            tableName: reservations
+            indexName: idx_reservations_guest_id
+            columns:
+              - column:
+                  name: guest_id
