@@ -20,13 +20,38 @@ public class AccommodationPolicyValidator {
         OccupancyPolicy occupancyPolicy = roomType.occupancyPolicy();
         PetPolicy petPolicy = roomType.petPolicy();
 
+        validateChildrenPolicy(hotelPolicy, accommodationParty);
+        GuestAgeClassification guestAges = classifyGuestAges(hotelPolicy, accommodationParty);
+        validateOccupancy(occupancyPolicy, accommodationParty, guestAges);
+        validatePets(hotelPolicy, petPolicy, accommodationParty);
+    }
+
+    public int chargeableGuestCount(HotelPolicy hotelPolicy, AccommodationParty accommodationParty) {
+        require(hotelPolicy, "hotelPolicy is required");
+        require(accommodationParty, "accommodationParty is required");
+
+        GuestAgeClassification guestAges = classifyGuestAges(hotelPolicy, accommodationParty);
+        return accommodationParty.guests().adults() + guestAges.children() + guestAges.adultEquivalentMinors();
+    }
+
+    private void validateChildrenPolicy(HotelPolicy hotelPolicy, AccommodationParty accommodationParty) {
         if (!hotelPolicy.childrenAllowed() && !accommodationParty.guests().childrenAges().isEmpty()) {
             throw new ValidationException("Children are not allowed in this hotel");
         }
+    }
 
+    private GuestAgeClassification classifyGuestAges(HotelPolicy hotelPolicy, AccommodationParty accommodationParty) {
         int infants = 0;
         int children = 0;
+        int adultEquivalentMinors = 0;
         for (Integer age : accommodationParty.guests().childrenAges()) {
+            if (!hotelPolicy.isSupportedMinorAge(age)) {
+                throw new ValidationException("Child age " + age + " is outside supported minor range");
+            }
+            if (hotelPolicy.isAdultEquivalentMinor(age)) {
+                adultEquivalentMinors++;
+                continue;
+            }
             if (hotelPolicy.isInfant(age)) {
                 infants++;
                 continue;
@@ -38,35 +63,27 @@ public class AccommodationPolicyValidator {
             throw new ValidationException("Child age " + age + " is outside supported child range");
         }
 
-        if (accommodationParty.guests().adults() > occupancyPolicy.maxAdults()) {
-            throw new ValidationException("adults exceed room type limit");
-        }
-        if (children > occupancyPolicy.maxChildren()) {
-            throw new ValidationException("children exceed room type limit");
-        }
-        if (infants > occupancyPolicy.maxInfants()) {
-            throw new ValidationException("infants exceed room type limit");
-        }
-        if (accommodationParty.guests().adults() + children > occupancyPolicy.maxTotalGuests()) {
-            throw new ValidationException("guest occupancy exceeds room type limit");
-        }
-
-        validatePets(hotelPolicy, petPolicy, accommodationParty);
+        return new GuestAgeClassification(children, infants, adultEquivalentMinors);
     }
 
-    public int chargeableGuestCount(HotelPolicy hotelPolicy, AccommodationParty accommodationParty) {
-        require(hotelPolicy, "hotelPolicy is required");
-        require(accommodationParty, "accommodationParty is required");
-
-        int children = 0;
-        for (Integer age : accommodationParty.guests().childrenAges()) {
-            if (hotelPolicy.isChild(age)) {
-                children++;
-            } else if (!hotelPolicy.isInfant(age)) {
-                throw new ValidationException("Child age " + age + " is outside supported child range");
-            }
+    private void validateOccupancy(
+            OccupancyPolicy occupancyPolicy,
+            AccommodationParty accommodationParty,
+            GuestAgeClassification guestAges
+    ) {
+        int effectiveAdults = accommodationParty.guests().adults() + guestAges.adultEquivalentMinors();
+        if (effectiveAdults > occupancyPolicy.maxAdults()) {
+            throw new ValidationException("adults exceed room type limit");
         }
-        return accommodationParty.guests().adults() + children;
+        if (guestAges.children() > occupancyPolicy.maxChildren()) {
+            throw new ValidationException("children exceed room type limit");
+        }
+        if (guestAges.infants() > occupancyPolicy.maxInfants()) {
+            throw new ValidationException("infants exceed room type limit");
+        }
+        if (effectiveAdults + guestAges.children() > occupancyPolicy.maxTotalGuests()) {
+            throw new ValidationException("guest occupancy exceeds room type limit");
+        }
     }
 
     private void validatePets(HotelPolicy hotelPolicy, PetPolicy petPolicy, AccommodationParty accommodationParty) {
@@ -97,5 +114,8 @@ public class AccommodationPolicyValidator {
             throw new ValidationException(message);
         }
         return value;
+    }
+
+    private record GuestAgeClassification(int children, int infants, int adultEquivalentMinors) {
     }
 }

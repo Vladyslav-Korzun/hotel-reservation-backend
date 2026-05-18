@@ -1,135 +1,167 @@
 package com.hotel.management.service.reservation;
 
+import com.hotel.management.domain.audit.AuditActionType;
+import com.hotel.management.domain.audit.AuditEntityType;
+import com.hotel.management.domain.audit.AuditLogEntry;
+import com.hotel.management.domain.guest.Guest;
+import com.hotel.management.domain.guest.GuestRepository;
+import com.hotel.management.domain.reservation.Reservation;
+import com.hotel.management.domain.reservation.ReservationFactory;
+import com.hotel.management.domain.reservation.ReservationRepository;
+import com.hotel.management.domain.shared.exception.NotFoundException;
+import com.hotel.management.domain.shared.exception.ValidationException;
+import com.hotel.management.domain.shared.value.EmailAddress;
+import com.hotel.management.domain.shared.value.StayPeriod;
 import com.hotel.management.service.exception.ForbiddenException;
+import com.hotel.management.service.port.AuditLogPort;
 import com.hotel.management.service.port.ClockPort;
-import com.hotel.management.service.accommodation.AccommodationPolicyValidator;
+import com.hotel.management.service.port.NotificationPort;
+import com.hotel.management.service.predicate.reservation.IsAdminPredicate;
+import com.hotel.management.service.predicate.reservation.IsGuestPredicate;
+import com.hotel.management.service.predicate.reservation.IsReservationOwnerPredicate;
+import com.hotel.management.service.predicate.reservation.IsStaffOrAdminPredicate;
 import com.hotel.management.service.reservation.locking.ReservationLockPort;
 import com.hotel.management.service.security.AuthenticatedUser;
 import com.hotel.management.service.security.CurrentUserPort;
-import com.hotel.management.domain.hotel.HotelRepository;
-import com.hotel.management.domain.reservation.Reservation;
-import com.hotel.management.domain.reservation.ReservationRepository;
-import com.hotel.management.domain.room.RoomType;
-import com.hotel.management.domain.room.RoomTypeRepository;
-import com.hotel.management.domain.shared.exception.NotFoundException;
-import com.hotel.management.domain.shared.exception.ValidationException;
-import com.hotel.management.domain.shared.value.StayPeriod;
 
-import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class ReservationService implements ReservationFacade {
 
     private final ReservationRepository reservationRepository;
-    private final ReservationQueryPort reservationQueryPort;
+    private final GuestRepository guestRepository;
     private final ReservationLockPort reservationLockPort;
-    private final HotelRepository hotelRepository;
-    private final RoomInventoryPort roomInventoryPort;
-    private final RoomTypeRepository roomTypeRepository;
     private final ClockPort clockPort;
     private final CurrentUserPort currentUserPort;
-    private final AccommodationPolicyValidator accommodationPolicyValidator;
+    private final ReservationCreationValidator reservationCreationValidator;
+    private final ReservationFactory reservationFactory;
+    private final ReservationPricingCalculator reservationPricingCalculator;
+    private final ReservationResultMapper reservationResultMapper;
+    private final AuditLogPort auditLogPort;
+    private final NotificationPort notificationPort;
 
     public ReservationService(
             ReservationRepository reservationRepository,
-            ReservationQueryPort reservationQueryPort,
+            GuestRepository guestRepository,
             ReservationLockPort reservationLockPort,
-            HotelRepository hotelRepository,
-            RoomInventoryPort roomInventoryPort,
-            RoomTypeRepository roomTypeRepository,
             ClockPort clockPort,
             CurrentUserPort currentUserPort,
-            AccommodationPolicyValidator accommodationPolicyValidator
+            ReservationCreationValidator reservationCreationValidator,
+            ReservationFactory reservationFactory,
+            ReservationPricingCalculator reservationPricingCalculator,
+            ReservationResultMapper reservationResultMapper,
+            AuditLogPort auditLogPort,
+            NotificationPort notificationPort
     ) {
         this.reservationRepository = reservationRepository;
-        this.reservationQueryPort = reservationQueryPort;
+        this.guestRepository = guestRepository;
         this.reservationLockPort = reservationLockPort;
-        this.hotelRepository = hotelRepository;
-        this.roomInventoryPort = roomInventoryPort;
-        this.roomTypeRepository = roomTypeRepository;
         this.clockPort = clockPort;
         this.currentUserPort = currentUserPort;
-        this.accommodationPolicyValidator = accommodationPolicyValidator;
+        this.reservationCreationValidator = reservationCreationValidator;
+        this.reservationFactory = reservationFactory;
+        this.reservationPricingCalculator = reservationPricingCalculator;
+        this.reservationResultMapper = reservationResultMapper;
+        this.auditLogPort = auditLogPort;
+        this.notificationPort = notificationPort;
     }
 
     @Override
     public CreateReservationResult createReservation(CreateReservationCommand command) {
         requireCommand(command);
-        var stayPeriod = new StayPeriod(command.checkIn(), command.checkOut());
-        assertStayPeriodIsNotInPast(stayPeriod);
-        assertRoomTypeAvailable(command, stayPeriod);
-
         var currentUser = currentUserPort.getCurrentUser();
-        var reservation = Reservation.createPending(
-                UUID.randomUUID().toString(),
+        Long guestId = resolveSelfBookingGuestId(currentUser);
+        return createResolvedReservation(ResolvedCreateReservationCommand.from(command, guestId), currentUser);
+    }
+
+    @Override
+    public CreateReservationResult createPublicReservation(CreatePublicReservationCommand command) {
+        requireCommand(command);
+        Guest guest = findOrCreateGuest(command.guestContact());
+        var actor = new AuthenticatedUser("public:" + guest.id(), Set.of("PUBLIC"), guest.id());
+        return createResolvedReservation(
+                ResolvedCreateReservationCommand.from(command.toReservationCommand(), guest.id()),
+                actor
+        );
+    }
+
+    @Override
+    public CreateReservationResult createStaffReservation(CreateStaffReservationCommand command) {
+        requireCommand(command);
+        var currentUser = currentUserPort.getCurrentUser();
+        assertCanCreateStaffReservation(currentUser);
+        Long guestId = resolveStaffBookingGuestId(command);
+        return createResolvedReservation(
+                ResolvedCreateReservationCommand.from(command.toReservationCommand(), guestId),
+                currentUser
+        );
+    }
+
+    private CreateReservationResult createResolvedReservation(
+            ResolvedCreateReservationCommand command,
+            AuthenticatedUser actor
+    ) {
+        ReservationCreationDetails creationDetails = reservationCreationValidator.validate(command);
+        String reservationId = UUID.randomUUID().toString();
+        var serviceItems = reservationFactory.createServiceItems(
+                reservationId,
+                creationDetails.serviceOfferings(),
+                creationDetails.selections()
+        );
+        var stayPeriod = new StayPeriod(command.checkIn(), command.checkOut());
+        var priceSnapshot = reservationPricingCalculator.calculate(
+                creationDetails.roomType(),
+                stayPeriod,
+                serviceItems
+        );
+        var reservation = reservationFactory.createPendingReservation(
+                reservationId,
                 command.hotelId(),
+                command.guestId(),
                 command.roomTypeId(),
                 command.checkIn(),
                 command.checkOut(),
                 command.accommodationParty(),
+                resolveContactEmail(command, creationDetails),
+                resolveContactPhone(command, creationDetails),
+                command.specialRequests(),
+                priceSnapshot,
+                serviceItems,
                 clockPort.now(),
-                currentUser.userId()
+                actor.userId()
         );
 
-        var savedReservation = reservationRepository.save(reservation);
-        return new CreateReservationResult(
+        Reservation savedReservation = reservationRepository.save(reservation);
+        auditLogPort.append(auditEntry(
+                actor,
+                AuditActionType.CREATE_RESERVATION,
                 savedReservation.id(),
-                savedReservation.hotelId(),
-                savedReservation.roomId(),
-                savedReservation.roomTypeId(),
-                savedReservation.checkIn(),
-                savedReservation.checkOut(),
-                savedReservation.accommodationParty().guests().adults(),
-                savedReservation.accommodationParty().guests().childrenAges(),
-                savedReservation.accommodationParty().pets(),
-                savedReservation.status().name(),
-                savedReservation.createdAt(),
-                savedReservation.cancelledAt(),
-                savedReservation.createdBy()
-        );
-    }
-
-    private void assertRoomTypeAvailable(CreateReservationCommand command, StayPeriod stayPeriod) {
-        var hotel = hotelRepository.findById(command.hotelId())
-                .orElseThrow(() -> new NotFoundException("Hotel not found: " + command.hotelId()));
-        if (!hotel.isActive()) {
-            throw new ValidationException("Hotel is not active");
-        }
-
-        RoomType roomType = roomTypeRepository.findByHotelIds(List.of(command.hotelId())).stream()
-                .filter(candidate -> candidate.id().equals(command.roomTypeId()))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Room type not found: " + command.roomTypeId()));
-
-        accommodationPolicyValidator.validate(hotel, roomType, command.accommodationParty());
-
-        long bookableRooms = roomInventoryPort.countBookableRoomsForReservation(
-                        command.hotelId(),
-                        command.roomTypeId()
-                );
-        if (bookableRooms == 0) {
-            throw new ValidationException("No rooms are available for this room type");
-        }
-
-        long activeReservations = reservationQueryPort.findActiveOverlapping(List.of(command.hotelId()), stayPeriod).stream()
-                .filter(reservation -> reservation.roomTypeId().equals(command.roomTypeId()))
-                .count();
-        if (activeReservations >= bookableRooms) {
-            throw new ValidationException("No rooms are available for the selected period");
-        }
+                "Reservation created"
+        ));
+        notificationPort.reservationCreated(savedReservation.id());
+        return reservationResultMapper.toCreateResult(savedReservation);
     }
 
     @Override
     public List<GetReservationResult> listReservations(int limit) {
         var currentUser = currentUserPort.getCurrentUser();
         assertCanList(currentUser);
-        if (limit <= 0 || limit > 200) {
-            throw new ValidationException("limit must be between 1 and 200");
-        }
+        validateLimit(limit);
 
         return reservationRepository.findAll(limit).stream()
-                .map(this::toResult)
+                .map(reservationResultMapper::toGetResult)
+                .toList();
+    }
+
+    @Override
+    public List<GetReservationResult> listMyReservations(int limit) {
+        var currentUser = currentUserPort.getCurrentUser();
+        validateLimit(limit);
+
+        return reservationRepository.findByCreatedBy(currentUser.userId(), limit).stream()
+                .map(reservationResultMapper::toGetResult)
                 .toList();
     }
 
@@ -138,7 +170,7 @@ public class ReservationService implements ReservationFacade {
         var currentUser = currentUserPort.getCurrentUser();
         var reservation = loadReservation(reservationId);
         assertCanView(reservation, currentUser);
-        return toResult(reservation);
+        return reservationResultMapper.toGetResult(reservation);
     }
 
     @Override
@@ -146,7 +178,14 @@ public class ReservationService implements ReservationFacade {
         var currentUser = currentUserPort.getCurrentUser();
         var reservation = loadReservationForChange(reservationId);
         assertCanManage(reservation, currentUser);
-        reservationRepository.save(reservation.cancel(clockPort.now()));
+        Reservation cancelledReservation = reservationRepository.save(reservation.cancel(clockPort.now()));
+        auditLogPort.append(auditEntry(
+                currentUser,
+                AuditActionType.CANCEL_RESERVATION,
+                cancelledReservation.id(),
+                "Reservation cancelled"
+        ));
+        notificationPort.reservationCancelled(cancelledReservation.id());
     }
 
     private Reservation loadReservation(String reservationId) {
@@ -168,56 +207,122 @@ public class ReservationService implements ReservationFacade {
     }
 
     private void assertCanView(Reservation reservation, AuthenticatedUser currentUser) {
-        if (currentUser.isAdmin() || currentUser.isStaff()) {
+        if (IsStaffOrAdminPredicate.INSTANCE.test(currentUser)) {
             return;
         }
-        if (!reservation.belongsTo(currentUser.userId())) {
+        if (!IsReservationOwnerPredicate.INSTANCE.test(reservation, currentUser)) {
             throw new ForbiddenException("Access to this reservation is denied");
         }
     }
 
     private void assertCanList(AuthenticatedUser currentUser) {
-        if (currentUser.isAdmin() || currentUser.isStaff()) {
+        if (IsStaffOrAdminPredicate.INSTANCE.test(currentUser)) {
             return;
         }
 
         throw new ForbiddenException("Access to all reservations is denied");
     }
 
-    private void assertCanManage(Reservation reservation, AuthenticatedUser currentUser) {
-        if (!currentUser.isAdmin() && !reservation.belongsTo(currentUser.userId())) {
-            throw new ForbiddenException("Access to this reservation is denied");
+    private Long resolveSelfBookingGuestId(AuthenticatedUser currentUser) {
+        if (!IsGuestPredicate.INSTANCE.test(currentUser)) {
+            throw new ForbiddenException("Only guest can create reservation");
         }
+
+        if (currentUser.guestId() == null) {
+            throw new ForbiddenException("guestId claim is required to create reservation");
+        }
+
+        return currentUser.guestId();
     }
 
-    private void requireCommand(CreateReservationCommand command) {
+    private void assertCanCreateStaffReservation(AuthenticatedUser currentUser) {
+        if (IsStaffOrAdminPredicate.INSTANCE.test(currentUser)) {
+            return;
+        }
+        throw new ForbiddenException("Only staff or admin can create staff reservation");
+    }
+
+    private Long resolveStaffBookingGuestId(CreateStaffReservationCommand command) {
+        if (command.guestId() != null) {
+            return command.guestId();
+        }
+        return findOrCreateGuest(command.guestContact()).id();
+    }
+
+    private Guest findOrCreateGuest(GuestContactCommand guestContact) {
+        if (guestContact == null) {
+            throw new ValidationException("guest contact is required");
+        }
+
+        return guestRepository.findByEmail(guestContact.emailAddress())
+                .orElseGet(() -> guestRepository.save(new Guest(
+                        null,
+                        guestContact.firstName(),
+                        guestContact.lastName(),
+                        guestContact.emailAddress(),
+                        guestContact.phone()
+                )));
+    }
+
+    private EmailAddress resolveContactEmail(
+            ResolvedCreateReservationCommand command,
+            ReservationCreationDetails creationDetails
+    ) {
+        String value = trimToNull(command.contactEmail());
+        if (value == null) {
+            return creationDetails.guest().email();
+        }
+        return new EmailAddress(value);
+    }
+
+    private String resolveContactPhone(
+            ResolvedCreateReservationCommand command,
+            ReservationCreationDetails creationDetails
+    ) {
+        String value = trimToNull(command.contactPhone());
+        return value == null ? creationDetails.guest().phone() : value;
+    }
+
+    private void requireCommand(Object command) {
         if (command == null) {
             throw new ValidationException("reservation command is required");
         }
     }
 
-    private void assertStayPeriodIsNotInPast(StayPeriod stayPeriod) {
-        var today = clockPort.now().atZone(ZoneOffset.UTC).toLocalDate();
-        if (stayPeriod.checkIn().isBefore(today)) {
-            throw new ValidationException("checkIn must not be in the past");
+    private void validateLimit(int limit) {
+        if (limit <= 0 || limit > 200) {
+            throw new ValidationException("limit must be between 1 and 200");
         }
     }
 
-    private GetReservationResult toResult(Reservation reservation) {
-        return new GetReservationResult(
-                reservation.id(),
-                reservation.hotelId(),
-                reservation.roomId(),
-                reservation.roomTypeId(),
-                reservation.checkIn(),
-                reservation.checkOut(),
-                reservation.accommodationParty().guests().adults(),
-                reservation.accommodationParty().guests().childrenAges(),
-                reservation.accommodationParty().pets(),
-                reservation.status().name(),
-                reservation.createdAt(),
-                reservation.cancelledAt(),
-                reservation.createdBy()
+    private void assertCanManage(Reservation reservation, AuthenticatedUser currentUser) {
+        if (!IsAdminPredicate.INSTANCE.test(currentUser) && !IsReservationOwnerPredicate.INSTANCE.test(reservation, currentUser)) {
+            throw new ForbiddenException("Access to this reservation is denied");
+        }
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private AuditLogEntry auditEntry(
+            AuthenticatedUser currentUser,
+            AuditActionType actionType,
+            String reservationId,
+            String details
+    ) {
+        return new AuditLogEntry(
+                null,
+                currentUser.userId(),
+                currentUser.roles().stream().findFirst().orElse("UNKNOWN"),
+                actionType,
+                AuditEntityType.RESERVATION,
+                reservationId,
+                clockPort.now(),
+                details
         );
     }
 }

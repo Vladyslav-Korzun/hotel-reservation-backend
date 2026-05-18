@@ -2,6 +2,8 @@ package com.hotel.management.service.availability;
 
 import com.hotel.management.domain.hotel.Hotel;
 import com.hotel.management.domain.hotel.HotelRepository;
+import com.hotel.management.domain.predicate.hotel.IsActiveHotelPredicate;
+import com.hotel.management.domain.predicate.room.IsBookableRoomPredicate;
 import com.hotel.management.domain.room.RoomRepository;
 import com.hotel.management.domain.room.RoomType;
 import com.hotel.management.domain.room.RoomTypeRepository;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -50,30 +53,58 @@ public class SearchAvailabilityService implements SearchAvailabilityFacade {
 
         List<Long> hotelIds = hotels.stream().map(Hotel::id).toList();
         Map<Long, Hotel> hotelsById = hotels.stream().collect(Collectors.toMap(Hotel::id, Function.identity()));
-        Map<Long, RoomType> roomTypesById = roomTypeRepository.findByHotelIds(hotelIds).stream()
-                .filter(roomType -> supports(hotelsById.get(roomType.hotelId()), roomType, command))
-                .collect(Collectors.toMap(RoomType::id, Function.identity()));
+        Map<Long, RoomType> roomTypesById = loadSupportedRoomTypes(hotelIds, hotelsById, command);
         if (roomTypesById.isEmpty()) {
             return List.of();
         }
 
-        Map<RoomTypeInventoryKey, Long> bookableRooms = roomRepository.findByHotelIds(hotelIds).stream()
-                .filter(room -> room.isBookable())
+        return toAvailableRoomResults(
+                countBookableRooms(hotelIds, roomTypesById),
+                countActiveReservations(hotelIds, command),
+                hotelsById,
+                roomTypesById
+        );
+    }
+
+    private Map<Long, RoomType> loadSupportedRoomTypes(
+            List<Long> hotelIds,
+            Map<Long, Hotel> hotelsById,
+            SearchAvailableRoomsCommand command
+    ) {
+        return roomTypeRepository.findByHotelIds(hotelIds).stream()
+                .filter(roomType -> supports(hotelsById.get(roomType.hotelId()), roomType, command))
+                .collect(Collectors.toMap(RoomType::id, Function.identity()));
+    }
+
+    private Map<RoomTypeInventoryKey, Long> countBookableRooms(List<Long> hotelIds, Map<Long, RoomType> roomTypesById) {
+        return roomRepository.findByHotelIds(hotelIds).stream()
+                .filter(IsBookableRoomPredicate.INSTANCE)
                 .filter(room -> roomTypesById.containsKey(room.roomTypeId()))
                 .collect(Collectors.groupingBy(
                         room -> new RoomTypeInventoryKey(room.hotelId(), room.roomTypeId()),
                         Collectors.counting()
                 ));
+    }
 
-        Map<RoomTypeInventoryKey, Long> activeReservations = reservationQueryPort.findActiveOverlapping(hotelIds, command.stayPeriod()).stream()
+    private Map<RoomTypeInventoryKey, Long> countActiveReservations(
+            List<Long> hotelIds,
+            SearchAvailableRoomsCommand command
+    ) {
+        return reservationQueryPort.findActiveOverlapping(hotelIds, command.stayPeriod()).stream()
                 .collect(Collectors.groupingBy(
                         reservation -> new RoomTypeInventoryKey(reservation.hotelId(), reservation.roomTypeId()),
                         Collectors.counting()
                 ));
+    }
 
+    private List<AvailableRoomResult> toAvailableRoomResults(
+            Map<RoomTypeInventoryKey, Long> bookableRooms,
+            Map<RoomTypeInventoryKey, Long> activeReservations,
+            Map<Long, Hotel> hotelsById,
+            Map<Long, RoomType> roomTypesById
+    ) {
         return bookableRooms.entrySet().stream()
-                .map(entry -> toAvailableRoomResult(entry, activeReservations, hotelsById, roomTypesById))
-                .filter(Objects::nonNull)
+                .flatMap(entry -> toAvailableRoomResult(entry, activeReservations, hotelsById, roomTypesById).stream())
                 .sorted(Comparator
                         .comparing(AvailableRoomResult::hotelId)
                         .thenComparing(AvailableRoomResult::roomTypeId))
@@ -84,7 +115,7 @@ public class SearchAvailabilityService implements SearchAvailabilityFacade {
         if (command.hotelId() != null) {
             Hotel hotel = hotelRepository.findById(command.hotelId())
                     .orElseThrow(() -> new NotFoundException("Hotel not found: " + command.hotelId()));
-            return hotel.isActive() ? List.of(hotel) : List.of();
+            return IsActiveHotelPredicate.INSTANCE.test(hotel) ? List.of(hotel) : List.of();
         }
 
         if (command.city() == null || command.city().isBlank()) {
@@ -94,7 +125,7 @@ public class SearchAvailabilityService implements SearchAvailabilityFacade {
         return hotelRepository.findActiveByCity(command.city());
     }
 
-    private AvailableRoomResult toAvailableRoomResult(
+    private Optional<AvailableRoomResult> toAvailableRoomResult(
             Map.Entry<RoomTypeInventoryKey, Long> entry,
             Map<RoomTypeInventoryKey, Long> activeReservations,
             Map<Long, Hotel> hotelsById,
@@ -103,16 +134,16 @@ public class SearchAvailabilityService implements SearchAvailabilityFacade {
         RoomTypeInventoryKey key = entry.getKey();
         long availableCount = entry.getValue() - activeReservations.getOrDefault(key, 0L);
         if (availableCount <= 0) {
-            return null;
+            return Optional.empty();
         }
 
         Hotel hotel = hotelsById.get(key.hotelId());
         RoomType roomType = roomTypesById.get(key.roomTypeId());
         if (hotel == null || roomType == null) {
-            return null;
+            return Optional.empty();
         }
 
-        return new AvailableRoomResult(
+        return Optional.of(new AvailableRoomResult(
                 hotel.id(),
                 hotel.name(),
                 roomType.id(),
@@ -124,8 +155,11 @@ public class SearchAvailabilityService implements SearchAvailabilityFacade {
                 roomType.petPolicy().petsAllowed(),
                 roomType.petPolicy().maxPets(),
                 roomType.basePrice(),
-                Math.toIntExact(availableCount)
-        );
+                Math.toIntExact(availableCount),
+                roomType.features().bedSetup(),
+                roomType.features().roomSizeSqm(),
+                roomType.features().amenities()
+        ));
     }
 
     private boolean supports(Hotel hotel, RoomType roomType, SearchAvailableRoomsCommand command) {

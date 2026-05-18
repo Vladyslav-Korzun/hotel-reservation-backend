@@ -6,7 +6,13 @@ public interface ReservationFacade {
 
     CreateReservationResult createReservation(CreateReservationCommand command);
 
+    CreateReservationResult createPublicReservation(CreatePublicReservationCommand command);
+
+    CreateReservationResult createStaffReservation(CreateStaffReservationCommand command);
+
     List<GetReservationResult> listReservations(int limit);
+
+    List<GetReservationResult> listMyReservations(int limit);
 
     GetReservationResult getReservation(String reservationId);
 
