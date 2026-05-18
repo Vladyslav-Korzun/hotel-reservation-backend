@@ -20,6 +20,9 @@ public class JpaRoomTypeEntity {
     private BigDecimal basePriceAmount;
     private String basePriceCurrency;
     private String description;
+    private String bedSetup;
+    private BigDecimal roomSizeSqm;
+    private String amenitiesJson = "[]";
 
     public Long getId() {
         return id;
@@ -147,5 +150,29 @@ public class JpaRoomTypeEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getBedSetup() {
+        return bedSetup;
+    }
+
+    public void setBedSetup(String bedSetup) {
+        this.bedSetup = bedSetup;
+    }
+
+    public BigDecimal getRoomSizeSqm() {
+        return roomSizeSqm;
+    }
+
+    public void setRoomSizeSqm(BigDecimal roomSizeSqm) {
+        this.roomSizeSqm = roomSizeSqm;
+    }
+
+    public String getAmenitiesJson() {
+        return amenitiesJson;
+    }
+
+    public void setAmenitiesJson(String amenitiesJson) {
+        this.amenitiesJson = amenitiesJson;
     }
 }

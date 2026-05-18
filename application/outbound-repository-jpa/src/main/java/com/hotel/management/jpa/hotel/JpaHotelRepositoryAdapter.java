@@ -19,6 +19,11 @@ public class JpaHotelRepositoryAdapter implements HotelRepository {
     }
 
     @Override
+    public Hotel save(Hotel hotel) {
+        return toDomain(hotelSpringDataRepository.save(toEntity(hotel)));
+    }
+
+    @Override
     public Optional<Hotel> findById(Long hotelId) {
         return hotelSpringDataRepository.findById(hotelId).map(this::toDomain);
     }
@@ -51,8 +56,27 @@ public class JpaHotelRepositoryAdapter implements HotelRepository {
                         Boolean.TRUE.equals(entity.getChildrenAllowed()),
                         Boolean.TRUE.equals(entity.getPetsAllowed()),
                         entity.getInfantMaxAge(),
-                        entity.getChildMaxAge()
+                        entity.getChildMaxAge(),
+                        entity.getAdultEquivalentAge()
                 )
         );
+    }
+
+    private JpaHotelEntity toEntity(Hotel hotel) {
+        var entity = new JpaHotelEntity();
+        entity.setId(hotel.id());
+        entity.setName(hotel.name());
+        entity.setCity(hotel.city());
+        entity.setCountry(hotel.country());
+        entity.setAddress(hotel.address());
+        entity.setStars(hotel.stars());
+        entity.setDescription(hotel.description());
+        entity.setStatus(hotel.status().name());
+        entity.setChildrenAllowed(hotel.policy().childrenAllowed());
+        entity.setPetsAllowed(hotel.policy().petsAllowed());
+        entity.setInfantMaxAge(hotel.policy().infantMaxAge());
+        entity.setChildMaxAge(hotel.policy().childMaxAge());
+        entity.setAdultEquivalentAge(hotel.policy().adultEquivalentAge());
+        return entity;
     }
 }

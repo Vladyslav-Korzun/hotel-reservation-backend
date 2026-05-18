@@ -13,6 +13,9 @@
             <basic name="hotelId">
                 <column name="hotel_id" nullable="false"/>
             </basic>
+            <basic name="guestId">
+                <column name="guest_id" nullable="false"/>
+            </basic>
             <basic name="roomId">
                 <column name="room_id" nullable="true"/>
             </basic>
@@ -34,6 +37,39 @@
             <basic name="petsJson">
                 <column name="pets_json" nullable="false" length="4000"/>
             </basic>
+            <basic name="contactEmail">
+                <column name="contact_email" nullable="true" length="255"/>
+            </basic>
+            <basic name="contactPhone">
+                <column name="contact_phone" nullable="true" length="32"/>
+            </basic>
+            <basic name="specialRequests">
+                <column name="special_requests" nullable="true" length="500"/>
+            </basic>
+            <basic name="basePriceAmount">
+                <column name="base_price_amount" nullable="false" precision="12" scale="2"/>
+            </basic>
+            <basic name="basePriceCurrency">
+                <column name="base_price_currency" nullable="false" length="3"/>
+            </basic>
+            <basic name="servicesPriceAmount">
+                <column name="services_price_amount" nullable="false" precision="12" scale="2"/>
+            </basic>
+            <basic name="servicesPriceCurrency">
+                <column name="services_price_currency" nullable="false" length="3"/>
+            </basic>
+            <basic name="discountAmount">
+                <column name="discount_amount" nullable="false" precision="12" scale="2"/>
+            </basic>
+            <basic name="discountCurrency">
+                <column name="discount_currency" nullable="false" length="3"/>
+            </basic>
+            <basic name="finalPriceAmount">
+                <column name="final_price_amount" nullable="false" precision="12" scale="2"/>
+            </basic>
+            <basic name="finalPriceCurrency">
+                <column name="final_price_currency" nullable="false" length="3"/>
+            </basic>
             <basic name="status">
                 <column name="status" nullable="false" length="32"/>
             </basic>
@@ -45,6 +81,144 @@
             </basic>
             <basic name="createdBy">
                 <column name="created_by" nullable="false" length="128"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.hotel.management.jpa.reservation.JpaReservationServiceItemEntity" access="FIELD">
+        <table name="reservation_service_items"/>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="IDENTITY"/>
+                <column name="id" nullable="false"/>
+            </id>
+            <basic name="reservationId">
+                <column name="reservation_id" nullable="false" length="64"/>
+            </basic>
+            <basic name="serviceOfferingId">
+                <column name="service_offering_id" nullable="false"/>
+            </basic>
+            <basic name="serviceNameSnapshot">
+                <column name="service_name_snapshot" nullable="false" length="160"/>
+            </basic>
+            <basic name="priceAmount">
+                <column name="price_amount" nullable="false" precision="12" scale="2"/>
+            </basic>
+            <basic name="priceCurrency">
+                <column name="price_currency" nullable="false" length="3"/>
+            </basic>
+            <basic name="quantity">
+                <column name="quantity" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.hotel.management.jpa.serviceoffering.JpaServiceOfferingEntity" access="FIELD">
+        <table name="hotel_service_offerings"/>
+        <attributes>
+            <id name="id">
+                <column name="id" nullable="false"/>
+            </id>
+            <basic name="hotelId">
+                <column name="hotel_id" nullable="false"/>
+            </basic>
+            <basic name="code">
+                <column name="code" nullable="false" length="64"/>
+            </basic>
+            <basic name="name">
+                <column name="name" nullable="false" length="160"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="true" length="1000"/>
+            </basic>
+            <basic name="priceAmount">
+                <column name="price_amount" nullable="false" precision="12" scale="2"/>
+            </basic>
+            <basic name="priceCurrency">
+                <column name="price_currency" nullable="false" length="3"/>
+            </basic>
+            <basic name="active">
+                <column name="active" nullable="false"/>
+            </basic>
+            <basic name="availabilityRule">
+                <column name="availability_rule" nullable="true" length="255"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.hotel.management.jpa.audit.JpaAuditLogEntity" access="FIELD">
+        <table name="audit_log"/>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="IDENTITY"/>
+                <column name="id" nullable="false"/>
+            </id>
+            <basic name="actorId">
+                <column name="actor_id" nullable="false" length="128"/>
+            </basic>
+            <basic name="actorRole">
+                <column name="actor_role" nullable="false" length="64"/>
+            </basic>
+            <basic name="actionType">
+                <column name="action_type" nullable="false" length="80"/>
+            </basic>
+            <basic name="entityType">
+                <column name="entity_type" nullable="false" length="80"/>
+            </basic>
+            <basic name="entityId">
+                <column name="entity_id" nullable="false" length="128"/>
+            </basic>
+            <basic name="timestamp">
+                <column name="created_at" nullable="false"/>
+            </basic>
+            <basic name="details">
+                <column name="details" nullable="true" length="2000"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.hotel.management.jpa.guest.JpaGuestEntity" access="FIELD">
+        <table name="guests"/>
+        <attributes>
+            <id name="id">
+                <column name="id" nullable="false"/>
+            </id>
+            <basic name="firstName">
+                <column name="first_name" nullable="false" length="120"/>
+            </basic>
+            <basic name="lastName">
+                <column name="last_name" nullable="false" length="120"/>
+            </basic>
+            <basic name="email">
+                <column name="email" nullable="false" length="255"/>
+            </basic>
+            <basic name="phone">
+                <column name="phone" nullable="true" length="64"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="com.hotel.management.jpa.stay.JpaStayEntity" access="FIELD">
+        <table name="stays"/>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="IDENTITY"/>
+                <column name="id" nullable="false"/>
+            </id>
+            <basic name="reservationId">
+                <column name="reservation_id" nullable="false" length="64"/>
+            </basic>
+            <basic name="roomId">
+                <column name="room_id" nullable="false"/>
+            </basic>
+            <basic name="checkedInAt">
+                <column name="checked_in_at" nullable="false"/>
+            </basic>
+            <basic name="checkedOutAt">
+                <column name="checked_out_at" nullable="true"/>
+            </basic>
+            <basic name="status">
+                <column name="status" nullable="false" length="32"/>
             </basic>
         </attributes>
     </entity>
@@ -87,6 +261,9 @@
             </basic>
             <basic name="childMaxAge">
                 <column name="child_max_age" nullable="false"/>
+            </basic>
+            <basic name="adultEquivalentAge">
+                <column name="adult_equivalent_age" nullable="false"/>
             </basic>
         </attributes>
     </entity>
@@ -141,6 +318,15 @@
             </basic>
             <basic name="description">
                 <column name="description" nullable="true" length="1000"/>
+            </basic>
+            <basic name="bedSetup">
+                <column name="bed_setup" nullable="true" length="120"/>
+            </basic>
+            <basic name="roomSizeSqm">
+                <column name="room_size_sqm" nullable="true" precision="5" scale="1"/>
+            </basic>
+            <basic name="amenitiesJson">
+                <column name="amenities_json" nullable="false" length="4000"/>
             </basic>
         </attributes>
     </entity>

@@ -1,15 +1,19 @@
 package com.hotel.management.jpa.reservation;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.hotel.management.domain.reservation.ReservationPriceSnapshot;
 import com.hotel.management.service.reservation.locking.ReservationLockPort;
 import com.hotel.management.domain.reservation.Reservation;
 import com.hotel.management.domain.reservation.ReservationStatus;
 import com.hotel.management.domain.shared.value.AccommodationParty;
+import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.GuestComposition;
+import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.shared.value.PetDetails;
 import com.hotel.management.jpa.shared.JsonColumnCodec;
 import org.springframework.stereotype.Component;
 
+import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +36,7 @@ public class JpaReservationLockAdapter implements ReservationLockPort {
         return Reservation.rehydrate(
                 entity.getId(),
                 entity.getHotelId(),
+                entity.getGuestId(),
                 entity.getRoomId(),
                 entity.getRoomTypeId(),
                 entity.getCheckIn(),
@@ -43,10 +48,24 @@ public class JpaReservationLockAdapter implements ReservationLockPort {
                         ),
                         JsonColumnCodec.read(entity.getPetsJson(), new TypeReference<List<PetDetails>>() { }, List.of())
                 ),
+                toEmailAddress(entity.getContactEmail()),
+                entity.getContactPhone(),
+                entity.getSpecialRequests(),
+                new ReservationPriceSnapshot(
+                        new Money(entity.getBasePriceAmount(), Currency.getInstance(entity.getBasePriceCurrency())),
+                        new Money(entity.getServicesPriceAmount(), Currency.getInstance(entity.getServicesPriceCurrency())),
+                        new Money(entity.getDiscountAmount(), Currency.getInstance(entity.getDiscountCurrency())),
+                        new Money(entity.getFinalPriceAmount(), Currency.getInstance(entity.getFinalPriceCurrency()))
+                ),
+                List.of(),
                 ReservationStatus.valueOf(entity.getStatus()),
                 entity.getCreatedAt(),
                 entity.getCancelledAt(),
                 entity.getCreatedBy()
         );
+    }
+
+    private EmailAddress toEmailAddress(String value) {
+        return value == null || value.isBlank() ? null : new EmailAddress(value);
     }
 }

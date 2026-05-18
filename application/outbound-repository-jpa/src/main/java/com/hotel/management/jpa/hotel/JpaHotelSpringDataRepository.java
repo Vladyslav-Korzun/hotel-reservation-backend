@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface JpaHotelSpringDataRepository extends JpaRepository<JpaHotelEntity, Long> {
+interface JpaHotelSpringDataRepository extends JpaRepository<JpaHotelEntity, Long> {
 
     List<JpaHotelEntity> findByStatusOrderByNameAsc(String status);
 

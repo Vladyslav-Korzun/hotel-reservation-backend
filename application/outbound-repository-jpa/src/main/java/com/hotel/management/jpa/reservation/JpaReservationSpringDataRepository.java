@@ -10,11 +10,13 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 
-public interface JpaReservationSpringDataRepository extends JpaRepository<JpaReservationEntity, String> {
+interface JpaReservationSpringDataRepository extends JpaRepository<JpaReservationEntity, String> {
 
     List<JpaReservationEntity> findAllByOrderByCreatedAtDesc();
 
     List<JpaReservationEntity> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    List<JpaReservationEntity> findByCreatedByOrderByCreatedAtDesc(String createdBy, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
@@ -36,6 +38,23 @@ public interface JpaReservationSpringDataRepository extends JpaRepository<JpaRes
             @Param("hotelIds") List<Long> hotelIds,
             @Param("checkIn") LocalDate checkIn,
             @Param("checkOut") LocalDate checkOut,
+            @Param("statuses") List<String> statuses
+    );
+
+    @Query("""
+            select reservation
+            from JpaReservationEntity reservation
+            where reservation.hotelId = :hotelId
+              and reservation.roomTypeId = :roomTypeId
+              and reservation.status in :statuses
+              and reservation.checkIn < :to
+              and reservation.checkOut > :from
+            """)
+    List<JpaReservationEntity> findActiveRoomTypeOverlapping(
+            @Param("hotelId") Long hotelId,
+            @Param("roomTypeId") Long roomTypeId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to,
             @Param("statuses") List<String> statuses
     );
 }

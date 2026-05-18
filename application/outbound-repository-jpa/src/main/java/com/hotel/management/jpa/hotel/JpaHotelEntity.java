@@ -14,6 +14,7 @@ public class JpaHotelEntity {
     private Boolean petsAllowed;
     private Integer infantMaxAge;
     private Integer childMaxAge;
+    private Integer adultEquivalentAge;
 
     public Long getId() {
         return id;
@@ -109,5 +110,13 @@ public class JpaHotelEntity {
 
     public void setChildMaxAge(Integer childMaxAge) {
         this.childMaxAge = childMaxAge;
+    }
+
+    public Integer getAdultEquivalentAge() {
+        return adultEquivalentAge;
+    }
+
+    public void setAdultEquivalentAge(Integer adultEquivalentAge) {
+        this.adultEquivalentAge = adultEquivalentAge;
     }
 }

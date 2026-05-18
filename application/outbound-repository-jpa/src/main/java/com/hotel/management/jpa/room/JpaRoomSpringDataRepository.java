@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface JpaRoomSpringDataRepository extends JpaRepository<JpaRoomEntity, Long> {
+interface JpaRoomSpringDataRepository extends JpaRepository<JpaRoomEntity, Long> {
 
     List<JpaRoomEntity> findByHotelIdIn(List<Long> hotelIds);
 
