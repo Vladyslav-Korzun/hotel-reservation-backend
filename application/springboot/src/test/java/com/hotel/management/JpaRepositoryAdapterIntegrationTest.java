@@ -2,7 +2,7 @@ package com.hotel.management;
 
 import com.hotel.management.domain.audit.AuditActionType;
 import com.hotel.management.domain.audit.AuditEntityType;
-import com.hotel.management.domain.audit.AuditLogEntry;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.guest.Guest;
 import com.hotel.management.domain.guest.GuestRepository;
 import com.hotel.management.domain.hotel.Hotel;
@@ -32,7 +32,7 @@ import com.hotel.management.domain.stay.Stay;
 import com.hotel.management.domain.stay.StayRepository;
 import com.hotel.management.domain.stay.StayStatus;
 import com.hotel.management.jpa.audit.JpaAuditLogEntity;
-import com.hotel.management.domain.audit.AuditLogPort;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,7 +85,7 @@ class JpaRepositoryAdapterIntegrationTest {
     private ReservationRepository reservationRepository;
 
     @Autowired
-    private AuditLogPort auditLogPort;
+    private AuditTrail auditTrail;
 
     @Autowired
     private StayRepository stayRepository;
@@ -208,17 +208,14 @@ class JpaRepositoryAdapterIntegrationTest {
     }
 
     @Test
-    void shouldAppendAuditLogThroughPort() {
-        auditLogPort.append(new AuditLogEntry(
-                null,
-                "admin-1",
-                "ADMIN",
+    void shouldRecordAuditLogThroughTrail() {
+        auditTrail.record(
+                new AuthenticatedUser("admin-1", Set.of("ADMIN")),
                 AuditActionType.CREATE_HOTEL,
                 AuditEntityType.HOTEL,
                 "1",
-                Instant.parse("2026-05-10T12:00:00Z"),
                 "created hotel"
-        ));
+        );
 
         entityManager.flush();
         entityManager.clear();

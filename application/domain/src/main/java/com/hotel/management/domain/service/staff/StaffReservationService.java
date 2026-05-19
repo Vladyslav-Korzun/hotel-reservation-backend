@@ -2,7 +2,7 @@ package com.hotel.management.domain.service.staff;
 
 import com.hotel.management.domain.audit.AuditActionType;
 import com.hotel.management.domain.audit.AuditEntityType;
-import com.hotel.management.domain.audit.AuditLogEntry;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.reservation.Reservation;
 import com.hotel.management.domain.reservation.ReservationRepository;
 import com.hotel.management.domain.room.Room;
@@ -12,7 +12,6 @@ import com.hotel.management.domain.stay.StayRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.audit.AuditLogPort;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.predicate.reservation.IsBeforeReservationCheckOutDatePredicate;
 import com.hotel.management.domain.predicate.reservation.IsCheckInDateReachedPredicate;
@@ -35,7 +34,7 @@ public class StaffReservationService implements StaffReservationFacade {
     private final RoomAssignmentPort roomAssignmentPort;
     private final CurrentUserPort currentUserPort;
     private final ClockPort clockPort;
-    private final AuditLogPort auditLogPort;
+    private final AuditTrail auditTrail;
     private final StaffReservationResultMapper staffReservationResultMapper;
 
     public StaffReservationService(
@@ -46,7 +45,7 @@ public class StaffReservationService implements StaffReservationFacade {
             RoomAssignmentPort roomAssignmentPort,
             CurrentUserPort currentUserPort,
             ClockPort clockPort,
-            AuditLogPort auditLogPort,
+            AuditTrail auditTrail,
             StaffReservationResultMapper staffReservationResultMapper
     ) {
         this.reservationRepository = reservationRepository;
@@ -56,7 +55,7 @@ public class StaffReservationService implements StaffReservationFacade {
         this.roomAssignmentPort = roomAssignmentPort;
         this.currentUserPort = currentUserPort;
         this.clockPort = clockPort;
-        this.auditLogPort = auditLogPort;
+        this.auditTrail = auditTrail;
         this.staffReservationResultMapper = staffReservationResultMapper;
     }
 
@@ -71,12 +70,13 @@ public class StaffReservationService implements StaffReservationFacade {
         reservationRepository.save(checkedInReservation);
         roomRepository.save(room.occupy());
         stayRepository.save(Stay.start(null, checkedInReservation.id(), room.id(), clockPort.now()));
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.CHECK_IN,
+                AuditEntityType.RESERVATION,
                 checkedInReservation.id(),
                 "Reservation checked in"
-        ));
+        );
 
         return staffReservationResultMapper.toResult(checkedInReservation);
     }
@@ -94,12 +94,13 @@ public class StaffReservationService implements StaffReservationFacade {
         reservationRepository.save(checkedOutReservation);
         stayRepository.save(stay.complete(clockPort.now()));
         roomRepository.save(room.markCleaningAfterCheckOut());
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.CHECK_OUT,
+                AuditEntityType.RESERVATION,
                 checkedOutReservation.id(),
                 "Reservation checked out"
-        ));
+        );
 
         return staffReservationResultMapper.toResult(checkedOutReservation);
     }
@@ -112,12 +113,13 @@ public class StaffReservationService implements StaffReservationFacade {
 
         var noShowReservation = reservation.markNoShow();
         reservationRepository.save(noShowReservation);
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.MARK_NO_SHOW,
+                AuditEntityType.RESERVATION,
                 noShowReservation.id(),
                 "Reservation marked as no-show"
-        ));
+        );
 
         return staffReservationResultMapper.toResult(noShowReservation);
     }
@@ -161,24 +163,6 @@ public class StaffReservationService implements StaffReservationFacade {
         if (!IsCheckInDateReachedPredicate.INSTANCE.test(reservation, today)) {
             throw new ValidationException("No-show is not allowed before reservation check-in date");
         }
-    }
-
-    private AuditLogEntry auditEntry(
-            AuthenticatedUser currentUser,
-            AuditActionType actionType,
-            String reservationId,
-            String details
-    ) {
-        return new AuditLogEntry(
-                null,
-                currentUser.userId(),
-                currentUser.roles().stream().findFirst().orElse("UNKNOWN"),
-                actionType,
-                AuditEntityType.RESERVATION,
-                reservationId,
-                clockPort.now(),
-                details
-        );
     }
 
 }

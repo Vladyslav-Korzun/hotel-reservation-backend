@@ -27,7 +27,7 @@ import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.service.accommodation.AccommodationPolicyValidator;
 import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.audit.AuditLogPort;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
@@ -94,7 +94,7 @@ class ReservationServiceTest {
     private AccommodationPolicyValidator accommodationPolicyValidator;
 
     @Mock
-    private AuditLogPort auditLogPort;
+    private AuditTrail auditTrail;
 
     private ReservationCreationValidator reservationCreationValidator;
 
@@ -122,7 +122,7 @@ class ReservationServiceTest {
                 new ReservationFactory(),
                 new ReservationPricingCalculator(),
                 new ReservationResultMapper(),
-                auditLogPort
+                auditTrail
         );
     }
 

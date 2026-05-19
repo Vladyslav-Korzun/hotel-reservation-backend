@@ -1,7 +1,8 @@
 package com.hotel.management.domain.service.staff;
 
 import com.hotel.management.domain.audit.AuditActionType;
-import com.hotel.management.domain.audit.AuditLogEntry;
+import com.hotel.management.domain.audit.AuditEntityType;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.reservation.Reservation;
 import com.hotel.management.domain.reservation.ReservationPriceSnapshot;
 import com.hotel.management.domain.reservation.ReservationRepository;
@@ -17,7 +18,6 @@ import com.hotel.management.domain.shared.value.AccommodationParty;
 import com.hotel.management.domain.shared.value.GuestComposition;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.audit.AuditLogPort;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,7 +70,7 @@ class StaffReservationServiceTest {
     private ClockPort clockPort;
 
     @Mock
-    private AuditLogPort auditLogPort;
+    private AuditTrail auditTrail;
 
     @Test
     void shouldCheckInReservationAndOccupyRoom() {
@@ -105,10 +106,13 @@ class StaffReservationServiceTest {
         assertEquals(100L, savedStay.getValue().roomId());
         assertEquals(StayStatus.ACTIVE, savedStay.getValue().status());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.CHECK_IN, auditEntry.getValue().actionType());
-        assertEquals("reservation-1", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.CHECK_IN),
+                eq(AuditEntityType.RESERVATION),
+                eq("reservation-1"),
+                eq("Reservation checked in")
+        );
     }
 
     @Test
@@ -140,10 +144,13 @@ class StaffReservationServiceTest {
         assertEquals(StayStatus.COMPLETED, savedStay.getValue().status());
         assertEquals(Instant.parse("2026-05-12T10:00:00Z"), savedStay.getValue().checkedOutAt());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.CHECK_OUT, auditEntry.getValue().actionType());
-        assertEquals("reservation-1", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.CHECK_OUT),
+                eq(AuditEntityType.RESERVATION),
+                eq("reservation-1"),
+                eq("Reservation checked out")
+        );
     }
 
     @Test
@@ -178,10 +185,13 @@ class StaffReservationServiceTest {
         verify(reservationRepository).save(savedReservation.capture());
         assertEquals(ReservationStatus.NO_SHOW, savedReservation.getValue().status());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.MARK_NO_SHOW, auditEntry.getValue().actionType());
-        assertEquals("reservation-1", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.MARK_NO_SHOW),
+                eq(AuditEntityType.RESERVATION),
+                eq("reservation-1"),
+                eq("Reservation marked as no-show")
+        );
     }
 
     @Test
@@ -194,7 +204,7 @@ class StaffReservationServiceTest {
 
         assertThrows(ValidationException.class, () -> service.markNoShow("reservation-1"));
         verify(reservationRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -207,7 +217,7 @@ class StaffReservationServiceTest {
 
         assertThrows(ValidationException.class, () -> service.markNoShow("reservation-1"));
         verify(reservationRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -266,7 +276,7 @@ class StaffReservationServiceTest {
                 roomAssignmentPort,
                 currentUserPort,
                 clockPort,
-                auditLogPort,
+                auditTrail,
                 new StaffReservationResultMapper()
         );
     }

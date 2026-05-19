@@ -2,15 +2,13 @@ package com.hotel.management.domain.service.room;
 
 import com.hotel.management.domain.audit.AuditActionType;
 import com.hotel.management.domain.audit.AuditEntityType;
-import com.hotel.management.domain.audit.AuditLogEntry;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.room.Room;
 import com.hotel.management.domain.room.RoomRepository;
 import com.hotel.management.domain.room.RoomStatus;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.audit.AuditLogPort;
-import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.junit.jupiter.api.Test;
@@ -19,13 +17,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,10 +39,7 @@ class RoomOperationsServiceTest {
     private CurrentUserPort currentUserPort;
 
     @Mock
-    private ClockPort clockPort;
-
-    @Mock
-    private AuditLogPort auditLogPort;
+    private AuditTrail auditTrail;
 
     @Test
     void shouldUpdateRoomStatusAndWriteAudit() {
@@ -54,7 +49,6 @@ class RoomOperationsServiceTest {
         when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         var result = service.updateRoomStatus(new UpdateRoomStatusCommand(1L, RoomStatus.AVAILABLE));
 
@@ -64,11 +58,13 @@ class RoomOperationsServiceTest {
         verify(roomRepository).save(savedRoom.capture());
         assertEquals(RoomStatus.AVAILABLE, savedRoom.getValue().status());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.UPDATE_ROOM_STATUS, auditEntry.getValue().actionType());
-        assertEquals(AuditEntityType.ROOM, auditEntry.getValue().entityType());
-        assertEquals("1", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.UPDATE_ROOM_STATUS),
+                eq(AuditEntityType.ROOM),
+                eq("1"),
+                eq("Room status changed to AVAILABLE")
+        );
     }
 
     @Test
@@ -118,7 +114,7 @@ class RoomOperationsServiceTest {
                 () -> service.updateRoomStatus(new UpdateRoomStatusCommand(1L, RoomStatus.CLEANING))
         );
         verify(roomRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -132,7 +128,7 @@ class RoomOperationsServiceTest {
                 () -> service.updateRoomStatus(new UpdateRoomStatusCommand(1L, RoomStatus.OCCUPIED))
         );
         verify(roomRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -146,15 +142,14 @@ class RoomOperationsServiceTest {
                 () -> service.updateRoomStatus(new UpdateRoomStatusCommand(1L, RoomStatus.MAINTENANCE))
         );
         verify(roomRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     private RoomOperationsService service() {
         return new RoomOperationsService(
                 roomRepository,
                 currentUserPort,
-                clockPort,
-                auditLogPort,
+                auditTrail,
                 new RoomOperationResultMapper()
         );
     }

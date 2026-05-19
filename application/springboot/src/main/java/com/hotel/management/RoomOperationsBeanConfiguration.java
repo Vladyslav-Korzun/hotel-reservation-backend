@@ -1,8 +1,7 @@
 package com.hotel.management;
 
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.room.RoomRepository;
-import com.hotel.management.domain.audit.AuditLogPort;
-import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.service.mapper.RoomOperationResultMapper;
 import com.hotel.management.domain.service.room.RoomOperationsFacade;
 import com.hotel.management.domain.service.room.RoomOperationsService;
@@ -22,15 +21,13 @@ public class RoomOperationsBeanConfiguration {
     RoomOperationsFacade roomOperationsFacade(
             RoomRepository roomRepository,
             CurrentUserPort currentUserPort,
-            ClockPort clockPort,
-            AuditLogPort auditLogPort,
+            AuditTrail auditTrail,
             RoomOperationResultMapper roomOperationResultMapper
     ) {
         var roomOperationsService = new RoomOperationsService(
                 roomRepository,
                 currentUserPort,
-                clockPort,
-                auditLogPort,
+                auditTrail,
                 roomOperationResultMapper
         );
         return new TransactionalRoomOperationsFacade(roomOperationsService);

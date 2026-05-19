@@ -2,7 +2,7 @@ package com.hotel.management.domain.service.hotel;
 
 import com.hotel.management.domain.audit.AuditActionType;
 import com.hotel.management.domain.audit.AuditEntityType;
-import com.hotel.management.domain.audit.AuditLogEntry;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.hotel.HotelFactory;
 import com.hotel.management.domain.hotel.HotelPolicy;
 import com.hotel.management.domain.hotel.HotelRepository;
@@ -23,8 +23,6 @@ import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.audit.AuditLogPort;
-import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.predicate.reservation.IsAdminPredicate;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
@@ -41,8 +39,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
     private final RoomRepository roomRepository;
     private final ServiceOfferingRepository serviceOfferingRepository;
     private final CurrentUserPort currentUserPort;
-    private final ClockPort clockPort;
-    private final AuditLogPort auditLogPort;
+    private final AuditTrail auditTrail;
     private final HotelFactory hotelFactory;
     private final RoomTypeFactory roomTypeFactory;
     private final RoomFactory roomFactory;
@@ -55,8 +52,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
             RoomRepository roomRepository,
             ServiceOfferingRepository serviceOfferingRepository,
             CurrentUserPort currentUserPort,
-            ClockPort clockPort,
-            AuditLogPort auditLogPort,
+            AuditTrail auditTrail,
             HotelFactory hotelFactory,
             RoomTypeFactory roomTypeFactory,
             RoomFactory roomFactory,
@@ -68,8 +64,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         this.roomRepository = roomRepository;
         this.serviceOfferingRepository = serviceOfferingRepository;
         this.currentUserPort = currentUserPort;
-        this.clockPort = clockPort;
-        this.auditLogPort = auditLogPort;
+        this.auditTrail = auditTrail;
         this.hotelFactory = hotelFactory;
         this.roomTypeFactory = roomTypeFactory;
         this.roomFactory = roomFactory;
@@ -103,7 +98,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 )
         );
         var savedHotel = hotelRepository.save(hotel);
-        auditLogPort.append(auditEntry(currentUser, AuditActionType.CREATE_HOTEL, savedHotel.id(), "Hotel created"));
+        auditTrail.record(currentUser, AuditActionType.CREATE_HOTEL, AuditEntityType.HOTEL, String.valueOf(savedHotel.id()), "Hotel created");
         return hotelQueryResultMapper.toResult(savedHotel);
     }
 
@@ -131,7 +126,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 )
         );
         var savedHotel = hotelRepository.save(updatedHotel);
-        auditLogPort.append(auditEntry(currentUser, AuditActionType.UPDATE_HOTEL, savedHotel.id(), "Hotel updated"));
+        auditTrail.record(currentUser, AuditActionType.UPDATE_HOTEL, AuditEntityType.HOTEL, String.valueOf(savedHotel.id()), "Hotel updated");
         return hotelQueryResultMapper.toResult(savedHotel);
     }
 
@@ -155,13 +150,13 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 roomTypeFeatures(command)
         );
         var savedRoomType = roomTypeRepository.save(roomType);
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.CREATE_ROOM_TYPE,
                 AuditEntityType.ROOM_TYPE,
-                savedRoomType.id(),
+                String.valueOf(savedRoomType.id()),
                 "Room type created"
-        ));
+        );
         return hotelQueryResultMapper.toResult(savedRoomType);
     }
 
@@ -182,13 +177,13 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 roomTypeFeatures(command)
         );
         var savedRoomType = roomTypeRepository.save(updatedRoomType);
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.UPDATE_ROOM_TYPE,
                 AuditEntityType.ROOM_TYPE,
-                savedRoomType.id(),
+                String.valueOf(savedRoomType.id()),
                 "Room type updated"
-        ));
+        );
         return hotelQueryResultMapper.toResult(savedRoomType);
     }
 
@@ -212,13 +207,13 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 command.status()
         );
         var savedRoom = roomRepository.save(room);
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.CREATE_ROOM,
                 AuditEntityType.ROOM,
-                savedRoom.id(),
+                String.valueOf(savedRoom.id()),
                 "Room created"
-        ));
+        );
         return hotelQueryResultMapper.toResult(savedRoom);
     }
 
@@ -240,13 +235,13 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 command.status()
         );
         var savedRoom = roomRepository.save(updatedRoom);
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.UPDATE_ROOM,
                 AuditEntityType.ROOM,
-                savedRoom.id(),
+                String.valueOf(savedRoom.id()),
                 "Room updated"
-        ));
+        );
         return hotelQueryResultMapper.toResult(savedRoom);
     }
 
@@ -270,13 +265,13 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 command.availabilityRule()
         );
         var savedServiceOffering = serviceOfferingRepository.save(serviceOffering);
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.CREATE_SERVICE_OFFERING,
                 AuditEntityType.SERVICE_OFFERING,
-                savedServiceOffering.id(),
+                String.valueOf(savedServiceOffering.id()),
                 "Service offering created"
-        ));
+        );
         return hotelQueryResultMapper.toResult(savedServiceOffering);
     }
 
@@ -297,13 +292,13 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 command.availabilityRule()
         );
         var savedServiceOffering = serviceOfferingRepository.save(updatedServiceOffering);
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.UPDATE_SERVICE_OFFERING,
                 AuditEntityType.SERVICE_OFFERING,
-                savedServiceOffering.id(),
+                String.valueOf(savedServiceOffering.id()),
                 "Service offering updated"
-        ));
+        );
         return hotelQueryResultMapper.toResult(savedServiceOffering);
     }
 
@@ -316,13 +311,13 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         assertServiceOfferingBelongsToHotel(serviceOffering, command.hotelId());
 
         var deactivatedServiceOffering = serviceOfferingRepository.save(serviceOffering.deactivate());
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.DEACTIVATE_SERVICE_OFFERING,
                 AuditEntityType.SERVICE_OFFERING,
-                deactivatedServiceOffering.id(),
+                String.valueOf(deactivatedServiceOffering.id()),
                 "Service offering deactivated"
-        ));
+        );
     }
 
     private AuthenticatedUser requireAdmin() {
@@ -541,31 +536,4 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         return money(amount, currencyCode, fieldName);
     }
 
-    private AuditLogEntry auditEntry(
-            AuthenticatedUser currentUser,
-            AuditActionType actionType,
-            Long hotelId,
-            String details
-    ) {
-        return auditEntry(currentUser, actionType, AuditEntityType.HOTEL, hotelId, details);
-    }
-
-    private AuditLogEntry auditEntry(
-            AuthenticatedUser currentUser,
-            AuditActionType actionType,
-            AuditEntityType entityType,
-            Long entityId,
-            String details
-    ) {
-        return new AuditLogEntry(
-                null,
-                currentUser.userId(),
-                currentUser.roles().stream().findFirst().orElse("UNKNOWN"),
-                actionType,
-                entityType,
-                String.valueOf(entityId),
-                clockPort.now(),
-                details
-        );
-    }
 }

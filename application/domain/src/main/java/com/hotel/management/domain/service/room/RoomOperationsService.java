@@ -2,15 +2,13 @@ package com.hotel.management.domain.service.room;
 
 import com.hotel.management.domain.audit.AuditActionType;
 import com.hotel.management.domain.audit.AuditEntityType;
-import com.hotel.management.domain.audit.AuditLogEntry;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.room.Room;
 import com.hotel.management.domain.room.RoomRepository;
 import com.hotel.management.domain.room.RoomStatus;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.audit.AuditLogPort;
-import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.predicate.reservation.IsStaffOrAdminPredicate;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
@@ -21,21 +19,18 @@ public class RoomOperationsService implements RoomOperationsFacade {
 
     private final RoomRepository roomRepository;
     private final CurrentUserPort currentUserPort;
-    private final ClockPort clockPort;
-    private final AuditLogPort auditLogPort;
+    private final AuditTrail auditTrail;
     private final RoomOperationResultMapper roomOperationResultMapper;
 
     public RoomOperationsService(
             RoomRepository roomRepository,
             CurrentUserPort currentUserPort,
-            ClockPort clockPort,
-            AuditLogPort auditLogPort,
+            AuditTrail auditTrail,
             RoomOperationResultMapper roomOperationResultMapper
     ) {
         this.roomRepository = roomRepository;
         this.currentUserPort = currentUserPort;
-        this.clockPort = clockPort;
-        this.auditLogPort = auditLogPort;
+        this.auditTrail = auditTrail;
         this.roomOperationResultMapper = roomOperationResultMapper;
     }
 
@@ -49,7 +44,13 @@ public class RoomOperationsService implements RoomOperationsFacade {
         var updatedRoom = changeStatus(room, command.status());
 
         var savedRoom = roomRepository.save(updatedRoom);
-        auditLogPort.append(auditEntry(currentUser, savedRoom));
+        auditTrail.record(
+                currentUser,
+                AuditActionType.UPDATE_ROOM_STATUS,
+                AuditEntityType.ROOM,
+                String.valueOf(savedRoom.id()),
+                "Room status changed to " + savedRoom.status().name()
+        );
         return roomOperationResultMapper.toResult(savedRoom);
     }
 
@@ -83,16 +84,4 @@ public class RoomOperationsService implements RoomOperationsFacade {
         };
     }
 
-    private AuditLogEntry auditEntry(AuthenticatedUser currentUser, Room room) {
-        return new AuditLogEntry(
-                null,
-                currentUser.userId(),
-                currentUser.roles().stream().findFirst().orElse("UNKNOWN"),
-                AuditActionType.UPDATE_ROOM_STATUS,
-                AuditEntityType.ROOM,
-                String.valueOf(room.id()),
-                clockPort.now(),
-                "Room status changed to " + room.status().name()
-        );
-    }
 }

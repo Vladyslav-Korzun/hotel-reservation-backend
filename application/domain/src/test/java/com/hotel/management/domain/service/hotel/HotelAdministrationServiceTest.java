@@ -2,7 +2,7 @@ package com.hotel.management.domain.service.hotel;
 
 import com.hotel.management.domain.audit.AuditActionType;
 import com.hotel.management.domain.audit.AuditEntityType;
-import com.hotel.management.domain.audit.AuditLogEntry;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.hotel.Hotel;
 import com.hotel.management.domain.hotel.HotelFactory;
 import com.hotel.management.domain.hotel.HotelPolicy;
@@ -27,8 +27,6 @@ import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.shared.value.PetType;
 import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.audit.AuditLogPort;
-import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.junit.jupiter.api.Test;
@@ -37,13 +35,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,10 +66,7 @@ class HotelAdministrationServiceTest {
     private CurrentUserPort currentUserPort;
 
     @Mock
-    private ClockPort clockPort;
-
-    @Mock
-    private AuditLogPort auditLogPort;
+    private AuditTrail auditTrail;
 
     @Test
     void shouldCreateHotelAndWriteAudit() {
@@ -79,7 +74,6 @@ class HotelAdministrationServiceTest {
         when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1004L)).thenReturn(Optional.empty());
         when(hotelRepository.save(any(Hotel.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         var result = service.createHotel(createCommand(1004L));
 
@@ -90,11 +84,13 @@ class HotelAdministrationServiceTest {
         verify(hotelRepository).save(savedHotel.capture());
         assertEquals("New Hotel", savedHotel.getValue().name());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.CREATE_HOTEL, auditEntry.getValue().actionType());
-        assertEquals(AuditEntityType.HOTEL, auditEntry.getValue().entityType());
-        assertEquals("1004", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.CREATE_HOTEL),
+                eq(AuditEntityType.HOTEL),
+                eq("1004"),
+                eq("Hotel created")
+        );
     }
 
     @Test
@@ -103,17 +99,13 @@ class HotelAdministrationServiceTest {
         when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Old Hotel", HotelStatus.ACTIVE)));
         when(hotelRepository.save(any(Hotel.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         var result = service.updateHotel(updateCommand(1001L));
 
         assertEquals("Updated Hotel", result.name());
         assertEquals("UNDER_MAINTENANCE", result.status());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.UPDATE_HOTEL, auditEntry.getValue().actionType());
-        assertEquals("1001", auditEntry.getValue().entityId());
+        verify(auditTrail).record(any(), eq(AuditActionType.UPDATE_HOTEL), eq(AuditEntityType.HOTEL), eq("1001"), eq("Hotel updated"));
     }
 
     @Test
@@ -133,7 +125,7 @@ class HotelAdministrationServiceTest {
 
         assertThrows(ValidationException.class, () -> service.createHotel(createCommand(1001L)));
         verify(hotelRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -144,7 +136,7 @@ class HotelAdministrationServiceTest {
 
         assertThrows(NotFoundException.class, () -> service.updateHotel(updateCommand(9999L)));
         verify(hotelRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -154,7 +146,6 @@ class HotelAdministrationServiceTest {
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(roomTypeRepository.findById(1104L)).thenReturn(Optional.empty());
         when(roomTypeRepository.save(any(RoomType.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         var result = service.createRoomType(createRoomTypeCommand(1104L, 1001L));
 
@@ -162,11 +153,13 @@ class HotelAdministrationServiceTest {
         assertEquals(1001L, result.hotelId());
         assertEquals("Suite", result.name());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.CREATE_ROOM_TYPE, auditEntry.getValue().actionType());
-        assertEquals(AuditEntityType.ROOM_TYPE, auditEntry.getValue().entityType());
-        assertEquals("1104", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.CREATE_ROOM_TYPE),
+                eq(AuditEntityType.ROOM_TYPE),
+                eq("1104"),
+                eq("Room type created")
+        );
     }
 
     @Test
@@ -176,17 +169,19 @@ class HotelAdministrationServiceTest {
         when(roomTypeRepository.findById(1102L)).thenReturn(Optional.of(roomType(1102L, 1001L, "Double")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(roomTypeRepository.save(any(RoomType.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         var result = service.updateRoomType(updateRoomTypeCommand(1102L));
 
         assertEquals("Updated Suite", result.name());
         assertEquals(3, result.maxAdults());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.UPDATE_ROOM_TYPE, auditEntry.getValue().actionType());
-        assertEquals("1102", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.UPDATE_ROOM_TYPE),
+                eq(AuditEntityType.ROOM_TYPE),
+                eq("1102"),
+                eq("Room type updated")
+        );
     }
 
     @Test
@@ -197,7 +192,6 @@ class HotelAdministrationServiceTest {
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(roomRepository.findById(1206L)).thenReturn(Optional.empty());
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         var result = service.createRoom(createRoomCommand(1206L, 1001L, 1102L, RoomStatus.AVAILABLE));
 
@@ -205,11 +199,13 @@ class HotelAdministrationServiceTest {
         assertEquals("401", result.roomNumber());
         assertEquals("AVAILABLE", result.status());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.CREATE_ROOM, auditEntry.getValue().actionType());
-        assertEquals(AuditEntityType.ROOM, auditEntry.getValue().entityType());
-        assertEquals("1206", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.CREATE_ROOM),
+                eq(AuditEntityType.ROOM),
+                eq("1206"),
+                eq("Room created")
+        );
     }
 
     @Test
@@ -220,17 +216,13 @@ class HotelAdministrationServiceTest {
         when(roomTypeRepository.findById(1103L)).thenReturn(Optional.of(roomType(1103L, 1001L, "Family")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         var result = service.updateRoom(updateRoomCommand(1203L, 1001L, 1103L, RoomStatus.MAINTENANCE));
 
         assertEquals(1103L, result.roomTypeId());
         assertEquals("MAINTENANCE", result.status());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.UPDATE_ROOM, auditEntry.getValue().actionType());
-        assertEquals("1203", auditEntry.getValue().entityId());
+        verify(auditTrail).record(any(), eq(AuditActionType.UPDATE_ROOM), eq(AuditEntityType.ROOM), eq("1203"), eq("Room updated"));
     }
 
     @Test
@@ -245,7 +237,7 @@ class HotelAdministrationServiceTest {
                 () -> service.createRoom(createRoomCommand(1206L, 1001L, 1102L, RoomStatus.AVAILABLE))
         );
         verify(roomRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -261,7 +253,7 @@ class HotelAdministrationServiceTest {
                 () -> service.createRoom(createRoomCommand(1206L, 1001L, 1102L, RoomStatus.OCCUPIED))
         );
         verify(roomRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -271,7 +263,6 @@ class HotelAdministrationServiceTest {
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(serviceOfferingRepository.findById(9001L)).thenReturn(Optional.empty());
         when(serviceOfferingRepository.save(any(ServiceOffering.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         var result = service.createServiceOffering(createServiceOfferingCommand(1001L, 9001L));
 
@@ -279,11 +270,13 @@ class HotelAdministrationServiceTest {
         assertEquals("BREAKFAST", result.code());
         assertEquals(true, result.active());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.CREATE_SERVICE_OFFERING, auditEntry.getValue().actionType());
-        assertEquals(AuditEntityType.SERVICE_OFFERING, auditEntry.getValue().entityType());
-        assertEquals("9001", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.CREATE_SERVICE_OFFERING),
+                eq(AuditEntityType.SERVICE_OFFERING),
+                eq("9001"),
+                eq("Service offering created")
+        );
     }
 
     @Test
@@ -294,7 +287,6 @@ class HotelAdministrationServiceTest {
         when(serviceOfferingRepository.findById(9001L))
                 .thenReturn(Optional.of(serviceOffering(9001L, 1001L, "BREAKFAST", true)));
         when(serviceOfferingRepository.save(any(ServiceOffering.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         var result = service.updateServiceOffering(updateServiceOfferingCommand(1001L, 9001L));
 
@@ -302,10 +294,13 @@ class HotelAdministrationServiceTest {
         assertEquals("Spa access", result.name());
         assertEquals(true, result.active());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.UPDATE_SERVICE_OFFERING, auditEntry.getValue().actionType());
-        assertEquals("9001", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.UPDATE_SERVICE_OFFERING),
+                eq(AuditEntityType.SERVICE_OFFERING),
+                eq("9001"),
+                eq("Service offering updated")
+        );
     }
 
     @Test
@@ -316,7 +311,6 @@ class HotelAdministrationServiceTest {
         when(serviceOfferingRepository.findById(9001L))
                 .thenReturn(Optional.of(serviceOffering(9001L, 1001L, "BREAKFAST", true)));
         when(serviceOfferingRepository.save(any(ServiceOffering.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
 
         service.deactivateServiceOffering(new DeactivateServiceOfferingCommand(1001L, 9001L));
 
@@ -324,10 +318,13 @@ class HotelAdministrationServiceTest {
         verify(serviceOfferingRepository).save(savedServiceOffering.capture());
         assertEquals(false, savedServiceOffering.getValue().active());
 
-        var auditEntry = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogPort).append(auditEntry.capture());
-        assertEquals(AuditActionType.DEACTIVATE_SERVICE_OFFERING, auditEntry.getValue().actionType());
-        assertEquals("9001", auditEntry.getValue().entityId());
+        verify(auditTrail).record(
+                any(),
+                eq(AuditActionType.DEACTIVATE_SERVICE_OFFERING),
+                eq(AuditEntityType.SERVICE_OFFERING),
+                eq("9001"),
+                eq("Service offering deactivated")
+        );
     }
 
     @Test
@@ -343,7 +340,7 @@ class HotelAdministrationServiceTest {
                 () -> service.updateServiceOffering(updateServiceOfferingCommand(1001L, 9001L))
         );
         verify(serviceOfferingRepository, never()).save(any());
-        verify(auditLogPort, never()).append(any());
+        verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
     private HotelAdministrationService service() {
@@ -353,8 +350,7 @@ class HotelAdministrationServiceTest {
                 roomRepository,
                 serviceOfferingRepository,
                 currentUserPort,
-                clockPort,
-                auditLogPort,
+                auditTrail,
                 new HotelFactory(),
                 new RoomTypeFactory(),
                 new RoomFactory(),

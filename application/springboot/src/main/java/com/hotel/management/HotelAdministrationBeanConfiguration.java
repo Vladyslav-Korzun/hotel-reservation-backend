@@ -11,8 +11,7 @@ import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.service.hotel.HotelAdministrationFacade;
 import com.hotel.management.domain.service.hotel.HotelAdministrationService;
 import com.hotel.management.domain.service.mapper.HotelQueryResultMapper;
-import com.hotel.management.domain.audit.AuditLogPort;
-import com.hotel.management.domain.shared.ClockPort;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,8 +46,7 @@ public class HotelAdministrationBeanConfiguration {
             RoomRepository roomRepository,
             ServiceOfferingRepository serviceOfferingRepository,
             CurrentUserPort currentUserPort,
-            ClockPort clockPort,
-            AuditLogPort auditLogPort,
+            AuditTrail auditTrail,
             HotelFactory hotelFactory,
             RoomTypeFactory roomTypeFactory,
             RoomFactory roomFactory,
@@ -61,8 +59,7 @@ public class HotelAdministrationBeanConfiguration {
                 roomRepository,
                 serviceOfferingRepository,
                 currentUserPort,
-                clockPort,
-                auditLogPort,
+                auditTrail,
                 hotelFactory,
                 roomTypeFactory,
                 roomFactory,

@@ -3,7 +3,7 @@ package com.hotel.management;
 import com.hotel.management.domain.reservation.ReservationRepository;
 import com.hotel.management.domain.room.RoomRepository;
 import com.hotel.management.domain.stay.StayRepository;
-import com.hotel.management.domain.audit.AuditLogPort;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
@@ -31,7 +31,7 @@ public class StaffReservationBeanConfiguration {
             RoomAssignmentPort roomAssignmentPort,
             CurrentUserPort currentUserPort,
             ClockPort clockPort,
-            AuditLogPort auditLogPort,
+            AuditTrail auditTrail,
             StaffReservationResultMapper staffReservationResultMapper
     ) {
         var staffReservationService = new StaffReservationService(
@@ -42,7 +42,7 @@ public class StaffReservationBeanConfiguration {
                 roomAssignmentPort,
                 currentUserPort,
                 clockPort,
-                auditLogPort,
+                auditTrail,
                 staffReservationResultMapper
         );
         return new TransactionalStaffReservationFacade(staffReservationService);

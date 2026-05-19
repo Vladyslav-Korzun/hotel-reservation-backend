@@ -2,7 +2,7 @@ package com.hotel.management.domain.service.reservation;
 
 import com.hotel.management.domain.audit.AuditActionType;
 import com.hotel.management.domain.audit.AuditEntityType;
-import com.hotel.management.domain.audit.AuditLogEntry;
+import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.guest.Guest;
 import com.hotel.management.domain.guest.GuestRepository;
 import com.hotel.management.domain.reservation.Reservation;
@@ -13,7 +13,6 @@ import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.StayPeriod;
 import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.audit.AuditLogPort;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.predicate.reservation.IsAdminPredicate;
 import com.hotel.management.domain.predicate.reservation.IsGuestPredicate;
@@ -41,7 +40,7 @@ public class ReservationService implements ReservationFacade {
     private final ReservationFactory reservationFactory;
     private final ReservationPricingCalculator reservationPricingCalculator;
     private final ReservationResultMapper reservationResultMapper;
-    private final AuditLogPort auditLogPort;
+    private final AuditTrail auditTrail;
 
     public ReservationService(
             ReservationRepository reservationRepository,
@@ -53,7 +52,7 @@ public class ReservationService implements ReservationFacade {
             ReservationFactory reservationFactory,
             ReservationPricingCalculator reservationPricingCalculator,
             ReservationResultMapper reservationResultMapper,
-            AuditLogPort auditLogPort
+            AuditTrail auditTrail
     ) {
         this.reservationRepository = reservationRepository;
         this.guestRepository = guestRepository;
@@ -64,7 +63,7 @@ public class ReservationService implements ReservationFacade {
         this.reservationFactory = reservationFactory;
         this.reservationPricingCalculator = reservationPricingCalculator;
         this.reservationResultMapper = reservationResultMapper;
-        this.auditLogPort = auditLogPort;
+        this.auditTrail = auditTrail;
     }
 
     @Override
@@ -133,12 +132,13 @@ public class ReservationService implements ReservationFacade {
         );
 
         Reservation savedReservation = reservationRepository.save(reservation);
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 actor,
                 AuditActionType.CREATE_RESERVATION,
+                AuditEntityType.RESERVATION,
                 savedReservation.id(),
                 "Reservation created"
-        ));
+        );
         return reservationResultMapper.toCreateResult(savedReservation);
     }
 
@@ -177,12 +177,13 @@ public class ReservationService implements ReservationFacade {
         var reservation = loadReservationForChange(reservationId);
         assertCanManage(reservation, currentUser);
         Reservation cancelledReservation = reservationRepository.save(reservation.cancel(clockPort.now()));
-        auditLogPort.append(auditEntry(
+        auditTrail.record(
                 currentUser,
                 AuditActionType.CANCEL_RESERVATION,
+                AuditEntityType.RESERVATION,
                 cancelledReservation.id(),
                 "Reservation cancelled"
-        ));
+        );
     }
 
     private Reservation loadReservation(String reservationId) {
@@ -305,21 +306,4 @@ public class ReservationService implements ReservationFacade {
         return value.trim();
     }
 
-    private AuditLogEntry auditEntry(
-            AuthenticatedUser currentUser,
-            AuditActionType actionType,
-            String reservationId,
-            String details
-    ) {
-        return new AuditLogEntry(
-                null,
-                currentUser.userId(),
-                currentUser.roles().stream().findFirst().orElse("UNKNOWN"),
-                actionType,
-                AuditEntityType.RESERVATION,
-                reservationId,
-                clockPort.now(),
-                details
-        );
-    }
 }
