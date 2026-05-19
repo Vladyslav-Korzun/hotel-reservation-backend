@@ -32,7 +32,7 @@ class HexagonalArchitectureTest {
         ArchRule rule = noClasses()
                 .that().resideInAnyPackage(
                         "com.hotel.management.domain..",
-                        "com.hotel.management.service..")
+                        "com.hotel.management.domain.service..")
                 .should().dependOnClassesThat()
                 .resideInAnyPackage(
                         "org.springframework..",
@@ -100,7 +100,7 @@ class HexagonalArchitectureTest {
         ArchRule repositoryPorts = classes()
                 .that().resideInAnyPackage(
                         "com.hotel.management.domain..",
-                        "com.hotel.management.service..")
+                        "com.hotel.management.domain.service..")
                 .and().haveSimpleNameEndingWith("Repository")
                 .should().beInterfaces()
                 .because("repository classes in the domain module are ports");

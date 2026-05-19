@@ -2,12 +2,12 @@ package com.hotel.management.controller;
 
 import com.hotel.management.api.dto.ReservationResponse;
 import com.hotel.management.mapper.ReservationMapper;
-import com.hotel.management.service.reservation.CreatePublicReservationCommand;
-import com.hotel.management.service.reservation.CreateReservationCommand;
+import com.hotel.management.domain.service.reservation.CreatePublicReservationCommand;
+import com.hotel.management.domain.service.reservation.CreateReservationCommand;
 import com.hotel.management.domain.reservation.CreateReservationResult;
-import com.hotel.management.service.reservation.CreateStaffReservationCommand;
+import com.hotel.management.domain.service.reservation.CreateStaffReservationCommand;
 import com.hotel.management.domain.reservation.GetReservationResult;
-import com.hotel.management.service.reservation.ReservationFacade;
+import com.hotel.management.domain.service.reservation.ReservationFacade;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

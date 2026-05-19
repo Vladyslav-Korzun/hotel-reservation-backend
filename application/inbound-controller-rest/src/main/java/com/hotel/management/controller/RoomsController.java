@@ -3,7 +3,7 @@ package com.hotel.management.controller;
 import com.hotel.management.api.RoomsApi;
 import com.hotel.management.api.dto.AvailableRoomResponse;
 import com.hotel.management.api.dto.SearchAvailableRoomsRequest;
-import com.hotel.management.service.availability.SearchAvailabilityFacade;
+import com.hotel.management.domain.service.availability.SearchAvailabilityFacade;
 import com.hotel.management.mapper.AvailabilityMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;

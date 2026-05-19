@@ -1,6 +1,6 @@
 package com.hotel.management;
 
-import com.hotel.management.service.accommodation.AccommodationPolicyValidator;
+import com.hotel.management.domain.service.accommodation.AccommodationPolicyValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

@@ -8,9 +8,9 @@ import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
 import com.hotel.management.domain.reservation.RoomAssignmentPort;
-import com.hotel.management.service.staff.StaffReservationFacade;
-import com.hotel.management.service.staff.StaffReservationResultMapper;
-import com.hotel.management.service.staff.StaffReservationService;
+import com.hotel.management.domain.service.staff.StaffReservationFacade;
+import com.hotel.management.domain.service.mapper.StaffReservationResultMapper;
+import com.hotel.management.domain.service.staff.StaffReservationService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

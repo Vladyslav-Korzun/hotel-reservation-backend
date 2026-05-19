@@ -13,9 +13,9 @@ import com.hotel.management.domain.shared.value.PetSize;
 import com.hotel.management.domain.shared.value.PetType;
 import com.hotel.management.domain.shared.value.StayPeriod;
 import com.hotel.management.domain.room.AvailableRoomResult;
-import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarQuery;
+import com.hotel.management.domain.service.availability.GetRoomTypeAvailabilityCalendarQuery;
 import com.hotel.management.domain.room.RoomTypeAvailabilityCalendarDayResult;
-import com.hotel.management.service.availability.SearchAvailableRoomsCommand;
+import com.hotel.management.domain.service.availability.SearchAvailableRoomsCommand;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

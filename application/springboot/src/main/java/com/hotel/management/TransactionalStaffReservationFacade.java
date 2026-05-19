@@ -1,6 +1,6 @@
 package com.hotel.management;
 
-import com.hotel.management.service.staff.StaffReservationFacade;
+import com.hotel.management.domain.service.staff.StaffReservationFacade;
 import com.hotel.management.domain.reservation.StaffReservationResult;
 import org.springframework.transaction.annotation.Transactional;
 

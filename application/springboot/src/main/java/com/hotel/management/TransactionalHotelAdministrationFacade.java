@@ -1,19 +1,19 @@
 package com.hotel.management;
 
-import com.hotel.management.service.hotel.CreateHotelCommand;
-import com.hotel.management.service.hotel.CreateRoomCommand;
-import com.hotel.management.service.hotel.CreateRoomTypeCommand;
-import com.hotel.management.service.hotel.CreateServiceOfferingCommand;
-import com.hotel.management.service.hotel.DeactivateServiceOfferingCommand;
-import com.hotel.management.service.hotel.HotelAdministrationFacade;
+import com.hotel.management.domain.service.hotel.CreateHotelCommand;
+import com.hotel.management.domain.service.hotel.CreateRoomCommand;
+import com.hotel.management.domain.service.hotel.CreateRoomTypeCommand;
+import com.hotel.management.domain.service.hotel.CreateServiceOfferingCommand;
+import com.hotel.management.domain.service.hotel.DeactivateServiceOfferingCommand;
+import com.hotel.management.domain.service.hotel.HotelAdministrationFacade;
 import com.hotel.management.domain.hotel.HotelResult;
 import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
 import com.hotel.management.domain.room.RoomResult;
 import com.hotel.management.domain.room.RoomTypeResult;
-import com.hotel.management.service.hotel.UpdateHotelCommand;
-import com.hotel.management.service.hotel.UpdateRoomCommand;
-import com.hotel.management.service.hotel.UpdateRoomTypeCommand;
-import com.hotel.management.service.hotel.UpdateServiceOfferingCommand;
+import com.hotel.management.domain.service.hotel.UpdateHotelCommand;
+import com.hotel.management.domain.service.hotel.UpdateRoomCommand;
+import com.hotel.management.domain.service.hotel.UpdateRoomTypeCommand;
+import com.hotel.management.domain.service.hotel.UpdateServiceOfferingCommand;
 import org.springframework.transaction.annotation.Transactional;
 
 public class TransactionalHotelAdministrationFacade implements HotelAdministrationFacade {

@@ -6,8 +6,8 @@ import com.hotel.management.api.dto.HotelServiceOfferingResponse;
 import com.hotel.management.api.dto.RoomTypeAvailabilityCalendarDayResponse;
 import com.hotel.management.mapper.AvailabilityMapper;
 import com.hotel.management.mapper.HotelMapper;
-import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarFacade;
-import com.hotel.management.service.hotel.HotelQueryFacade;
+import com.hotel.management.domain.service.availability.GetRoomTypeAvailabilityCalendarFacade;
+import com.hotel.management.domain.service.hotel.HotelQueryFacade;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 

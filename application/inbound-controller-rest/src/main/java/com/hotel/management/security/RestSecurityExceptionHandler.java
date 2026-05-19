@@ -1,7 +1,7 @@
 package com.hotel.management.security;
 
-import com.hotel.management.service.exception.ForbiddenException;
-import com.hotel.management.service.exception.UnauthorizedException;
+import com.hotel.management.domain.service.exception.ForbiddenException;
+import com.hotel.management.domain.service.exception.UnauthorizedException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

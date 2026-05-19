@@ -3,7 +3,7 @@ package com.hotel.management.controller;
 import com.hotel.management.api.MeApi;
 import com.hotel.management.api.dto.ReservationResponse;
 import com.hotel.management.mapper.ReservationMapper;
-import com.hotel.management.service.reservation.ReservationFacade;
+import com.hotel.management.domain.service.reservation.ReservationFacade;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 

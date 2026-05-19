@@ -14,7 +14,7 @@ import com.hotel.management.api.dto.UpdateRoomRequest;
 import com.hotel.management.api.dto.UpdateRoomTypeRequest;
 import com.hotel.management.api.dto.UpdateServiceOfferingRequest;
 import com.hotel.management.mapper.HotelMapper;
-import com.hotel.management.service.hotel.HotelAdministrationFacade;
+import com.hotel.management.domain.service.hotel.HotelAdministrationFacade;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 

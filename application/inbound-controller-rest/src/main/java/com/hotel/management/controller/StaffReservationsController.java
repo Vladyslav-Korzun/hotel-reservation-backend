@@ -6,11 +6,11 @@ import com.hotel.management.api.dto.ReservationResponse;
 import com.hotel.management.api.dto.RoomOperationResponse;
 import com.hotel.management.api.dto.StaffCreateReservationRequest;
 import com.hotel.management.api.dto.UpdateRoomStatusRequest;
-import com.hotel.management.service.reservation.ReservationFacade;
-import com.hotel.management.service.staff.StaffReservationFacade;
+import com.hotel.management.domain.service.reservation.ReservationFacade;
+import com.hotel.management.domain.service.staff.StaffReservationFacade;
 import com.hotel.management.mapper.ReservationMapper;
 import com.hotel.management.mapper.RoomMapper;
-import com.hotel.management.service.room.RoomOperationsFacade;
+import com.hotel.management.domain.service.room.RoomOperationsFacade;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 

@@ -5,13 +5,13 @@ import com.hotel.management.api.dto.HotelServiceOfferingResponse;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.mapper.AvailabilityMapper;
 import com.hotel.management.mapper.HotelMapper;
-import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarFacade;
-import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarQuery;
+import com.hotel.management.domain.service.availability.GetRoomTypeAvailabilityCalendarFacade;
+import com.hotel.management.domain.service.availability.GetRoomTypeAvailabilityCalendarQuery;
 import com.hotel.management.domain.room.RoomTypeAvailabilityCalendarDayResult;
-import com.hotel.management.service.hotel.HotelQueryFacade;
+import com.hotel.management.domain.service.hotel.HotelQueryFacade;
 import com.hotel.management.domain.hotel.HotelResult;
 import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
-import com.hotel.management.service.hotel.ListHotelsQuery;
+import com.hotel.management.domain.service.hotel.ListHotelsQuery;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

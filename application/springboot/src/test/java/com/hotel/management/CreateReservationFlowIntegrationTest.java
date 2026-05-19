@@ -1,7 +1,7 @@
 package com.hotel.management;
 
-import com.hotel.management.service.availability.SearchAvailableRoomsCommand;
-import com.hotel.management.service.availability.SearchAvailabilityFacade;
+import com.hotel.management.domain.service.availability.SearchAvailableRoomsCommand;
+import com.hotel.management.domain.service.availability.SearchAvailabilityFacade;
 import com.hotel.management.jpa.guest.JpaGuestEntity;
 import com.hotel.management.jpa.hotel.JpaHotelEntity;
 import com.hotel.management.jpa.reservation.JpaReservationEntity;

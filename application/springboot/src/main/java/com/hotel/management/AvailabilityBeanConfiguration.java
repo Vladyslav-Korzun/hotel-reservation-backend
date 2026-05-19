@@ -1,13 +1,13 @@
 package com.hotel.management;
 
-import com.hotel.management.service.availability.SearchAvailabilityFacade;
-import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarFacade;
-import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarService;
-import com.hotel.management.service.availability.SearchAvailabilityService;
+import com.hotel.management.domain.service.availability.SearchAvailabilityFacade;
+import com.hotel.management.domain.service.availability.GetRoomTypeAvailabilityCalendarFacade;
+import com.hotel.management.domain.service.availability.GetRoomTypeAvailabilityCalendarService;
+import com.hotel.management.domain.service.availability.SearchAvailabilityService;
 import com.hotel.management.domain.hotel.HotelRepository;
 import com.hotel.management.domain.room.RoomRepository;
 import com.hotel.management.domain.room.RoomTypeRepository;
-import com.hotel.management.service.accommodation.AccommodationPolicyValidator;
+import com.hotel.management.domain.service.accommodation.AccommodationPolicyValidator;
 import com.hotel.management.domain.reservation.ReservationQueryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
