@@ -14,6 +14,7 @@ import com.hotel.management.domain.service.hotel.UpdateHotelCommand;
 import com.hotel.management.domain.service.hotel.UpdateRoomCommand;
 import com.hotel.management.domain.service.hotel.UpdateRoomTypeCommand;
 import com.hotel.management.domain.service.hotel.UpdateServiceOfferingCommand;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import org.springframework.transaction.annotation.Transactional;
 
 public class TransactionalHotelAdministrationFacade implements HotelAdministrationFacade {
@@ -26,55 +27,55 @@ public class TransactionalHotelAdministrationFacade implements HotelAdministrati
 
     @Override
     @Transactional
-    public HotelResult createHotel(CreateHotelCommand command) {
-        return delegate.createHotel(command);
+    public HotelResult createHotel(AuthenticatedUser actor, CreateHotelCommand command) {
+        return delegate.createHotel(actor, command);
     }
 
     @Override
     @Transactional
-    public HotelResult updateHotel(UpdateHotelCommand command) {
-        return delegate.updateHotel(command);
+    public HotelResult updateHotel(AuthenticatedUser actor, UpdateHotelCommand command) {
+        return delegate.updateHotel(actor, command);
     }
 
     @Override
     @Transactional
-    public RoomTypeResult createRoomType(CreateRoomTypeCommand command) {
-        return delegate.createRoomType(command);
+    public RoomTypeResult createRoomType(AuthenticatedUser actor, CreateRoomTypeCommand command) {
+        return delegate.createRoomType(actor, command);
     }
 
     @Override
     @Transactional
-    public RoomTypeResult updateRoomType(UpdateRoomTypeCommand command) {
-        return delegate.updateRoomType(command);
+    public RoomTypeResult updateRoomType(AuthenticatedUser actor, UpdateRoomTypeCommand command) {
+        return delegate.updateRoomType(actor, command);
     }
 
     @Override
     @Transactional
-    public RoomResult createRoom(CreateRoomCommand command) {
-        return delegate.createRoom(command);
+    public RoomResult createRoom(AuthenticatedUser actor, CreateRoomCommand command) {
+        return delegate.createRoom(actor, command);
     }
 
     @Override
     @Transactional
-    public RoomResult updateRoom(UpdateRoomCommand command) {
-        return delegate.updateRoom(command);
+    public RoomResult updateRoom(AuthenticatedUser actor, UpdateRoomCommand command) {
+        return delegate.updateRoom(actor, command);
     }
 
     @Override
     @Transactional
-    public HotelServiceOfferingResult createServiceOffering(CreateServiceOfferingCommand command) {
-        return delegate.createServiceOffering(command);
+    public HotelServiceOfferingResult createServiceOffering(AuthenticatedUser actor, CreateServiceOfferingCommand command) {
+        return delegate.createServiceOffering(actor, command);
     }
 
     @Override
     @Transactional
-    public HotelServiceOfferingResult updateServiceOffering(UpdateServiceOfferingCommand command) {
-        return delegate.updateServiceOffering(command);
+    public HotelServiceOfferingResult updateServiceOffering(AuthenticatedUser actor, UpdateServiceOfferingCommand command) {
+        return delegate.updateServiceOffering(actor, command);
     }
 
     @Override
     @Transactional
-    public void deactivateServiceOffering(DeactivateServiceOfferingCommand command) {
-        delegate.deactivateServiceOffering(command);
+    public void deactivateServiceOffering(AuthenticatedUser actor, DeactivateServiceOfferingCommand command) {
+        delegate.deactivateServiceOffering(actor, command);
     }
 }

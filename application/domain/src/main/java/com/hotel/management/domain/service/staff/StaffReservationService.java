@@ -15,7 +15,7 @@ import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.predicate.reservation.IsBeforeReservationCheckOutDatePredicate;
 import com.hotel.management.domain.predicate.reservation.IsCheckInDateReachedPredicate;
 import com.hotel.management.domain.reservation.ReservationLockPort;
-import com.hotel.management.domain.shared.security.CurrentUserPort;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 
 import java.time.ZoneOffset;
 import com.hotel.management.domain.reservation.RoomAssignmentPort;
@@ -29,7 +29,6 @@ public class StaffReservationService implements StaffReservationFacade {
     private final RoomRepository roomRepository;
     private final StayRepository stayRepository;
     private final RoomAssignmentPort roomAssignmentPort;
-    private final CurrentUserPort currentUserPort;
     private final ClockPort clockPort;
     private final AuditTrail auditTrail;
     private final StaffReservationResultMapper staffReservationResultMapper;
@@ -40,7 +39,6 @@ public class StaffReservationService implements StaffReservationFacade {
             RoomRepository roomRepository,
             StayRepository stayRepository,
             RoomAssignmentPort roomAssignmentPort,
-            CurrentUserPort currentUserPort,
             ClockPort clockPort,
             AuditTrail auditTrail,
             StaffReservationResultMapper staffReservationResultMapper
@@ -50,16 +48,14 @@ public class StaffReservationService implements StaffReservationFacade {
         this.roomRepository = roomRepository;
         this.stayRepository = stayRepository;
         this.roomAssignmentPort = roomAssignmentPort;
-        this.currentUserPort = currentUserPort;
         this.clockPort = clockPort;
         this.auditTrail = auditTrail;
         this.staffReservationResultMapper = staffReservationResultMapper;
     }
 
     @Override
-    public StaffReservationResult checkIn(String reservationId) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireStaffOrAdmin();
+    public StaffReservationResult checkIn(AuthenticatedUser actor, String reservationId) {
+        actor.requireStaffOrAdmin();
         var reservation = loadReservationForChange(reservationId);
         assertCheckInDateAllowed(reservation);
         var room = findAvailableRoomFor(reservation);
@@ -69,7 +65,7 @@ public class StaffReservationService implements StaffReservationFacade {
         roomRepository.save(room.occupy());
         stayRepository.save(Stay.start(null, checkedInReservation.id(), room.id(), clockPort.now()));
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.CHECK_IN,
                 AuditEntityType.RESERVATION,
                 checkedInReservation.id(),
@@ -80,9 +76,8 @@ public class StaffReservationService implements StaffReservationFacade {
     }
 
     @Override
-    public StaffReservationResult checkOut(String reservationId) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireStaffOrAdmin();
+    public StaffReservationResult checkOut(AuthenticatedUser actor, String reservationId) {
+        actor.requireStaffOrAdmin();
         var reservation = loadReservationForChange(reservationId);
         var checkedOutReservation = reservation.completeCheckOut();
         var stay = stayRepository.findActiveByReservationId(reservation.id())
@@ -94,7 +89,7 @@ public class StaffReservationService implements StaffReservationFacade {
         stayRepository.save(stay.complete(clockPort.now()));
         roomRepository.save(room.markCleaningAfterCheckOut());
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.CHECK_OUT,
                 AuditEntityType.RESERVATION,
                 checkedOutReservation.id(),
@@ -105,16 +100,15 @@ public class StaffReservationService implements StaffReservationFacade {
     }
 
     @Override
-    public StaffReservationResult markNoShow(String reservationId) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireStaffOrAdmin();
+    public StaffReservationResult markNoShow(AuthenticatedUser actor, String reservationId) {
+        actor.requireStaffOrAdmin();
         var reservation = loadReservationForChange(reservationId);
         assertNoShowDateAllowed(reservation);
 
         var noShowReservation = reservation.markNoShow();
         reservationRepository.save(noShowReservation);
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.MARK_NO_SHOW,
                 AuditEntityType.RESERVATION,
                 noShowReservation.id(),

@@ -15,6 +15,7 @@ import com.hotel.management.api.dto.UpdateRoomTypeRequest;
 import com.hotel.management.api.dto.UpdateServiceOfferingRequest;
 import com.hotel.management.mapper.HotelMapper;
 import com.hotel.management.domain.service.hotel.HotelAdministrationFacade;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,31 +23,37 @@ import org.springframework.web.bind.annotation.RestController;
 public class HotelAdministrationController implements AdminApi {
 
     private final HotelAdministrationFacade hotelAdministrationFacade;
+    private final CurrentUserPort currentUserPort;
     private final HotelMapper hotelMapper;
 
     public HotelAdministrationController(
             HotelAdministrationFacade hotelAdministrationFacade,
+            CurrentUserPort currentUserPort,
             HotelMapper hotelMapper
     ) {
         this.hotelAdministrationFacade = hotelAdministrationFacade;
+        this.currentUserPort = currentUserPort;
         this.hotelMapper = hotelMapper;
     }
 
     @Override
     public ResponseEntity<HotelResponse> createHotel(CreateHotelRequest createHotelRequest) {
-        var result = hotelAdministrationFacade.createHotel(hotelMapper.toCommand(createHotelRequest));
+        var actor = currentUserPort.getCurrentUser();
+        var result = hotelAdministrationFacade.createHotel(actor, hotelMapper.toCommand(createHotelRequest));
         return ResponseEntity.status(201).body(hotelMapper.toResponse(result));
     }
 
     @Override
     public ResponseEntity<HotelResponse> updateHotel(Long hotelId, UpdateHotelRequest updateHotelRequest) {
-        var result = hotelAdministrationFacade.updateHotel(hotelMapper.toCommand(hotelId, updateHotelRequest));
+        var actor = currentUserPort.getCurrentUser();
+        var result = hotelAdministrationFacade.updateHotel(actor, hotelMapper.toCommand(hotelId, updateHotelRequest));
         return ResponseEntity.ok(hotelMapper.toResponse(result));
     }
 
     @Override
     public ResponseEntity<RoomTypeResponse> createRoomType(CreateRoomTypeRequest createRoomTypeRequest) {
-        var result = hotelAdministrationFacade.createRoomType(hotelMapper.toCommand(createRoomTypeRequest));
+        var actor = currentUserPort.getCurrentUser();
+        var result = hotelAdministrationFacade.createRoomType(actor, hotelMapper.toCommand(createRoomTypeRequest));
         return ResponseEntity.status(201).body(hotelMapper.toResponse(result));
     }
 
@@ -55,19 +62,22 @@ public class HotelAdministrationController implements AdminApi {
             Long roomTypeId,
             UpdateRoomTypeRequest updateRoomTypeRequest
     ) {
-        var result = hotelAdministrationFacade.updateRoomType(hotelMapper.toCommand(roomTypeId, updateRoomTypeRequest));
+        var actor = currentUserPort.getCurrentUser();
+        var result = hotelAdministrationFacade.updateRoomType(actor, hotelMapper.toCommand(roomTypeId, updateRoomTypeRequest));
         return ResponseEntity.ok(hotelMapper.toResponse(result));
     }
 
     @Override
     public ResponseEntity<RoomResponse> createRoom(CreateRoomRequest createRoomRequest) {
-        var result = hotelAdministrationFacade.createRoom(hotelMapper.toCommand(createRoomRequest));
+        var actor = currentUserPort.getCurrentUser();
+        var result = hotelAdministrationFacade.createRoom(actor, hotelMapper.toCommand(createRoomRequest));
         return ResponseEntity.status(201).body(hotelMapper.toResponse(result));
     }
 
     @Override
     public ResponseEntity<RoomResponse> updateRoom(Long roomId, UpdateRoomRequest updateRoomRequest) {
-        var result = hotelAdministrationFacade.updateRoom(hotelMapper.toCommand(roomId, updateRoomRequest));
+        var actor = currentUserPort.getCurrentUser();
+        var result = hotelAdministrationFacade.updateRoom(actor, hotelMapper.toCommand(roomId, updateRoomRequest));
         return ResponseEntity.ok(hotelMapper.toResponse(result));
     }
 
@@ -76,7 +86,9 @@ public class HotelAdministrationController implements AdminApi {
             Long hotelId,
             CreateServiceOfferingRequest createServiceOfferingRequest
     ) {
+        var actor = currentUserPort.getCurrentUser();
         var result = hotelAdministrationFacade.createServiceOffering(
+                actor,
                 hotelMapper.toCommand(hotelId, createServiceOfferingRequest)
         );
         return ResponseEntity.status(201).body(hotelMapper.toResponse(result));
@@ -88,7 +100,9 @@ public class HotelAdministrationController implements AdminApi {
             Long serviceId,
             UpdateServiceOfferingRequest updateServiceOfferingRequest
     ) {
+        var actor = currentUserPort.getCurrentUser();
         var result = hotelAdministrationFacade.updateServiceOffering(
+                actor,
                 hotelMapper.toCommand(hotelId, serviceId, updateServiceOfferingRequest)
         );
         return ResponseEntity.ok(hotelMapper.toResponse(result));
@@ -96,7 +110,9 @@ public class HotelAdministrationController implements AdminApi {
 
     @Override
     public ResponseEntity<Void> deactivateServiceOffering(Long hotelId, Long serviceId) {
+        var actor = currentUserPort.getCurrentUser();
         hotelAdministrationFacade.deactivateServiceOffering(
+                actor,
                 hotelMapper.toDeactivateServiceOfferingCommand(hotelId, serviceId)
         );
         return ResponseEntity.noContent().build();

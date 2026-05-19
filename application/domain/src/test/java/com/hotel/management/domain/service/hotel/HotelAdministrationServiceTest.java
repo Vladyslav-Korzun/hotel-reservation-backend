@@ -28,7 +28,6 @@ import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.shared.value.PetType;
 import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
-import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -63,19 +62,15 @@ class HotelAdministrationServiceTest {
     private ServiceOfferingRepository serviceOfferingRepository;
 
     @Mock
-    private CurrentUserPort currentUserPort;
-
-    @Mock
     private AuditTrail auditTrail;
 
     @Test
     void shouldCreateHotelAndWriteAudit() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1004L)).thenReturn(Optional.empty());
         when(hotelRepository.save(any(Hotel.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.createHotel(createCommand(1004L));
+        var result = service.createHotel(admin(), createCommand(1004L));
 
         assertEquals(1004L, result.hotelId());
         assertEquals("ACTIVE", result.status());
@@ -96,11 +91,10 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldUpdateHotelAndWriteAudit() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Old Hotel", HotelStatus.ACTIVE)));
         when(hotelRepository.save(any(Hotel.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.updateHotel(updateCommand(1001L));
+        var result = service.updateHotel(admin(), updateCommand(1001L));
 
         assertEquals("Updated Hotel", result.name());
         assertEquals("UNDER_MAINTENANCE", result.status());
@@ -111,19 +105,17 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldRejectNonAdminUser() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
 
-        assertThrows(ForbiddenException.class, () -> service.createHotel(createCommand(1004L)));
+        assertThrows(ForbiddenException.class, () -> service.createHotel(new AuthenticatedUser("staff-1", Set.of("STAFF")), createCommand(1004L)));
         verify(hotelRepository, never()).save(any());
     }
 
     @Test
     void shouldRejectDuplicateHotelId() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Existing Hotel", HotelStatus.ACTIVE)));
 
-        assertThrows(ValidationException.class, () -> service.createHotel(createCommand(1001L)));
+        assertThrows(ValidationException.class, () -> service.createHotel(admin(), createCommand(1001L)));
         verify(hotelRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
@@ -131,10 +123,9 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldRejectMissingHotelOnUpdate() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(9999L)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> service.updateHotel(updateCommand(9999L)));
+        assertThrows(NotFoundException.class, () -> service.updateHotel(admin(), updateCommand(9999L)));
         verify(hotelRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
@@ -142,12 +133,11 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldCreateRoomTypeAndWriteAudit() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(roomTypeRepository.findById(1104L)).thenReturn(Optional.empty());
         when(roomTypeRepository.save(any(RoomType.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.createRoomType(createRoomTypeCommand(1104L, 1001L));
+        var result = service.createRoomType(admin(), createRoomTypeCommand(1104L, 1001L));
 
         assertEquals(1104L, result.roomTypeId());
         assertEquals(1001L, result.hotelId());
@@ -165,12 +155,11 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldUpdateRoomTypeAndWriteAudit() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(roomTypeRepository.findById(1102L)).thenReturn(Optional.of(roomType(1102L, 1001L, "Double")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(roomTypeRepository.save(any(RoomType.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.updateRoomType(updateRoomTypeCommand(1102L));
+        var result = service.updateRoomType(admin(), updateRoomTypeCommand(1102L));
 
         assertEquals("Updated Suite", result.name());
         assertEquals(3, result.maxAdults());
@@ -187,13 +176,12 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldCreateRoomAndWriteAudit() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(roomTypeRepository.findById(1102L)).thenReturn(Optional.of(roomType(1102L, 1001L, "Double")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(roomRepository.findById(1206L)).thenReturn(Optional.empty());
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.createRoom(createRoomCommand(1206L, 1001L, 1102L, RoomStatus.AVAILABLE));
+        var result = service.createRoom(admin(), createRoomCommand(1206L, 1001L, 1102L, RoomStatus.AVAILABLE));
 
         assertEquals(1206L, result.roomId());
         assertEquals("401", result.roomNumber());
@@ -211,13 +199,12 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldUpdateRoomAndWriteAudit() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(roomRepository.findById(1203L)).thenReturn(Optional.of(room(1203L, 1001L, 1102L, RoomStatus.AVAILABLE)));
         when(roomTypeRepository.findById(1103L)).thenReturn(Optional.of(roomType(1103L, 1001L, "Family")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.updateRoom(updateRoomCommand(1203L, 1001L, 1103L, RoomStatus.MAINTENANCE));
+        var result = service.updateRoom(admin(), updateRoomCommand(1203L, 1001L, 1103L, RoomStatus.MAINTENANCE));
 
         assertEquals(1103L, result.roomTypeId());
         assertEquals("MAINTENANCE", result.status());
@@ -228,13 +215,12 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldRejectRoomTypeFromDifferentHotel() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(roomTypeRepository.findById(1102L)).thenReturn(Optional.of(roomType(1102L, 2001L, "Double")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
 
         assertThrows(
                 ValidationException.class,
-                () -> service.createRoom(createRoomCommand(1206L, 1001L, 1102L, RoomStatus.AVAILABLE))
+                () -> service.createRoom(admin(), createRoomCommand(1206L, 1001L, 1102L, RoomStatus.AVAILABLE))
         );
         verify(roomRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
@@ -243,14 +229,13 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldRejectOccupiedRoomStatusInAdminFlow() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(roomTypeRepository.findById(1102L)).thenReturn(Optional.of(roomType(1102L, 1001L, "Double")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(roomRepository.findById(1206L)).thenReturn(Optional.empty());
 
         assertThrows(
                 ValidationException.class,
-                () -> service.createRoom(createRoomCommand(1206L, 1001L, 1102L, RoomStatus.OCCUPIED))
+                () -> service.createRoom(admin(), createRoomCommand(1206L, 1001L, 1102L, RoomStatus.OCCUPIED))
         );
         verify(roomRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
@@ -259,12 +244,11 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldCreateServiceOfferingAndWriteAudit() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(serviceOfferingRepository.findById(9001L)).thenReturn(Optional.empty());
         when(serviceOfferingRepository.save(any(ServiceOffering.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.createServiceOffering(createServiceOfferingCommand(1001L, 9001L));
+        var result = service.createServiceOffering(admin(), createServiceOfferingCommand(1001L, 9001L));
 
         assertEquals(9001L, result.serviceOfferingId());
         assertEquals("BREAKFAST", result.code());
@@ -282,13 +266,12 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldUpdateServiceOfferingAndWriteAudit() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(serviceOfferingRepository.findById(9001L))
                 .thenReturn(Optional.of(serviceOffering(9001L, 1001L, "BREAKFAST", true)));
         when(serviceOfferingRepository.save(any(ServiceOffering.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.updateServiceOffering(updateServiceOfferingCommand(1001L, 9001L));
+        var result = service.updateServiceOffering(admin(), updateServiceOfferingCommand(1001L, 9001L));
 
         assertEquals("SPA", result.code());
         assertEquals("Spa access", result.name());
@@ -306,13 +289,12 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldDeactivateServiceOfferingAndWriteAudit() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(serviceOfferingRepository.findById(9001L))
                 .thenReturn(Optional.of(serviceOffering(9001L, 1001L, "BREAKFAST", true)));
         when(serviceOfferingRepository.save(any(ServiceOffering.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        service.deactivateServiceOffering(new DeactivateServiceOfferingCommand(1001L, 9001L));
+        service.deactivateServiceOffering(admin(), new DeactivateServiceOfferingCommand(1001L, 9001L));
 
         var savedServiceOffering = ArgumentCaptor.forClass(ServiceOffering.class);
         verify(serviceOfferingRepository).save(savedServiceOffering.capture());
@@ -330,14 +312,13 @@ class HotelAdministrationServiceTest {
     @Test
     void shouldRejectServiceOfferingFromDifferentHotel() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("admin-1", Set.of("ADMIN")));
         when(hotelRepository.findById(1001L)).thenReturn(Optional.of(hotel(1001L, "Hotel", HotelStatus.ACTIVE)));
         when(serviceOfferingRepository.findById(9001L))
                 .thenReturn(Optional.of(serviceOffering(9001L, 2001L, "BREAKFAST", true)));
 
         assertThrows(
                 ValidationException.class,
-                () -> service.updateServiceOffering(updateServiceOfferingCommand(1001L, 9001L))
+                () -> service.updateServiceOffering(admin(), updateServiceOfferingCommand(1001L, 9001L))
         );
         verify(serviceOfferingRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
@@ -349,7 +330,6 @@ class HotelAdministrationServiceTest {
                 roomTypeRepository,
                 roomRepository,
                 serviceOfferingRepository,
-                currentUserPort,
                 auditTrail,
                 new HotelFactory(),
                 new RoomTypeFactory(),
@@ -357,6 +337,10 @@ class HotelAdministrationServiceTest {
                 new ServiceOfferingFactory(),
                 new HotelQueryResultMapper()
         );
+    }
+
+    private static AuthenticatedUser admin() {
+        return new AuthenticatedUser("admin-1", Set.of("ADMIN"));
     }
 
     private static CreateHotelCommand createCommand(Long hotelId) {

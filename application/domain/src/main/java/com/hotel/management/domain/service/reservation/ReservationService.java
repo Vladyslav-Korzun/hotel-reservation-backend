@@ -19,7 +19,6 @@ import com.hotel.management.domain.predicate.reservation.IsReservationOwnerPredi
 import com.hotel.management.domain.predicate.reservation.IsStaffOrAdminPredicate;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
-import com.hotel.management.domain.shared.security.CurrentUserPort;
 
 import java.util.List;
 import java.util.Set;
@@ -34,7 +33,6 @@ public class ReservationService implements ReservationFacade {
     private final GuestRepository guestRepository;
     private final ReservationLockPort reservationLockPort;
     private final ClockPort clockPort;
-    private final CurrentUserPort currentUserPort;
     private final ReservationCreationValidator reservationCreationValidator;
     private final ReservationFactory reservationFactory;
     private final ReservationPricingCalculator reservationPricingCalculator;
@@ -46,7 +44,6 @@ public class ReservationService implements ReservationFacade {
             GuestRepository guestRepository,
             ReservationLockPort reservationLockPort,
             ClockPort clockPort,
-            CurrentUserPort currentUserPort,
             ReservationCreationValidator reservationCreationValidator,
             ReservationFactory reservationFactory,
             ReservationPricingCalculator reservationPricingCalculator,
@@ -57,7 +54,6 @@ public class ReservationService implements ReservationFacade {
         this.guestRepository = guestRepository;
         this.reservationLockPort = reservationLockPort;
         this.clockPort = clockPort;
-        this.currentUserPort = currentUserPort;
         this.reservationCreationValidator = reservationCreationValidator;
         this.reservationFactory = reservationFactory;
         this.reservationPricingCalculator = reservationPricingCalculator;
@@ -66,11 +62,10 @@ public class ReservationService implements ReservationFacade {
     }
 
     @Override
-    public CreateReservationResult createReservation(CreateReservationCommand command) {
+    public CreateReservationResult createReservation(AuthenticatedUser actor, CreateReservationCommand command) {
         requireCommand(command);
-        var currentUser = currentUserPort.getCurrentUser();
-        Long guestId = currentUser.requireGuestId();
-        return createResolvedReservation(ResolvedCreateReservationCommand.from(command, guestId), currentUser);
+        Long guestId = actor.requireGuestId();
+        return createResolvedReservation(ResolvedCreateReservationCommand.from(command, guestId), actor);
     }
 
     @Override
@@ -85,14 +80,13 @@ public class ReservationService implements ReservationFacade {
     }
 
     @Override
-    public CreateReservationResult createStaffReservation(CreateStaffReservationCommand command) {
+    public CreateReservationResult createStaffReservation(AuthenticatedUser actor, CreateStaffReservationCommand command) {
         requireCommand(command);
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireStaffOrAdmin();
+        actor.requireStaffOrAdmin();
         Long guestId = resolveStaffBookingGuestId(command);
         return createResolvedReservation(
                 ResolvedCreateReservationCommand.from(command.toReservationCommand(), guestId),
-                currentUser
+                actor
         );
     }
 
@@ -142,9 +136,8 @@ public class ReservationService implements ReservationFacade {
     }
 
     @Override
-    public List<GetReservationResult> listReservations(int limit) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireStaffOrAdmin();
+    public List<GetReservationResult> listReservations(AuthenticatedUser actor, int limit) {
+        actor.requireStaffOrAdmin();
         validateLimit(limit);
 
         return reservationRepository.findAll(limit).stream()
@@ -153,31 +146,28 @@ public class ReservationService implements ReservationFacade {
     }
 
     @Override
-    public List<GetReservationResult> listMyReservations(int limit) {
-        var currentUser = currentUserPort.getCurrentUser();
+    public List<GetReservationResult> listMyReservations(AuthenticatedUser actor, int limit) {
         validateLimit(limit);
 
-        return reservationRepository.findByCreatedBy(currentUser.userId(), limit).stream()
+        return reservationRepository.findByCreatedBy(actor.userId(), limit).stream()
                 .map(reservationResultMapper::toGetResult)
                 .toList();
     }
 
     @Override
-    public GetReservationResult getReservation(String reservationId) {
-        var currentUser = currentUserPort.getCurrentUser();
+    public GetReservationResult getReservation(AuthenticatedUser actor, String reservationId) {
         var reservation = loadReservation(reservationId);
-        assertCanView(reservation, currentUser);
+        assertCanView(reservation, actor);
         return reservationResultMapper.toGetResult(reservation);
     }
 
     @Override
-    public void cancelReservation(String reservationId) {
-        var currentUser = currentUserPort.getCurrentUser();
+    public void cancelReservation(AuthenticatedUser actor, String reservationId) {
         var reservation = loadReservationForChange(reservationId);
-        assertCanManage(reservation, currentUser);
+        assertCanManage(reservation, actor);
         Reservation cancelledReservation = reservationRepository.save(reservation.cancel(clockPort.now()));
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.CANCEL_RESERVATION,
                 AuditEntityType.RESERVATION,
                 cancelledReservation.id(),

@@ -3,6 +3,7 @@ package com.hotel.management;
 import com.hotel.management.domain.room.RoomOperationResult;
 import com.hotel.management.domain.service.room.RoomOperationsFacade;
 import com.hotel.management.domain.service.room.UpdateRoomStatusCommand;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import org.springframework.transaction.annotation.Transactional;
 
 public class TransactionalRoomOperationsFacade implements RoomOperationsFacade {
@@ -15,7 +16,7 @@ public class TransactionalRoomOperationsFacade implements RoomOperationsFacade {
 
     @Override
     @Transactional
-    public RoomOperationResult updateRoomStatus(UpdateRoomStatusCommand command) {
-        return delegate.updateRoomStatus(command);
+    public RoomOperationResult updateRoomStatus(AuthenticatedUser actor, UpdateRoomStatusCommand command) {
+        return delegate.updateRoomStatus(actor, command);
     }
 }

@@ -17,7 +17,6 @@ import com.hotel.management.domain.service.mapper.ReservationResultMapper;
 import com.hotel.management.domain.service.reservation.ReservationService;
 import com.hotel.management.domain.reservation.RoomInventoryPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
-import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -68,7 +67,6 @@ public class ReservationBeanConfiguration {
             GuestRepository guestRepository,
             ReservationLockPort reservationLockPort,
             ClockPort clockPort,
-            CurrentUserPort currentUserPort,
             ReservationCreationValidator reservationCreationValidator,
             ReservationFactory reservationFactory,
             ReservationPricingCalculator reservationPricingCalculator,
@@ -80,7 +78,6 @@ public class ReservationBeanConfiguration {
                 guestRepository,
                 reservationLockPort,
                 clockPort,
-                currentUserPort,
                 reservationCreationValidator,
                 reservationFactory,
                 reservationPricingCalculator,

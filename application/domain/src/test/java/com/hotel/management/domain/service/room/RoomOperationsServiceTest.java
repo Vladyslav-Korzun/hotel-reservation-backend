@@ -10,7 +10,6 @@ import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
-import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -36,9 +35,6 @@ class RoomOperationsServiceTest {
     private RoomRepository roomRepository;
 
     @Mock
-    private CurrentUserPort currentUserPort;
-
-    @Mock
     private AuditTrail auditTrail;
 
     @Test
@@ -46,11 +42,10 @@ class RoomOperationsServiceTest {
         var service = service();
         var room = room(RoomStatus.CLEANING);
 
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.updateRoomStatus(new UpdateRoomStatusCommand(1L, RoomStatus.AVAILABLE));
+        var result = service.updateRoomStatus(staff(), new UpdateRoomStatusCommand(1L, RoomStatus.AVAILABLE));
 
         assertEquals("AVAILABLE", result.status());
 
@@ -70,11 +65,10 @@ class RoomOperationsServiceTest {
     @Test
     void shouldRejectGuestUser() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-1", Set.of("GUEST")));
 
         assertThrows(
                 ForbiddenException.class,
-                () -> service.updateRoomStatus(new UpdateRoomStatusCommand(1L, RoomStatus.CLEANING))
+                () -> service.updateRoomStatus(new AuthenticatedUser("guest-1", Set.of("GUEST")), new UpdateRoomStatusCommand(1L, RoomStatus.CLEANING))
         );
         verify(roomRepository, never()).findById(any());
     }
@@ -82,11 +76,10 @@ class RoomOperationsServiceTest {
     @Test
     void shouldRejectMissingRoomId() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
 
         assertThrows(
                 ValidationException.class,
-                () -> service.updateRoomStatus(new UpdateRoomStatusCommand(null, RoomStatus.CLEANING))
+                () -> service.updateRoomStatus(staff(), new UpdateRoomStatusCommand(null, RoomStatus.CLEANING))
         );
         verify(roomRepository, never()).findById(any());
     }
@@ -94,11 +87,10 @@ class RoomOperationsServiceTest {
     @Test
     void shouldRejectMissingStatus() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
 
         assertThrows(
                 ValidationException.class,
-                () -> service.updateRoomStatus(new UpdateRoomStatusCommand(1L, null))
+                () -> service.updateRoomStatus(staff(), new UpdateRoomStatusCommand(1L, null))
         );
         verify(roomRepository, never()).findById(any());
     }
@@ -106,12 +98,11 @@ class RoomOperationsServiceTest {
     @Test
     void shouldRejectUnknownRoom() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(roomRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(
                 NotFoundException.class,
-                () -> service.updateRoomStatus(new UpdateRoomStatusCommand(1L, RoomStatus.CLEANING))
+                () -> service.updateRoomStatus(staff(), new UpdateRoomStatusCommand(1L, RoomStatus.CLEANING))
         );
         verify(roomRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
@@ -120,12 +111,11 @@ class RoomOperationsServiceTest {
     @Test
     void shouldRejectManualOccupiedStatus() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room(RoomStatus.AVAILABLE)));
 
         assertThrows(
                 ValidationException.class,
-                () -> service.updateRoomStatus(new UpdateRoomStatusCommand(1L, RoomStatus.OCCUPIED))
+                () -> service.updateRoomStatus(staff(), new UpdateRoomStatusCommand(1L, RoomStatus.OCCUPIED))
         );
         verify(roomRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
@@ -134,12 +124,11 @@ class RoomOperationsServiceTest {
     @Test
     void shouldRejectOccupiedRoomMovedToMaintenance() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room(RoomStatus.OCCUPIED)));
 
         assertThrows(
                 ValidationException.class,
-                () -> service.updateRoomStatus(new UpdateRoomStatusCommand(1L, RoomStatus.MAINTENANCE))
+                () -> service.updateRoomStatus(staff(), new UpdateRoomStatusCommand(1L, RoomStatus.MAINTENANCE))
         );
         verify(roomRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
@@ -148,10 +137,13 @@ class RoomOperationsServiceTest {
     private RoomOperationsService service() {
         return new RoomOperationsService(
                 roomRepository,
-                currentUserPort,
                 auditTrail,
                 new RoomOperationResultMapper()
         );
+    }
+
+    private static AuthenticatedUser staff() {
+        return new AuthenticatedUser("staff-1", Set.of("STAFF"));
     }
 
     private static Room room(RoomStatus status) {

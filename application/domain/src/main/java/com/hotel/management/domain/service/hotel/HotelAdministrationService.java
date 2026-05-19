@@ -22,7 +22,7 @@ import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.Money;
-import com.hotel.management.domain.shared.security.CurrentUserPort;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.hotel.HotelResult;
 import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
 import com.hotel.management.domain.room.RoomResult;
@@ -35,7 +35,6 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
     private final RoomTypeRepository roomTypeRepository;
     private final RoomRepository roomRepository;
     private final ServiceOfferingRepository serviceOfferingRepository;
-    private final CurrentUserPort currentUserPort;
     private final AuditTrail auditTrail;
     private final HotelFactory hotelFactory;
     private final RoomTypeFactory roomTypeFactory;
@@ -48,7 +47,6 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
             RoomTypeRepository roomTypeRepository,
             RoomRepository roomRepository,
             ServiceOfferingRepository serviceOfferingRepository,
-            CurrentUserPort currentUserPort,
             AuditTrail auditTrail,
             HotelFactory hotelFactory,
             RoomTypeFactory roomTypeFactory,
@@ -60,7 +58,6 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         this.roomTypeRepository = roomTypeRepository;
         this.roomRepository = roomRepository;
         this.serviceOfferingRepository = serviceOfferingRepository;
-        this.currentUserPort = currentUserPort;
         this.auditTrail = auditTrail;
         this.hotelFactory = hotelFactory;
         this.roomTypeFactory = roomTypeFactory;
@@ -70,9 +67,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
     }
 
     @Override
-    public HotelResult createHotel(CreateHotelCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireAdmin();
+    public HotelResult createHotel(AuthenticatedUser actor, CreateHotelCommand command) {
+        actor.requireAdmin();
         requireCreateCommand(command);
         if (hotelRepository.findById(command.hotelId()).isPresent()) {
             throw new ValidationException("Hotel already exists: " + command.hotelId());
@@ -96,14 +92,13 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 )
         );
         var savedHotel = hotelRepository.save(hotel);
-        auditTrail.record(currentUser, AuditActionType.CREATE_HOTEL, AuditEntityType.HOTEL, String.valueOf(savedHotel.id()), "Hotel created");
+        auditTrail.record(actor, AuditActionType.CREATE_HOTEL, AuditEntityType.HOTEL, String.valueOf(savedHotel.id()), "Hotel created");
         return hotelQueryResultMapper.toResult(savedHotel);
     }
 
     @Override
-    public HotelResult updateHotel(UpdateHotelCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireAdmin();
+    public HotelResult updateHotel(AuthenticatedUser actor, UpdateHotelCommand command) {
+        actor.requireAdmin();
         requireUpdateCommand(command);
         var hotel = hotelRepository.findById(command.hotelId())
                 .orElseThrow(() -> new NotFoundException("Hotel not found: " + command.hotelId()));
@@ -125,14 +120,13 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 )
         );
         var savedHotel = hotelRepository.save(updatedHotel);
-        auditTrail.record(currentUser, AuditActionType.UPDATE_HOTEL, AuditEntityType.HOTEL, String.valueOf(savedHotel.id()), "Hotel updated");
+        auditTrail.record(actor, AuditActionType.UPDATE_HOTEL, AuditEntityType.HOTEL, String.valueOf(savedHotel.id()), "Hotel updated");
         return hotelQueryResultMapper.toResult(savedHotel);
     }
 
     @Override
-    public RoomTypeResult createRoomType(CreateRoomTypeCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireAdmin();
+    public RoomTypeResult createRoomType(AuthenticatedUser actor, CreateRoomTypeCommand command) {
+        actor.requireAdmin();
         requireCreateRoomTypeCommand(command);
         assertHotelExists(command.hotelId());
         if (roomTypeRepository.findById(command.roomTypeId()).isPresent()) {
@@ -151,7 +145,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         );
         var savedRoomType = roomTypeRepository.save(roomType);
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.CREATE_ROOM_TYPE,
                 AuditEntityType.ROOM_TYPE,
                 String.valueOf(savedRoomType.id()),
@@ -161,9 +155,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
     }
 
     @Override
-    public RoomTypeResult updateRoomType(UpdateRoomTypeCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireAdmin();
+    public RoomTypeResult updateRoomType(AuthenticatedUser actor, UpdateRoomTypeCommand command) {
+        actor.requireAdmin();
         requireUpdateRoomTypeCommand(command);
         var roomType = roomTypeRepository.findById(command.roomTypeId())
                 .orElseThrow(() -> new NotFoundException("Room type not found: " + command.roomTypeId()));
@@ -179,7 +172,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         );
         var savedRoomType = roomTypeRepository.save(updatedRoomType);
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.UPDATE_ROOM_TYPE,
                 AuditEntityType.ROOM_TYPE,
                 String.valueOf(savedRoomType.id()),
@@ -189,9 +182,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
     }
 
     @Override
-    public RoomResult createRoom(CreateRoomCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireAdmin();
+    public RoomResult createRoom(AuthenticatedUser actor, CreateRoomCommand command) {
+        actor.requireAdmin();
         requireCreateRoomCommand(command);
         var roomType = loadRoomType(command.roomTypeId());
         assertRoomTypeBelongsToHotel(roomType, command.hotelId());
@@ -210,7 +202,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         );
         var savedRoom = roomRepository.save(room);
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.CREATE_ROOM,
                 AuditEntityType.ROOM,
                 String.valueOf(savedRoom.id()),
@@ -220,9 +212,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
     }
 
     @Override
-    public RoomResult updateRoom(UpdateRoomCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireAdmin();
+    public RoomResult updateRoom(AuthenticatedUser actor, UpdateRoomCommand command) {
+        actor.requireAdmin();
         requireUpdateRoomCommand(command);
         var room = roomRepository.findById(command.roomId())
                 .orElseThrow(() -> new NotFoundException("Room not found: " + command.roomId()));
@@ -239,7 +230,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         );
         var savedRoom = roomRepository.save(updatedRoom);
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.UPDATE_ROOM,
                 AuditEntityType.ROOM,
                 String.valueOf(savedRoom.id()),
@@ -249,9 +240,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
     }
 
     @Override
-    public HotelServiceOfferingResult createServiceOffering(CreateServiceOfferingCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireAdmin();
+    public HotelServiceOfferingResult createServiceOffering(AuthenticatedUser actor, CreateServiceOfferingCommand command) {
+        actor.requireAdmin();
         requireCreateServiceOfferingCommand(command);
         assertHotelExists(command.hotelId());
         if (serviceOfferingRepository.findById(command.serviceOfferingId()).isPresent()) {
@@ -270,7 +260,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         );
         var savedServiceOffering = serviceOfferingRepository.save(serviceOffering);
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.CREATE_SERVICE_OFFERING,
                 AuditEntityType.SERVICE_OFFERING,
                 String.valueOf(savedServiceOffering.id()),
@@ -280,9 +270,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
     }
 
     @Override
-    public HotelServiceOfferingResult updateServiceOffering(UpdateServiceOfferingCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireAdmin();
+    public HotelServiceOfferingResult updateServiceOffering(AuthenticatedUser actor, UpdateServiceOfferingCommand command) {
+        actor.requireAdmin();
         requireUpdateServiceOfferingCommand(command);
         assertHotelExists(command.hotelId());
         var serviceOffering = loadServiceOffering(command.serviceOfferingId());
@@ -298,7 +287,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
         );
         var savedServiceOffering = serviceOfferingRepository.save(updatedServiceOffering);
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.UPDATE_SERVICE_OFFERING,
                 AuditEntityType.SERVICE_OFFERING,
                 String.valueOf(savedServiceOffering.id()),
@@ -308,9 +297,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
     }
 
     @Override
-    public void deactivateServiceOffering(DeactivateServiceOfferingCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireAdmin();
+    public void deactivateServiceOffering(AuthenticatedUser actor, DeactivateServiceOfferingCommand command) {
+        actor.requireAdmin();
         requireDeactivateServiceOfferingCommand(command);
         assertHotelExists(command.hotelId());
         var serviceOffering = loadServiceOffering(command.serviceOfferingId());
@@ -318,7 +306,7 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
         var deactivatedServiceOffering = serviceOfferingRepository.save(serviceOffering.deactivate());
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.DEACTIVATE_SERVICE_OFFERING,
                 AuditEntityType.SERVICE_OFFERING,
                 String.valueOf(deactivatedServiceOffering.id()),

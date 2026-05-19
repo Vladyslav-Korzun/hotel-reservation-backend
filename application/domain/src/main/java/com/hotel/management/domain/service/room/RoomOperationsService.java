@@ -8,33 +8,29 @@ import com.hotel.management.domain.room.RoomRepository;
 import com.hotel.management.domain.room.RoomStatus;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
-import com.hotel.management.domain.shared.security.CurrentUserPort;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.room.RoomOperationResult;
 import com.hotel.management.domain.service.mapper.RoomOperationResultMapper;
 
 public class RoomOperationsService implements RoomOperationsFacade {
 
     private final RoomRepository roomRepository;
-    private final CurrentUserPort currentUserPort;
     private final AuditTrail auditTrail;
     private final RoomOperationResultMapper roomOperationResultMapper;
 
     public RoomOperationsService(
             RoomRepository roomRepository,
-            CurrentUserPort currentUserPort,
             AuditTrail auditTrail,
             RoomOperationResultMapper roomOperationResultMapper
     ) {
         this.roomRepository = roomRepository;
-        this.currentUserPort = currentUserPort;
         this.auditTrail = auditTrail;
         this.roomOperationResultMapper = roomOperationResultMapper;
     }
 
     @Override
-    public RoomOperationResult updateRoomStatus(UpdateRoomStatusCommand command) {
-        var currentUser = currentUserPort.getCurrentUser();
-        currentUser.requireStaffOrAdmin();
+    public RoomOperationResult updateRoomStatus(AuthenticatedUser actor, UpdateRoomStatusCommand command) {
+        actor.requireStaffOrAdmin();
         requireCommand(command);
 
         var room = roomRepository.findById(command.roomId())
@@ -43,7 +39,7 @@ public class RoomOperationsService implements RoomOperationsFacade {
 
         var savedRoom = roomRepository.save(updatedRoom);
         auditTrail.record(
-                currentUser,
+                actor,
                 AuditActionType.UPDATE_ROOM_STATUS,
                 AuditEntityType.ROOM,
                 String.valueOf(savedRoom.id()),

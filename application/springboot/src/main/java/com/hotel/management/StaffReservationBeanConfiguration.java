@@ -6,7 +6,6 @@ import com.hotel.management.domain.stay.StayRepository;
 import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
-import com.hotel.management.domain.shared.security.CurrentUserPort;
 import com.hotel.management.domain.reservation.RoomAssignmentPort;
 import com.hotel.management.domain.service.staff.StaffReservationFacade;
 import com.hotel.management.domain.service.mapper.StaffReservationResultMapper;
@@ -29,7 +28,6 @@ public class StaffReservationBeanConfiguration {
             RoomRepository roomRepository,
             StayRepository stayRepository,
             RoomAssignmentPort roomAssignmentPort,
-            CurrentUserPort currentUserPort,
             ClockPort clockPort,
             AuditTrail auditTrail,
             StaffReservationResultMapper staffReservationResultMapper
@@ -40,7 +38,6 @@ public class StaffReservationBeanConfiguration {
                 roomRepository,
                 stayRepository,
                 roomAssignmentPort,
-                currentUserPort,
                 clockPort,
                 auditTrail,
                 staffReservationResultMapper

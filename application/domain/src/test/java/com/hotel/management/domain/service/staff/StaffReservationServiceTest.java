@@ -21,7 +21,6 @@ import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
-import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -64,9 +63,6 @@ class StaffReservationServiceTest {
     private RoomAssignmentPort roomAssignmentPort;
 
     @Mock
-    private CurrentUserPort currentUserPort;
-
-    @Mock
     private ClockPort clockPort;
 
     @Mock
@@ -78,7 +74,6 @@ class StaffReservationServiceTest {
         var reservation = reservation("reservation-1", null, ReservationStatus.PENDING);
         var room = room(100L, RoomStatus.AVAILABLE);
 
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
         when(reservationLockPort.findReservationForChange("reservation-1")).thenReturn(Optional.of(reservation));
         when(roomAssignmentPort.findAvailableRoomForCheckIn(1L, 2L)).thenReturn(Optional.of(room));
@@ -86,7 +81,7 @@ class StaffReservationServiceTest {
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(stayRepository.save(any(Stay.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.checkIn("reservation-1");
+        var result = service.checkIn(staff(), "reservation-1");
 
         assertEquals("CHECKED_IN", result.status());
         assertEquals(100L, result.roomId());
@@ -121,7 +116,6 @@ class StaffReservationServiceTest {
         var reservation = reservation("reservation-1", 100L, ReservationStatus.CHECKED_IN);
         var room = room(100L, RoomStatus.OCCUPIED);
 
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(clockPort.now()).thenReturn(Instant.parse("2026-05-12T10:00:00Z"));
         when(reservationLockPort.findReservationForChange("reservation-1")).thenReturn(Optional.of(reservation));
         when(stayRepository.findActiveByReservationId("reservation-1")).thenReturn(Optional.of(stay()));
@@ -130,7 +124,7 @@ class StaffReservationServiceTest {
         when(stayRepository.save(any(Stay.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.checkOut("reservation-1");
+        var result = service.checkOut(staff(), "reservation-1");
 
         assertEquals("CHECKED_OUT", result.status());
         assertEquals(100L, result.roomId());
@@ -158,11 +152,10 @@ class StaffReservationServiceTest {
         var service = service();
         var reservation = reservation("reservation-1", 100L, ReservationStatus.CHECKED_IN);
 
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(reservationLockPort.findReservationForChange("reservation-1")).thenReturn(Optional.of(reservation));
         when(stayRepository.findActiveByReservationId("reservation-1")).thenReturn(Optional.empty());
 
-        assertThrows(ValidationException.class, () -> service.checkOut("reservation-1"));
+        assertThrows(ValidationException.class, () -> service.checkOut(staff(), "reservation-1"));
         verify(reservationRepository, never()).save(any());
         verify(roomRepository, never()).save(any());
     }
@@ -172,12 +165,11 @@ class StaffReservationServiceTest {
         var service = service();
         var reservation = reservation("reservation-1", null, ReservationStatus.PENDING);
 
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
         when(reservationLockPort.findReservationForChange("reservation-1")).thenReturn(Optional.of(reservation));
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.markNoShow("reservation-1");
+        var result = service.markNoShow(staff(), "reservation-1");
 
         assertEquals("NO_SHOW", result.status());
 
@@ -197,12 +189,11 @@ class StaffReservationServiceTest {
     @Test
     void shouldRejectNoShowBeforeReservationDate() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(clockPort.now()).thenReturn(Instant.parse("2026-05-09T10:00:00Z"));
         when(reservationLockPort.findReservationForChange("reservation-1"))
                 .thenReturn(Optional.of(reservation("reservation-1", null, ReservationStatus.PENDING)));
 
-        assertThrows(ValidationException.class, () -> service.markNoShow("reservation-1"));
+        assertThrows(ValidationException.class, () -> service.markNoShow(staff(), "reservation-1"));
         verify(reservationRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
@@ -210,12 +201,11 @@ class StaffReservationServiceTest {
     @Test
     void shouldRejectNoShowForCheckedInReservation() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
         when(reservationLockPort.findReservationForChange("reservation-1"))
                 .thenReturn(Optional.of(reservation("reservation-1", 100L, ReservationStatus.CHECKED_IN)));
 
-        assertThrows(ValidationException.class, () -> service.markNoShow("reservation-1"));
+        assertThrows(ValidationException.class, () -> service.markNoShow(staff(), "reservation-1"));
         verify(reservationRepository, never()).save(any());
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
@@ -223,22 +213,19 @@ class StaffReservationServiceTest {
     @Test
     void shouldRejectGuestCheckIn() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-1", Set.of("GUEST")));
-
-        assertThrows(ForbiddenException.class, () -> service.checkIn("reservation-1"));
+        assertThrows(ForbiddenException.class, () -> service.checkIn(new AuthenticatedUser("guest-1", Set.of("GUEST")), "reservation-1"));
         verify(reservationRepository, never()).findById(any());
     }
 
     @Test
     void shouldRejectCheckInWithoutAvailableRoom() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(clockPort.now()).thenReturn(Instant.parse("2026-05-10T10:00:00Z"));
         when(reservationLockPort.findReservationForChange("reservation-1"))
                 .thenReturn(Optional.of(reservation("reservation-1", null, ReservationStatus.PENDING)));
         when(roomAssignmentPort.findAvailableRoomForCheckIn(1L, 2L)).thenReturn(Optional.empty());
 
-        assertThrows(ValidationException.class, () -> service.checkIn("reservation-1"));
+        assertThrows(ValidationException.class, () -> service.checkIn(staff(), "reservation-1"));
         verify(reservationRepository, never()).save(any());
         verify(roomRepository, never()).save(any());
     }
@@ -246,24 +233,22 @@ class StaffReservationServiceTest {
     @Test
     void shouldRejectCheckInBeforeReservationDate() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(clockPort.now()).thenReturn(Instant.parse("2026-05-09T10:00:00Z"));
         when(reservationLockPort.findReservationForChange("reservation-1"))
                 .thenReturn(Optional.of(reservation("reservation-1", null, ReservationStatus.PENDING)));
 
-        assertThrows(ValidationException.class, () -> service.checkIn("reservation-1"));
+        assertThrows(ValidationException.class, () -> service.checkIn(staff(), "reservation-1"));
         verify(roomAssignmentPort, never()).findAvailableRoomForCheckIn(anyLong(), anyLong());
     }
 
     @Test
     void shouldRejectCheckInAfterReservationCheckOutDate() {
         var service = service();
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-1", Set.of("STAFF")));
         when(clockPort.now()).thenReturn(Instant.parse("2026-05-12T10:00:00Z"));
         when(reservationLockPort.findReservationForChange("reservation-1"))
                 .thenReturn(Optional.of(reservation("reservation-1", null, ReservationStatus.PENDING)));
 
-        assertThrows(ValidationException.class, () -> service.checkIn("reservation-1"));
+        assertThrows(ValidationException.class, () -> service.checkIn(staff(), "reservation-1"));
         verify(roomAssignmentPort, never()).findAvailableRoomForCheckIn(anyLong(), anyLong());
     }
 
@@ -274,11 +259,14 @@ class StaffReservationServiceTest {
                 roomRepository,
                 stayRepository,
                 roomAssignmentPort,
-                currentUserPort,
                 clockPort,
                 auditTrail,
                 new StaffReservationResultMapper()
         );
+    }
+
+    private static AuthenticatedUser staff() {
+        return new AuthenticatedUser("staff-1", Set.of("STAFF"));
     }
 
     private static Reservation reservation(String id, Long roomId, ReservationStatus status) {

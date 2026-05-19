@@ -3,24 +3,25 @@ import com.hotel.management.domain.hotel.HotelResult;
 import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
 import com.hotel.management.domain.room.RoomResult;
 import com.hotel.management.domain.room.RoomTypeResult;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 
 public interface HotelAdministrationFacade {
 
-    HotelResult createHotel(CreateHotelCommand command);
+    HotelResult createHotel(AuthenticatedUser actor, CreateHotelCommand command);
 
-    HotelResult updateHotel(UpdateHotelCommand command);
+    HotelResult updateHotel(AuthenticatedUser actor, UpdateHotelCommand command);
 
-    RoomTypeResult createRoomType(CreateRoomTypeCommand command);
+    RoomTypeResult createRoomType(AuthenticatedUser actor, CreateRoomTypeCommand command);
 
-    RoomTypeResult updateRoomType(UpdateRoomTypeCommand command);
+    RoomTypeResult updateRoomType(AuthenticatedUser actor, UpdateRoomTypeCommand command);
 
-    RoomResult createRoom(CreateRoomCommand command);
+    RoomResult createRoom(AuthenticatedUser actor, CreateRoomCommand command);
 
-    RoomResult updateRoom(UpdateRoomCommand command);
+    RoomResult updateRoom(AuthenticatedUser actor, UpdateRoomCommand command);
 
-    HotelServiceOfferingResult createServiceOffering(CreateServiceOfferingCommand command);
+    HotelServiceOfferingResult createServiceOffering(AuthenticatedUser actor, CreateServiceOfferingCommand command);
 
-    HotelServiceOfferingResult updateServiceOffering(UpdateServiceOfferingCommand command);
+    HotelServiceOfferingResult updateServiceOffering(AuthenticatedUser actor, UpdateServiceOfferingCommand command);
 
-    void deactivateServiceOffering(DeactivateServiceOfferingCommand command);
+    void deactivateServiceOffering(AuthenticatedUser actor, DeactivateServiceOfferingCommand command);
 }

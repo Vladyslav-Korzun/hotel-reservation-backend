@@ -8,6 +8,7 @@ import com.hotel.management.api.dto.PublicCreateReservationRequest;
 import com.hotel.management.api.dto.ReservationResponse;
 import com.hotel.management.domain.shared.exception.ConflictException;
 import com.hotel.management.domain.service.reservation.ReservationFacade;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
 import com.hotel.management.mapper.ReservationMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,20 +22,24 @@ import java.util.List;
 public class ReservationsController implements ReservationsApi, PublicApi {
 
     private final ReservationFacade reservationFacade;
+    private final CurrentUserPort currentUserPort;
     private final ReservationMapper reservationMapper;
 
     public ReservationsController(
             ReservationFacade reservationFacade,
+            CurrentUserPort currentUserPort,
             ReservationMapper reservationMapper
     ) {
         this.reservationFacade = reservationFacade;
+        this.currentUserPort = currentUserPort;
         this.reservationMapper = reservationMapper;
     }
 
     @Override
     public ResponseEntity<CreateReservationResponse> createReservation(CreateReservationRequest createReservationRequest) {
+        var actor = currentUserPort.getCurrentUser();
         var command = reservationMapper.toCommand(createReservationRequest);
-        var result = reservationFacade.createReservation(command);
+        var result = reservationFacade.createReservation(actor, command);
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationMapper.toResponse(result));
     }
 
@@ -50,19 +55,22 @@ public class ReservationsController implements ReservationsApi, PublicApi {
 
     @Override
     public ResponseEntity<List<ReservationResponse>> listReservations(Integer limit) {
-        var result = reservationFacade.listReservations(limit == null ? 100 : limit);
+        var actor = currentUserPort.getCurrentUser();
+        var result = reservationFacade.listReservations(actor, limit == null ? 100 : limit);
         return ResponseEntity.ok(reservationMapper.toResponse(result));
     }
 
     @Override
     public ResponseEntity<ReservationResponse> getReservation(String reservationId) {
-        var result = reservationFacade.getReservation(reservationId);
+        var actor = currentUserPort.getCurrentUser();
+        var result = reservationFacade.getReservation(actor, reservationId);
         return ResponseEntity.ok(reservationMapper.toResponse(result));
     }
 
     @Override
     public ResponseEntity<Void> cancelReservation(String reservationId) {
-        reservationFacade.cancelReservation(reservationId);
+        var actor = currentUserPort.getCurrentUser();
+        reservationFacade.cancelReservation(actor, reservationId);
         return ResponseEntity.noContent().build();
     }
 

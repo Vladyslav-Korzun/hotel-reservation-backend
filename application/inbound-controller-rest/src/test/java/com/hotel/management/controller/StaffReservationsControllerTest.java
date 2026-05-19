@@ -17,9 +17,12 @@ import com.hotel.management.domain.service.room.RoomOperationsFacade;
 import com.hotel.management.domain.service.room.UpdateRoomStatusCommand;
 import com.hotel.management.domain.service.staff.StaffReservationFacade;
 import com.hotel.management.domain.reservation.StaffReservationResult;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,12 +31,14 @@ class StaffReservationsControllerTest {
     private final TestStaffReservationFacade staffReservationFacade = new TestStaffReservationFacade();
     private final TestReservationFacade reservationFacade = new TestReservationFacade();
     private final TestRoomOperationsFacade roomOperationsFacade = new TestRoomOperationsFacade();
+    private final TestCurrentUserPort currentUserPort = new TestCurrentUserPort();
     private final TestReservationMapper reservationMapper = new TestReservationMapper();
     private final TestRoomMapper roomMapper = new TestRoomMapper();
     private final StaffReservationsController controller = new StaffReservationsController(
             staffReservationFacade,
             reservationFacade,
             roomOperationsFacade,
+            currentUserPort,
             reservationMapper,
             roomMapper
     );
@@ -47,6 +52,7 @@ class StaffReservationsControllerTest {
         assertThat(actual.getStatusCode().value()).isEqualTo(200);
         assertThat(actual.getBody()).isSameAs(reservationMapper.response);
         assertThat(staffReservationFacade.checkInReservationId).isEqualTo("reservation-1");
+        assertThat(staffReservationFacade.checkInActor).isSameAs(currentUserPort.user);
         assertThat(reservationMapper.result).isSameAs(staffReservationFacade.checkInResult);
     }
 
@@ -59,6 +65,7 @@ class StaffReservationsControllerTest {
         assertThat(actual.getStatusCode().value()).isEqualTo(200);
         assertThat(actual.getBody()).isSameAs(reservationMapper.response);
         assertThat(staffReservationFacade.checkOutReservationId).isEqualTo("reservation-1");
+        assertThat(staffReservationFacade.checkOutActor).isSameAs(currentUserPort.user);
         assertThat(reservationMapper.result).isSameAs(staffReservationFacade.checkOutResult);
     }
 
@@ -71,6 +78,7 @@ class StaffReservationsControllerTest {
         assertThat(actual.getStatusCode().value()).isEqualTo(200);
         assertThat(actual.getBody()).isSameAs(reservationMapper.response);
         assertThat(staffReservationFacade.markNoShowReservationId).isEqualTo("reservation-1");
+        assertThat(staffReservationFacade.markNoShowActor).isSameAs(currentUserPort.user);
         assertThat(reservationMapper.result).isSameAs(staffReservationFacade.markNoShowResult);
     }
 
@@ -87,6 +95,7 @@ class StaffReservationsControllerTest {
         assertThat(roomMapper.roomId).isEqualTo(10L);
         assertThat(roomMapper.request).isSameAs(request);
         assertThat(roomOperationsFacade.command).isSameAs(roomMapper.command);
+        assertThat(roomOperationsFacade.actor).isSameAs(currentUserPort.user);
         assertThat(roomMapper.result).isSameAs(roomOperationsFacade.result);
     }
 
@@ -95,24 +104,30 @@ class StaffReservationsControllerTest {
         private final StaffReservationResult checkInResult = null;
         private final StaffReservationResult checkOutResult = null;
         private final StaffReservationResult markNoShowResult = null;
+        private AuthenticatedUser checkInActor;
+        private AuthenticatedUser checkOutActor;
+        private AuthenticatedUser markNoShowActor;
         private String checkInReservationId;
         private String checkOutReservationId;
         private String markNoShowReservationId;
 
         @Override
-        public StaffReservationResult checkIn(String reservationId) {
+        public StaffReservationResult checkIn(AuthenticatedUser actor, String reservationId) {
+            this.checkInActor = actor;
             this.checkInReservationId = reservationId;
             return checkInResult;
         }
 
         @Override
-        public StaffReservationResult checkOut(String reservationId) {
+        public StaffReservationResult checkOut(AuthenticatedUser actor, String reservationId) {
+            this.checkOutActor = actor;
             this.checkOutReservationId = reservationId;
             return checkOutResult;
         }
 
         @Override
-        public StaffReservationResult markNoShow(String reservationId) {
+        public StaffReservationResult markNoShow(AuthenticatedUser actor, String reservationId) {
+            this.markNoShowActor = actor;
             this.markNoShowReservationId = reservationId;
             return markNoShowResult;
         }
@@ -121,7 +136,7 @@ class StaffReservationsControllerTest {
     private static final class TestReservationFacade implements ReservationFacade {
 
         @Override
-        public CreateReservationResult createReservation(CreateReservationCommand command) {
+        public CreateReservationResult createReservation(AuthenticatedUser actor, CreateReservationCommand command) {
             throw new UnsupportedOperationException();
         }
 
@@ -131,27 +146,27 @@ class StaffReservationsControllerTest {
         }
 
         @Override
-        public CreateReservationResult createStaffReservation(CreateStaffReservationCommand command) {
+        public CreateReservationResult createStaffReservation(AuthenticatedUser actor, CreateStaffReservationCommand command) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public List<GetReservationResult> listReservations(int limit) {
+        public List<GetReservationResult> listReservations(AuthenticatedUser actor, int limit) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public List<GetReservationResult> listMyReservations(int limit) {
+        public List<GetReservationResult> listMyReservations(AuthenticatedUser actor, int limit) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public GetReservationResult getReservation(String reservationId) {
+        public GetReservationResult getReservation(AuthenticatedUser actor, String reservationId) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void cancelReservation(String reservationId) {
+        public void cancelReservation(AuthenticatedUser actor, String reservationId) {
             throw new UnsupportedOperationException();
         }
     }
@@ -167,9 +182,11 @@ class StaffReservationsControllerTest {
                 "CLEANING"
         );
         private UpdateRoomStatusCommand command;
+        private AuthenticatedUser actor;
 
         @Override
-        public RoomOperationResult updateRoomStatus(UpdateRoomStatusCommand command) {
+        public RoomOperationResult updateRoomStatus(AuthenticatedUser actor, UpdateRoomStatusCommand command) {
+            this.actor = actor;
             this.command = command;
             return result;
         }
@@ -206,6 +223,16 @@ class StaffReservationsControllerTest {
         public RoomOperationResponse toResponse(RoomOperationResult result) {
             this.result = result;
             return response;
+        }
+    }
+
+    private static final class TestCurrentUserPort implements CurrentUserPort {
+
+        private final AuthenticatedUser user = new AuthenticatedUser("staff-1", Set.of("STAFF"));
+
+        @Override
+        public AuthenticatedUser getCurrentUser() {
+            return user;
         }
     }
 }
