@@ -1,7 +1,13 @@
 databaseChangeLog:
   - changeSet:
-      id: 021-add-reservation-contact-fields
+      id: 021-add-reservation-contact-email
       author: Vladyslav Korzun
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - columnExists:
+                tableName: reservations
+                columnName: contact_email
       changes:
         - addColumn:
             tableName: reservations
@@ -9,9 +15,35 @@ databaseChangeLog:
               - column:
                   name: contact_email
                   type: varchar(255)
+  - changeSet:
+      id: 021-add-reservation-contact-phone
+      author: Vladyslav Korzun
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - columnExists:
+                tableName: reservations
+                columnName: contact_phone
+      changes:
+        - addColumn:
+            tableName: reservations
+            columns:
               - column:
                   name: contact_phone
                   type: varchar(32)
+  - changeSet:
+      id: 021-add-reservation-special-requests
+      author: Vladyslav Korzun
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - columnExists:
+                tableName: reservations
+                columnName: special_requests
+      changes:
+        - addColumn:
+            tableName: reservations
+            columns:
               - column:
                   name: special_requests
                   type: varchar(500)
