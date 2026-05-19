@@ -11,6 +11,9 @@ target/
 # VS Code
 .vscode/
 
+# Local working caches / scratch directories (not part of the project)
+.claude/
+
 # OS files
 .DS_Store
 Thumbs.db

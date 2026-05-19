@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,9 +33,32 @@ public class SpringSecurityCurrentUserAdapter implements CurrentUserPort {
             String userId = preferredUsername != null && !preferredUsername.isBlank()
                     ? preferredUsername
                     : jwt.getSubject();
-            return new AuthenticatedUser(userId, roles);
+            return new AuthenticatedUser(userId, roles, guestId(jwt));
         }
 
         throw new IllegalStateException("Authenticated JWT principal is required");
+    }
+
+    private Long guestId(Jwt jwt) {
+        Object claim = jwt.getClaims().get("guest_id");
+        if (claim == null) {
+            claim = jwt.getClaims().get("guestId");
+        }
+        if (claim instanceof Number number) {
+            return number.longValue();
+        }
+        if (claim instanceof String value && !value.isBlank()) {
+            return Long.valueOf(value);
+        }
+        if (claim instanceof List<?> values && !values.isEmpty()) {
+            Object firstValue = values.getFirst();
+            if (firstValue instanceof Number number) {
+                return number.longValue();
+            }
+            if (firstValue instanceof String value && !value.isBlank()) {
+                return Long.valueOf(value);
+            }
+        }
+        return null;
     }
 }

@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 019-add-guest-id-sequence
+      author: Vladyslav Korzun
+      changes:
+        - createSequence:
+            sequenceName: guest_id_seq
+            startValue: 100000
+            incrementBy: 1

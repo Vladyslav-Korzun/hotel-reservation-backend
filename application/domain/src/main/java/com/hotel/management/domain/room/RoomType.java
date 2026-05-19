@@ -12,6 +12,7 @@ public final class RoomType {
     private final PetPolicy petPolicy;
     private final Money basePrice;
     private final String description;
+    private final RoomTypeFeatures features;
 
     public RoomType(
             Long id,
@@ -20,7 +21,8 @@ public final class RoomType {
             OccupancyPolicy occupancyPolicy,
             PetPolicy petPolicy,
             Money basePrice,
-            String description
+            String description,
+            RoomTypeFeatures features
     ) {
         this.id = require(id, "roomTypeId is required");
         this.hotelId = require(hotelId, "hotelId is required");
@@ -29,6 +31,7 @@ public final class RoomType {
         this.petPolicy = require(petPolicy, "petPolicy is required");
         this.basePrice = require(basePrice, "basePrice is required");
         this.description = description;
+        this.features = features == null ? RoomTypeFeatures.empty() : features;
     }
 
     public RoomType updateDetails(
@@ -36,9 +39,10 @@ public final class RoomType {
             OccupancyPolicy occupancyPolicy,
             PetPolicy petPolicy,
             Money basePrice,
-            String description
+            String description,
+            RoomTypeFeatures features
     ) {
-        return new RoomType(id, hotelId, name, occupancyPolicy, petPolicy, basePrice, description);
+        return new RoomType(id, hotelId, name, occupancyPolicy, petPolicy, basePrice, description, features);
     }
 
     public Long id() {
@@ -67,6 +71,10 @@ public final class RoomType {
 
     public String description() {
         return description;
+    }
+
+    public RoomTypeFeatures features() {
+        return features;
     }
 
     private static <T> T require(T value, String message) {

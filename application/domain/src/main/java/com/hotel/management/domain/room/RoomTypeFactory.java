@@ -11,8 +11,9 @@ public class RoomTypeFactory {
             OccupancyPolicy occupancyPolicy,
             PetPolicy petPolicy,
             Money basePrice,
-            String description
+            String description,
+            RoomTypeFeatures features
     ) {
-        return new RoomType(roomTypeId, hotelId, name, occupancyPolicy, petPolicy, basePrice, description);
+        return new RoomType(roomTypeId, hotelId, name, occupancyPolicy, petPolicy, basePrice, description, features);
     }
 }

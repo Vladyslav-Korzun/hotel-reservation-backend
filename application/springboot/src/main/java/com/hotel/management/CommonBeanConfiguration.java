@@ -13,4 +13,5 @@ public class CommonBeanConfiguration {
     ClockPort clockPort() {
         return Instant::now;
     }
+
 }

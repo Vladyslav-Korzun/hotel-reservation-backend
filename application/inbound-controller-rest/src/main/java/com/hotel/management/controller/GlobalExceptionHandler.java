@@ -1,5 +1,6 @@
 package com.hotel.management.controller;
 
+import com.hotel.management.service.exception.ConflictException;
 import com.hotel.management.service.exception.ForbiddenException;
 import com.hotel.management.service.exception.UnauthorizedException;
 import com.hotel.management.domain.shared.exception.NotFoundException;
@@ -44,6 +45,14 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleForbiddenException(ForbiddenException exception, HttpServletRequest request) {
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
         problemDetail.setTitle("Access denied");
+        problemDetail.setDetail(exception.getMessage());
+        return complete(problemDetail, request);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ProblemDetail handleConflictException(ConflictException exception, HttpServletRequest request) {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problemDetail.setTitle("Conflict");
         problemDetail.setDetail(exception.getMessage());
         return complete(problemDetail, request);
     }

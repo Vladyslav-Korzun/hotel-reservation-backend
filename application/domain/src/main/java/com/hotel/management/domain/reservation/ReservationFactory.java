@@ -4,6 +4,7 @@ import com.hotel.management.domain.serviceoffering.ServiceOffering;
 import com.hotel.management.domain.serviceoffering.ServiceOfferingSelection;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.AccommodationParty;
+import com.hotel.management.domain.shared.value.EmailAddress;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -24,7 +25,7 @@ public class ReservationFactory {
             Instant createdAt,
             String createdBy
     ) {
-        return Reservation.createPending(
+        return createPendingReservation(
                 reservationId,
                 hotelId,
                 guestId,
@@ -32,6 +33,9 @@ public class ReservationFactory {
                 checkIn,
                 checkOut,
                 accommodationParty,
+                null,
+                null,
+                null,
                 priceSnapshot,
                 serviceItems,
                 createdAt,
@@ -47,6 +51,11 @@ public class ReservationFactory {
             LocalDate checkIn,
             LocalDate checkOut,
             AccommodationParty accommodationParty,
+            EmailAddress contactEmail,
+            String contactPhone,
+            String specialRequests,
+            ReservationPriceSnapshot priceSnapshot,
+            List<ReservationServiceItem> serviceItems,
             Instant createdAt,
             String createdBy
     ) {
@@ -58,6 +67,11 @@ public class ReservationFactory {
                 checkIn,
                 checkOut,
                 accommodationParty,
+                contactEmail,
+                contactPhone,
+                specialRequests,
+                priceSnapshot,
+                serviceItems,
                 createdAt,
                 createdBy
         );

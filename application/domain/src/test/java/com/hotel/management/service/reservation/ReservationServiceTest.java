@@ -4,27 +4,38 @@ import com.hotel.management.domain.hotel.Hotel;
 import com.hotel.management.domain.hotel.HotelPolicy;
 import com.hotel.management.domain.hotel.HotelRepository;
 import com.hotel.management.domain.hotel.HotelStatus;
+import com.hotel.management.domain.guest.Guest;
+import com.hotel.management.domain.guest.GuestRepository;
 import com.hotel.management.domain.reservation.Reservation;
+import com.hotel.management.domain.reservation.ReservationFactory;
+import com.hotel.management.domain.reservation.ReservationPriceSnapshot;
 import com.hotel.management.domain.reservation.ReservationRepository;
 import com.hotel.management.domain.reservation.ReservationStatus;
 import com.hotel.management.domain.room.OccupancyPolicy;
 import com.hotel.management.domain.room.PetPolicy;
 import com.hotel.management.domain.room.RoomType;
+import com.hotel.management.domain.room.RoomTypeFeatures;
 import com.hotel.management.domain.room.RoomTypeRepository;
+import com.hotel.management.domain.serviceoffering.ServiceOffering;
+import com.hotel.management.domain.serviceoffering.ServiceOfferingSelection;
+import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.AccommodationParty;
 import com.hotel.management.domain.shared.value.GuestComposition;
+import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.service.accommodation.AccommodationPolicyValidator;
 import com.hotel.management.service.exception.ForbiddenException;
+import com.hotel.management.service.port.AuditLogPort;
 import com.hotel.management.service.port.ClockPort;
+import com.hotel.management.service.port.NotificationPort;
 import com.hotel.management.service.reservation.locking.ReservationLockPort;
 import com.hotel.management.service.security.AuthenticatedUser;
 import com.hotel.management.service.security.CurrentUserPort;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -38,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -55,6 +67,9 @@ class ReservationServiceTest {
     private HotelRepository hotelRepository;
 
     @Mock
+    private GuestRepository guestRepository;
+
+    @Mock
     private ReservationLockPort reservationLockPort;
 
     @Mock
@@ -62,6 +77,9 @@ class ReservationServiceTest {
 
     @Mock
     private RoomTypeRepository roomTypeRepository;
+
+    @Mock
+    private ServiceOfferingRepository serviceOfferingRepository;
 
     @Mock
     private ClockPort clockPort;
@@ -72,8 +90,42 @@ class ReservationServiceTest {
     @Mock
     private AccommodationPolicyValidator accommodationPolicyValidator;
 
-    @InjectMocks
+    @Mock
+    private AuditLogPort auditLogPort;
+
+    @Mock
+    private NotificationPort notificationPort;
+
+    private ReservationCreationValidator reservationCreationValidator;
+
     private ReservationService facade;
+
+    @BeforeEach
+    void setUp() {
+        reservationCreationValidator = new ReservationCreationValidator(
+                reservationQueryPort,
+                hotelRepository,
+                guestRepository,
+                roomInventoryPort,
+                roomTypeRepository,
+                serviceOfferingRepository,
+                clockPort,
+                accommodationPolicyValidator
+        );
+        facade = new ReservationService(
+                repository,
+                guestRepository,
+                reservationLockPort,
+                clockPort,
+                currentUserPort,
+                reservationCreationValidator,
+                new ReservationFactory(),
+                new ReservationPricingCalculator(),
+                new ReservationResultMapper(),
+                auditLogPort,
+                notificationPort
+        );
+    }
 
     @Test
     void shouldCreateReservationForAuthenticatedUser() {
@@ -82,7 +134,7 @@ class ReservationServiceTest {
         stubAvailableRoomType(1L, 2L);
         when(reservationQueryPort.findActiveOverlapping(any(), any())).thenReturn(List.of());
         when(clockPort.now()).thenReturn(Instant.parse("2026-04-03T12:00:00Z"));
-        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST")));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST"), 10L));
         when(repository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var result = facade.createReservation(new CreateReservationCommand(
@@ -95,13 +147,149 @@ class ReservationServiceTest {
 
         assertEquals("PENDING", result.status());
         assertEquals(1L, result.hotelId());
+        assertEquals(10L, result.guestId());
         assertEquals("guest-123", result.createdBy());
         assertEquals(2, result.adults());
         assertEquals(Instant.parse("2026-04-03T12:00:00Z"), result.createdAt());
+        verify(notificationPort).reservationCreated(result.reservationId());
+    }
+
+    @Test
+    void shouldCreateReservationWithServiceOfferingAndPriceSnapshot() {
+        stubAvailableRoomType(1L, 2L);
+        when(serviceOfferingRepository.findById(10001L)).thenReturn(Optional.of(new ServiceOffering(
+                10001L,
+                1L,
+                "BREAKFAST",
+                "Breakfast",
+                "Buffet breakfast",
+                Money.of("15.00", "EUR"),
+                true,
+                null
+        )));
+        when(reservationQueryPort.findActiveOverlapping(any(), any())).thenReturn(List.of());
+        when(clockPort.now()).thenReturn(Instant.parse("2026-04-03T12:00:00Z"));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST"), 10L));
+        when(repository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var result = facade.createReservation(new CreateReservationCommand(
+                1L,
+                2L,
+                LocalDate.parse("2026-05-10"),
+                LocalDate.parse("2026-05-12"),
+                party(2),
+                List.of(new ServiceOfferingSelection(10001L, 2))
+        ));
+
+        assertEquals(Money.of("200.00", "EUR"), result.basePrice());
+        assertEquals(Money.of("30.00", "EUR"), result.servicesPrice());
+        assertEquals(Money.of("230.00", "EUR"), result.finalPrice());
+        assertEquals(1, result.serviceItems().size());
+        assertEquals("Breakfast", result.serviceItems().getFirst().serviceName());
+    }
+
+    @Test
+    void shouldCreatePublicReservationForExistingGuestByEmail() {
+        stubAvailableRoomType(1L, 2L);
+        when(guestRepository.findByEmail(new EmailAddress("john@example.com"))).thenReturn(Optional.of(new Guest(
+                10L,
+                "John",
+                "Smith",
+                new EmailAddress("john@example.com"),
+                "+421900000000"
+        )));
+        when(reservationQueryPort.findActiveOverlapping(any(), any())).thenReturn(List.of());
+        when(clockPort.now()).thenReturn(Instant.parse("2026-04-03T12:00:00Z"));
+        when(repository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var result = facade.createPublicReservation(new CreatePublicReservationCommand(
+                1L,
+                2L,
+                LocalDate.parse("2026-05-10"),
+                LocalDate.parse("2026-05-12"),
+                party(2),
+                List.of(),
+                new GuestContactCommand("John", "Smith", "john@example.com", "+421900000000")
+        ));
+
+        assertEquals(10L, result.guestId());
+        assertEquals("public:10", result.createdBy());
+        verify(currentUserPort, never()).getCurrentUser();
+    }
+
+    @Test
+    void shouldCreateStaffReservationForSelectedGuest() {
+        stubAvailableRoomType(1L, 2L);
+        when(reservationQueryPort.findActiveOverlapping(any(), any())).thenReturn(List.of());
+        when(clockPort.now()).thenReturn(Instant.parse("2026-04-03T12:00:00Z"));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-100", Set.of("STAFF")));
+        when(repository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var result = facade.createStaffReservation(new CreateStaffReservationCommand(
+                1L,
+                2L,
+                10L,
+                null,
+                LocalDate.parse("2026-05-10"),
+                LocalDate.parse("2026-05-12"),
+                party(2),
+                List.of()
+        ));
+
+        assertEquals(10L, result.guestId());
+        assertEquals("staff-100", result.createdBy());
+    }
+
+    @Test
+    void shouldRejectStaffReservationWithoutGuestIdOrGuestContact() {
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("staff-100", Set.of("STAFF")));
+
+        assertThrows(ValidationException.class, () -> facade.createStaffReservation(new CreateStaffReservationCommand(
+                1L,
+                2L,
+                null,
+                null,
+                LocalDate.parse("2026-05-10"),
+                LocalDate.parse("2026-05-12"),
+                party(2),
+                List.of()
+        )));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void shouldRejectGuestCreatingReservationWithoutGuestClaim() {
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST")));
+
+        assertThrows(ForbiddenException.class, () -> facade.createReservation(new CreateReservationCommand(
+                1L,
+                2L,
+                LocalDate.parse("2026-05-10"),
+                LocalDate.parse("2026-05-12"),
+                party(2)
+        )));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void shouldRejectReservationForMissingGuest() {
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST"), 10L));
+        when(clockPort.now()).thenReturn(Instant.parse("2026-04-03T12:00:00Z"));
+        when(guestRepository.findById(10L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> facade.createReservation(new CreateReservationCommand(
+                1L,
+                2L,
+                LocalDate.parse("2026-05-10"),
+                LocalDate.parse("2026-05-12"),
+                party(2)
+        )));
+        verify(repository, never()).save(any());
     }
 
     @Test
     void shouldRejectInvalidStayPeriod() {
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST"), 10L));
         assertThrows(ValidationException.class, () -> facade.createReservation(new CreateReservationCommand(
                 1L,
                 2L,
@@ -117,6 +305,7 @@ class ReservationServiceTest {
         stubAvailableRoomType(1L, 2L);
         when(reservationQueryPort.findActiveOverlapping(any(), any())).thenReturn(List.of(new ActiveReservationView(1L, 2L)));
         when(clockPort.now()).thenReturn(Instant.parse("2026-04-03T12:00:00Z"));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST"), 10L));
 
         assertThrows(ValidationException.class, () -> facade.createReservation(new CreateReservationCommand(
                 1L,
@@ -131,6 +320,7 @@ class ReservationServiceTest {
     @Test
     void shouldRejectReservationInPast() {
         when(clockPort.now()).thenReturn(Instant.parse("2026-04-03T12:00:00Z"));
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST"), 10L));
 
         assertThrows(ValidationException.class, () -> facade.createReservation(new CreateReservationCommand(
                 1L,
@@ -158,15 +348,12 @@ class ReservationServiceTest {
     @Test
     void shouldAllowStaffToListAllReservations() {
         Reservation firstReservation = pendingReservation("reservation-1", 1L, null, 2L, "guest-123");
-        Reservation secondReservation = Reservation.rehydrate(
+        Reservation secondReservation = reservation(
                 "reservation-2",
                 3L,
+                null,
                 4L,
-                LocalDate.parse("2026-06-10"),
-                LocalDate.parse("2026-06-12"),
-                party(1),
                 ReservationStatus.CANCELLED,
-                Instant.parse("2026-04-04T12:00:00Z"),
                 Instant.parse("2026-04-05T12:00:00Z"),
                 "guest-456"
         );
@@ -178,6 +365,28 @@ class ReservationServiceTest {
         assertEquals(2, result.size());
         assertEquals("reservation-1", result.getFirst().reservationId());
         assertTrue(result.stream().anyMatch(item -> item.createdBy().equals("guest-456")));
+    }
+
+    @Test
+    void shouldListCurrentUserReservations() {
+        Reservation firstReservation = pendingReservation("reservation-1", 1L, null, 2L, "guest-123");
+        Reservation secondReservation = pendingReservation("reservation-2", 1L, null, 2L, "guest-123");
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST")));
+        when(repository.findByCreatedBy("guest-123", 100)).thenReturn(List.of(firstReservation, secondReservation));
+
+        var result = facade.listMyReservations(100);
+
+        assertEquals(2, result.size());
+        assertEquals("guest-123", result.getFirst().createdBy());
+        verify(repository, never()).findAll(100);
+    }
+
+    @Test
+    void shouldRejectInvalidLimitForCurrentUserReservations() {
+        when(currentUserPort.getCurrentUser()).thenReturn(new AuthenticatedUser("guest-123", Set.of("GUEST")));
+
+        assertThrows(ValidationException.class, () -> facade.listMyReservations(0));
+        verify(repository, never()).findByCreatedBy(any(), anyInt());
     }
 
     @Test
@@ -206,6 +415,7 @@ class ReservationServiceTest {
         facade.cancelReservation("reservation-1");
 
         verify(repository).save(any(Reservation.class));
+        verify(notificationPort).reservationCancelled("reservation-1");
     }
 
     @Test
@@ -239,15 +449,12 @@ class ReservationServiceTest {
 
     @Test
     void shouldRejectCancellingAlreadyCancelledReservation() {
-        Reservation reservation = Reservation.rehydrate(
+        Reservation reservation = reservation(
                 "reservation-1",
                 1L,
+                null,
                 2L,
-                LocalDate.parse("2026-05-10"),
-                LocalDate.parse("2026-05-12"),
-                party(2),
                 ReservationStatus.CANCELLED,
-                Instant.parse("2026-04-03T12:00:00Z"),
                 Instant.parse("2026-04-04T10:00:00Z"),
                 "guest-123"
         );
@@ -260,16 +467,12 @@ class ReservationServiceTest {
 
     @Test
     void shouldRejectCancellingCheckedInReservation() {
-        Reservation reservation = Reservation.rehydrate(
+        Reservation reservation = reservation(
                 "reservation-1",
                 1L,
                 100L,
                 2L,
-                LocalDate.parse("2026-05-10"),
-                LocalDate.parse("2026-05-12"),
-                party(2),
                 ReservationStatus.CHECKED_IN,
-                Instant.parse("2026-04-03T12:00:00Z"),
                 null,
                 "guest-123"
         );
@@ -282,16 +485,12 @@ class ReservationServiceTest {
 
     @Test
     void shouldRejectCancellingCheckedOutReservation() {
-        Reservation reservation = Reservation.rehydrate(
+        Reservation reservation = reservation(
                 "reservation-1",
                 1L,
                 100L,
                 2L,
-                LocalDate.parse("2026-05-10"),
-                LocalDate.parse("2026-05-12"),
-                party(2),
                 ReservationStatus.CHECKED_OUT,
-                Instant.parse("2026-04-03T12:00:00Z"),
                 null,
                 "guest-123"
         );
@@ -304,15 +503,12 @@ class ReservationServiceTest {
 
     @Test
     void shouldRejectCancellingNoShowReservation() {
-        Reservation reservation = Reservation.rehydrate(
+        Reservation reservation = reservation(
                 "reservation-1",
                 1L,
+                null,
                 2L,
-                LocalDate.parse("2026-05-10"),
-                LocalDate.parse("2026-05-12"),
-                party(2),
                 ReservationStatus.NO_SHOW,
-                Instant.parse("2026-04-03T12:00:00Z"),
                 null,
                 "guest-123"
         );
@@ -325,16 +521,12 @@ class ReservationServiceTest {
 
     @Test
     void shouldRejectCheckedInReservationWithoutAssignedRoom() {
-        assertThrows(ValidationException.class, () -> Reservation.rehydrate(
+        assertThrows(ValidationException.class, () -> reservation(
                 "reservation-1",
                 1L,
                 null,
                 2L,
-                LocalDate.parse("2026-05-10"),
-                LocalDate.parse("2026-05-12"),
-                party(2),
                 ReservationStatus.CHECKED_IN,
-                Instant.parse("2026-04-03T12:00:00Z"),
                 null,
                 "guest-123"
         ));
@@ -342,22 +534,25 @@ class ReservationServiceTest {
 
     @Test
     void shouldRejectCheckedOutReservationWithoutAssignedRoom() {
-        assertThrows(ValidationException.class, () -> Reservation.rehydrate(
+        assertThrows(ValidationException.class, () -> reservation(
                 "reservation-1",
                 1L,
                 null,
                 2L,
-                LocalDate.parse("2026-05-10"),
-                LocalDate.parse("2026-05-12"),
-                party(2),
                 ReservationStatus.CHECKED_OUT,
-                Instant.parse("2026-04-03T12:00:00Z"),
                 null,
                 "guest-123"
         ));
     }
 
     private void stubAvailableRoomType(Long hotelId, Long roomTypeId) {
+        when(guestRepository.findById(10L)).thenReturn(Optional.of(new Guest(
+                10L,
+                "John",
+                "Smith",
+                new EmailAddress("john@example.com"),
+                "+421900000000"
+        )));
         when(hotelRepository.findById(hotelId)).thenReturn(Optional.of(new Hotel(
                 hotelId,
                 "Danube Hotel",
@@ -367,7 +562,7 @@ class ReservationServiceTest {
                 4,
                 "City hotel",
                 HotelStatus.ACTIVE,
-                new HotelPolicy(true, true, 2, 11)
+                new HotelPolicy(true, true, 2, 12, 13)
         )));
         when(roomTypeRepository.findByHotelIds(List.of(hotelId))).thenReturn(List.of(new RoomType(
                 roomTypeId,
@@ -376,7 +571,8 @@ class ReservationServiceTest {
                 new OccupancyPolicy(2, 1, 1, 3),
                 new PetPolicy(false, 0, Set.of(), null, null),
                 Money.of("100.00", "EUR"),
-                "Standard room"
+                "Standard room",
+                RoomTypeFeatures.empty()
         )));
         when(roomInventoryPort.countBookableRoomsForReservation(hotelId, roomTypeId)).thenReturn(1L);
     }
@@ -386,32 +582,38 @@ class ReservationServiceTest {
     }
 
     private static Reservation pendingReservation(String reservationId, Long hotelId, Long roomId, Long roomTypeId, String createdBy) {
-        if (roomId == null) {
-            return Reservation.rehydrate(
-                    reservationId,
-                    hotelId,
-                    roomTypeId,
-                    LocalDate.parse("2026-05-10"),
-                    LocalDate.parse("2026-05-12"),
-                    party(2),
-                    ReservationStatus.PENDING,
-                    Instant.parse("2026-04-03T12:00:00Z"),
-                    null,
-                    createdBy
-            );
-        }
+        return reservation(reservationId, hotelId, roomId, roomTypeId, ReservationStatus.PENDING, null, createdBy);
+    }
+
+    private static Reservation reservation(
+            String reservationId,
+            Long hotelId,
+            Long roomId,
+            Long roomTypeId,
+            ReservationStatus status,
+            Instant cancelledAt,
+            String createdBy
+    ) {
         return Reservation.rehydrate(
                 reservationId,
                 hotelId,
+                10L,
                 roomId,
                 roomTypeId,
                 LocalDate.parse("2026-05-10"),
                 LocalDate.parse("2026-05-12"),
                 party(2),
-                ReservationStatus.PENDING,
+                priceSnapshot(),
+                List.of(),
+                status,
                 Instant.parse("2026-04-03T12:00:00Z"),
-                null,
+                cancelledAt,
                 createdBy
         );
+    }
+
+    private static ReservationPriceSnapshot priceSnapshot() {
+        Money zero = Money.zero("EUR");
+        return new ReservationPriceSnapshot(zero, zero, zero, zero);
     }
 }

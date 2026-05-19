@@ -10,6 +10,7 @@ import com.hotel.management.domain.room.Room;
 import com.hotel.management.domain.room.RoomRepository;
 import com.hotel.management.domain.room.RoomStatus;
 import com.hotel.management.domain.room.RoomType;
+import com.hotel.management.domain.room.RoomTypeFeatures;
 import com.hotel.management.domain.room.RoomTypeRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.value.AccommodationParty;
@@ -161,7 +162,7 @@ class SearchAvailabilityServiceTest {
                 4,
                 "City hotel",
                 HotelStatus.ACTIVE,
-                new HotelPolicy(true, true, 2, 11)
+                new HotelPolicy(true, true, 2, 12, 13)
         );
     }
 
@@ -173,7 +174,8 @@ class SearchAvailabilityServiceTest {
                 new OccupancyPolicy(maxAdults, maxChildren, maxInfants, maxTotalGuests),
                 new PetPolicy(false, 0, java.util.Set.of(), null, null),
                 Money.of("100.00", "EUR"),
-                name + " room"
+                name + " room",
+                RoomTypeFeatures.empty()
         );
     }
 

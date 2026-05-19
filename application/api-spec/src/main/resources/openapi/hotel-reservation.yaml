@@ -8,6 +8,565 @@ info:
 servers:
   - url: http://localhost:8080
 paths:
+  /hotels:
+    get:
+      tags:
+        - Hotels
+      operationId: listHotels
+      summary: List active hotels
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active hotels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HotelResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /hotels/{hotelId}:
+    get:
+      tags:
+        - Hotels
+      operationId: getHotelDetails
+      summary: Get active hotel details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Hotel details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /hotels/{hotelId}/services:
+    get:
+      tags:
+        - Hotels
+      operationId: listHotelServices
+      summary: List active hotel services
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Active hotel services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HotelServiceOfferingResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/hotels:
+    post:
+      tags:
+        - Admin Hotels
+      operationId: createHotel
+      summary: Create hotel
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHotelRequest'
+      responses:
+        '201':
+          description: Hotel created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/hotels/{hotelId}:
+    put:
+      tags:
+        - Admin Hotels
+      operationId: updateHotel
+      summary: Update hotel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHotelRequest'
+      responses:
+        '200':
+          description: Hotel updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/room-types:
+    post:
+      tags:
+        - Admin Room Types
+      operationId: createRoomType
+      summary: Create room type
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomTypeRequest'
+      responses:
+        '201':
+          description: Room type created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomTypeResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/room-types/{roomTypeId}:
+    put:
+      tags:
+        - Admin Room Types
+      operationId: updateRoomType
+      summary: Update room type
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomTypeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoomTypeRequest'
+      responses:
+        '200':
+          description: Room type updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomTypeResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Room type not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/rooms:
+    post:
+      tags:
+        - Admin Rooms
+      operationId: createRoom
+      summary: Create room
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomRequest'
+      responses:
+        '201':
+          description: Room created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel or room type not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/rooms/{roomId}:
+    put:
+      tags:
+        - Admin Rooms
+      operationId: updateRoom
+      summary: Update room
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoomRequest'
+      responses:
+        '200':
+          description: Room updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Room, hotel, or room type not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/hotels/{hotelId}/services:
+    post:
+      tags:
+        - Admin Service Offerings
+      operationId: createServiceOffering
+      summary: Create hotel service offering
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceOfferingRequest'
+      responses:
+        '201':
+          description: Service offering created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelServiceOfferingResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/hotels/{hotelId}/services/{serviceId}:
+    put:
+      tags:
+        - Admin Service Offerings
+      operationId: updateServiceOffering
+      summary: Update hotel service offering
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateServiceOfferingRequest'
+      responses:
+        '200':
+          description: Service offering updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HotelServiceOfferingResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel or service offering not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Admin Service Offerings
+      operationId: deactivateServiceOffering
+      summary: Deactivate hotel service offering
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Service offering deactivated
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel or service offering not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /rooms/search:
     post:
       tags:
@@ -31,6 +590,9 @@ paths:
                   checkOut: '2026-05-12'
                   adults: 2
                   childrenAges: [7, 1]
+                  serviceOfferings:
+                    - serviceOfferingId: 10001
+                      quantity: 2
                   pets:
                     - type: DOG
                       size: SMALL
@@ -50,6 +612,99 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /hotels/{hotelId}/room-types/{roomTypeId}/availability-calendar:
+    get:
+      tags:
+        - Rooms
+      operationId: getRoomTypeAvailabilityCalendar
+      summary: Get room type availability calendar
+      description: Returns one item for every date in the inclusive [from, to] range. Each item describes whether at least one physical room of the requested room type is available for that night. Check-out dates are not counted as occupied nights. The date range cannot exceed 90 days.
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: roomTypeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Room type availability calendar
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoomTypeAvailabilityCalendarDayResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel or room type not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /me/reservations:
+    get:
+      tags:
+        - Reservations
+      operationId: listMyReservations
+      summary: List current user's reservations
+      description: Returns reservations created by the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 200
+            default: 100
+      responses:
+        '200':
+          description: Current user's reservation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservationResponse'
         '401':
           description: Unauthorized
           content:
@@ -106,8 +761,8 @@ paths:
       tags:
         - Reservations
       operationId: createReservation
-      summary: Create reservation
-      description: Creates a new reservation for an accommodation party.
+      summary: Create authenticated guest reservation
+      description: Creates a reservation for the guest profile linked to the authenticated GUEST JWT. The request body must not contain guestId.
       security:
         - bearerAuth: []
       requestBody:
@@ -150,6 +805,51 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /public/reservations:
+    post:
+      tags:
+        - Reservations
+      operationId: createPublicReservation
+      summary: Create anonymous guest checkout reservation
+      description: Creates a reservation without JWT. Backend creates or finds the Guest profile from contact data; guestId must not be supplied by the caller.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicCreateReservationRequest'
+            examples:
+              anonymousCheckout:
+                value:
+                  hotelId: 1001
+                  roomTypeId: 1102
+                  firstName: Anna
+                  lastName: Tester
+                  email: anna.tester@example.com
+                  phone: '+421900000011'
+                  checkIn: '2026-05-10'
+                  checkOut: '2026-05-12'
+                  adults: 2
+                  childrenAges: [7]
+      responses:
+        '201':
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateReservationResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Authenticated callers must use POST /reservations
           content:
             application/problem+json:
               schema:
@@ -224,6 +924,55 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Reservation not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /staff/reservations:
+    post:
+      tags:
+        - Staff Reservations
+      operationId: createStaffReservation
+      summary: Create staff reservation
+      description: Creates an internal staff/admin reservation. Staff may provide an existing guestId or guest contact data for creating/finding a Guest profile.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffCreateReservationRequest'
+            examples:
+              forExistingGuest:
+                value:
+                  hotelId: 1001
+                  roomTypeId: 1102
+                  guestId: 11
+                  checkIn: '2026-05-10'
+                  checkOut: '2026-05-12'
+                  adults: 2
+      responses:
+        '201':
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateReservationResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/problem+json:
               schema:
@@ -318,6 +1067,103 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /staff/reservations/{reservationId}/no-show:
+    post:
+      tags:
+        - Staff Reservations
+      operationId: markNoShowReservation
+      summary: Mark reservation as no-show
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reservation marked as no-show
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationResponse'
+        '400':
+          description: Business rule violation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Reservation not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /staff/rooms/{roomId}/status:
+    patch:
+      tags:
+        - Staff Rooms
+      operationId: updateRoomStatus
+      summary: Update room operational status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoomStatusRequest'
+      responses:
+        '200':
+          description: Room status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomOperationResponse'
+        '400':
+          description: Business rule violation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Room not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -325,6 +1171,576 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    HotelResponse:
+      type: object
+      required:
+        - hotelId
+        - name
+        - city
+        - country
+        - address
+        - stars
+        - status
+        - childrenAllowed
+        - petsAllowed
+        - infantMaxAge
+        - childMaxAge
+        - adultEquivalentAge
+      properties:
+        hotelId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        address:
+          type: string
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+        description:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, UNDER_MAINTENANCE]
+        childrenAllowed:
+          type: boolean
+          description: Whether this hotel accepts children and infants. If false, childrenAges must be empty when searching or creating a reservation.
+        petsAllowed:
+          type: boolean
+        infantMaxAge:
+          type: integer
+          description: Inclusive maximum age classified as an infant for this hotel. Infants are submitted inside childrenAges.
+        childMaxAge:
+          type: integer
+          description: Inclusive maximum age that counts as a child for this hotel. Older minors from adultEquivalentAge count against adult occupancy instead.
+        adultEquivalentAge:
+          type: integer
+          description: Inclusive age from which a minor submitted in childrenAges counts as an adult for occupancy limits. Must be less than 18.
+    HotelServiceOfferingResponse:
+      type: object
+      required:
+        - serviceOfferingId
+        - hotelId
+        - code
+        - name
+        - priceAmount
+        - priceCurrency
+        - active
+      properties:
+        serviceOfferingId:
+          type: integer
+          format: int64
+        hotelId:
+          type: integer
+          format: int64
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        priceAmount:
+          type: number
+        priceCurrency:
+          type: string
+        active:
+          type: boolean
+        availabilityRule:
+          type: string
+    CreateHotelRequest:
+      type: object
+      required:
+        - hotelId
+        - name
+        - city
+        - country
+        - address
+        - stars
+        - status
+        - childrenAllowed
+        - petsAllowed
+        - infantMaxAge
+        - childMaxAge
+        - adultEquivalentAge
+      properties:
+        hotelId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        address:
+          type: string
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+        description:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, UNDER_MAINTENANCE]
+        childrenAllowed:
+          type: boolean
+          description: Whether this hotel accepts children and infants. If false, childrenAges must be empty when searching or creating a reservation.
+        petsAllowed:
+          type: boolean
+        infantMaxAge:
+          type: integer
+          minimum: 0
+          description: Inclusive maximum age classified as an infant for this hotel. Infants are submitted inside childrenAges.
+        childMaxAge:
+          type: integer
+          minimum: 0
+          description: Inclusive maximum age that counts as a child for this hotel. Older minors from adultEquivalentAge count against adult occupancy instead.
+        adultEquivalentAge:
+          type: integer
+          minimum: 1
+          maximum: 17
+          description: Inclusive age from which a minor submitted in childrenAges counts as an adult for occupancy limits. Must be greater than infantMaxAge.
+    UpdateHotelRequest:
+      type: object
+      required:
+        - name
+        - city
+        - country
+        - address
+        - stars
+        - status
+        - childrenAllowed
+        - petsAllowed
+        - infantMaxAge
+        - childMaxAge
+        - adultEquivalentAge
+      properties:
+        name:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        address:
+          type: string
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+        description:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, UNDER_MAINTENANCE]
+        childrenAllowed:
+          type: boolean
+          description: Whether this hotel accepts children and infants. If false, childrenAges must be empty when searching or creating a reservation.
+        petsAllowed:
+          type: boolean
+        infantMaxAge:
+          type: integer
+          minimum: 0
+          description: Inclusive maximum age classified as an infant for this hotel. Infants are submitted inside childrenAges.
+        childMaxAge:
+          type: integer
+          minimum: 0
+          description: Inclusive maximum age that counts as a child for this hotel. Older minors from adultEquivalentAge count against adult occupancy instead.
+        adultEquivalentAge:
+          type: integer
+          minimum: 1
+          maximum: 17
+          description: Inclusive age from which a minor submitted in childrenAges counts as an adult for occupancy limits. Must be greater than infantMaxAge.
+    RoomAmenityCode:
+      type: string
+      enum:
+        - WIFI
+        - AIR_CONDITIONING
+        - HEATING
+        - PRIVATE_BATHROOM
+        - BATHTUB
+        - SHOWER
+        - HAIRDRYER
+        - SAFE
+        - MINIBAR
+        - COFFEE_MACHINE
+        - SMART_TV
+        - SOUNDPROOFING
+        - BALCONY
+        - SEA_VIEW
+        - CITY_VIEW
+        - MOUNTAIN_VIEW
+        - WORKSPACE
+        - WHEELCHAIR_ACCESSIBLE
+    RoomTypeResponse:
+      type: object
+      required:
+        - roomTypeId
+        - hotelId
+        - name
+        - maxAdults
+        - maxChildren
+        - maxInfants
+        - maxTotalGuests
+        - petsAllowed
+        - maxPets
+        - allowedPetTypes
+        - basePriceAmount
+        - basePriceCurrency
+      properties:
+        roomTypeId:
+          type: integer
+          format: int64
+        hotelId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        maxAdults:
+          type: integer
+        maxChildren:
+          type: integer
+          description: Maximum number of non-infant children allowed for this room type.
+        maxInfants:
+          type: integer
+          description: Maximum number of infants allowed for this room type. Infants are classified from childrenAges using the hotel's infantMaxAge.
+        maxTotalGuests:
+          type: integer
+          description: Maximum occupancy counted as adults, adult-equivalent minors, and non-infant children. Infants are limited separately by maxInfants.
+        petsAllowed:
+          type: boolean
+        maxPets:
+          type: integer
+        allowedPetTypes:
+          type: array
+          items:
+            type: string
+            enum: [DOG, CAT, OTHER]
+        maxPetWeightKg:
+          type: number
+        petFeeAmount:
+          type: number
+        petFeeCurrency:
+          type: string
+        basePriceAmount:
+          type: number
+        basePriceCurrency:
+          type: string
+        description:
+          type: string
+        bedSetup:
+          type: string
+          nullable: true
+          maxLength: 120
+          description: Human-readable bed configuration as a single line. Null when not yet configured.
+          example: 1 king bed + sofa bed
+        roomSizeSqm:
+          type: number
+          format: float
+          nullable: true
+          minimum: 1
+          maximum: 1000
+          description: Room floor area in square metres. Null when unknown.
+          example: 28.5
+        amenities:
+          type: array
+          description: Room amenities as stable enum codes. Frontend maps each code to an icon and a localized label.
+          items:
+            $ref: '#/components/schemas/RoomAmenityCode'
+          example: [WIFI, AIR_CONDITIONING, PRIVATE_BATHROOM, SEA_VIEW]
+    CreateRoomTypeRequest:
+      type: object
+      required:
+        - roomTypeId
+        - hotelId
+        - name
+        - maxAdults
+        - maxChildren
+        - maxInfants
+        - maxTotalGuests
+        - petsAllowed
+        - maxPets
+        - allowedPetTypes
+        - basePriceAmount
+        - basePriceCurrency
+      properties:
+        roomTypeId:
+          type: integer
+          format: int64
+        hotelId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        maxAdults:
+          type: integer
+          minimum: 1
+        maxChildren:
+          type: integer
+          minimum: 0
+          description: Maximum number of non-infant children allowed for this room type.
+        maxInfants:
+          type: integer
+          minimum: 0
+          description: Maximum number of infants allowed for this room type. Infants are classified from childrenAges using the hotel's infantMaxAge.
+        maxTotalGuests:
+          type: integer
+          minimum: 1
+          description: Maximum occupancy counted as adults, adult-equivalent minors, and non-infant children. Infants are limited separately by maxInfants.
+        petsAllowed:
+          type: boolean
+        maxPets:
+          type: integer
+          minimum: 0
+        allowedPetTypes:
+          type: array
+          items:
+            type: string
+            enum: [DOG, CAT, OTHER]
+        maxPetWeightKg:
+          type: number
+          minimum: 0
+        petFeeAmount:
+          type: number
+          minimum: 0
+        petFeeCurrency:
+          type: string
+        basePriceAmount:
+          type: number
+          minimum: 0
+        basePriceCurrency:
+          type: string
+        description:
+          type: string
+        bedSetup:
+          type: string
+          nullable: true
+          maxLength: 120
+          description: Human-readable bed configuration as a single line. Blank is treated as null.
+          example: 1 king bed + sofa bed
+        roomSizeSqm:
+          type: number
+          format: float
+          nullable: true
+          minimum: 1
+          maximum: 1000
+          description: Room floor area in square metres. Null when unknown.
+          example: 28.5
+        amenities:
+          type: array
+          description: Room amenities as stable enum codes. Empty array allowed.
+          items:
+            $ref: '#/components/schemas/RoomAmenityCode'
+          example: [WIFI, AIR_CONDITIONING, PRIVATE_BATHROOM, SEA_VIEW]
+    UpdateRoomTypeRequest:
+      type: object
+      required:
+        - name
+        - maxAdults
+        - maxChildren
+        - maxInfants
+        - maxTotalGuests
+        - petsAllowed
+        - maxPets
+        - allowedPetTypes
+        - basePriceAmount
+        - basePriceCurrency
+      properties:
+        name:
+          type: string
+        maxAdults:
+          type: integer
+          minimum: 1
+        maxChildren:
+          type: integer
+          minimum: 0
+          description: Maximum number of non-infant children allowed for this room type.
+        maxInfants:
+          type: integer
+          minimum: 0
+          description: Maximum number of infants allowed for this room type. Infants are classified from childrenAges using the hotel's infantMaxAge.
+        maxTotalGuests:
+          type: integer
+          minimum: 1
+          description: Maximum occupancy counted as adults, adult-equivalent minors, and non-infant children. Infants are limited separately by maxInfants.
+        petsAllowed:
+          type: boolean
+        maxPets:
+          type: integer
+          minimum: 0
+        allowedPetTypes:
+          type: array
+          items:
+            type: string
+            enum: [DOG, CAT, OTHER]
+        maxPetWeightKg:
+          type: number
+          minimum: 0
+        petFeeAmount:
+          type: number
+          minimum: 0
+        petFeeCurrency:
+          type: string
+        basePriceAmount:
+          type: number
+          minimum: 0
+        basePriceCurrency:
+          type: string
+        description:
+          type: string
+        bedSetup:
+          type: string
+          nullable: true
+          maxLength: 120
+          description: Human-readable bed configuration as a single line. Blank is treated as null.
+          example: 1 king bed + sofa bed
+        roomSizeSqm:
+          type: number
+          format: float
+          nullable: true
+          minimum: 1
+          maximum: 1000
+          description: Room floor area in square metres. Null when unknown.
+          example: 28.5
+        amenities:
+          type: array
+          description: Room amenities as stable enum codes. Empty array allowed.
+          items:
+            $ref: '#/components/schemas/RoomAmenityCode'
+          example: [WIFI, AIR_CONDITIONING, PRIVATE_BATHROOM, SEA_VIEW]
+    RoomResponse:
+      type: object
+      required:
+        - roomId
+        - hotelId
+        - roomNumber
+        - roomTypeId
+        - capacity
+        - status
+      properties:
+        roomId:
+          type: integer
+          format: int64
+        hotelId:
+          type: integer
+          format: int64
+        roomNumber:
+          type: string
+        roomTypeId:
+          type: integer
+          format: int64
+        capacity:
+          type: integer
+        status:
+          type: string
+          enum: [AVAILABLE, CLEANING, MAINTENANCE, OUT_OF_SERVICE]
+    CreateRoomRequest:
+      type: object
+      required:
+        - roomId
+        - hotelId
+        - roomNumber
+        - roomTypeId
+        - capacity
+        - status
+      properties:
+        roomId:
+          type: integer
+          format: int64
+        hotelId:
+          type: integer
+          format: int64
+        roomNumber:
+          type: string
+        roomTypeId:
+          type: integer
+          format: int64
+        capacity:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum: [AVAILABLE, CLEANING, MAINTENANCE, OUT_OF_SERVICE]
+    UpdateRoomRequest:
+      type: object
+      required:
+        - hotelId
+        - roomNumber
+        - roomTypeId
+        - capacity
+        - status
+      properties:
+        hotelId:
+          type: integer
+          format: int64
+        roomNumber:
+          type: string
+        roomTypeId:
+          type: integer
+          format: int64
+        capacity:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum: [AVAILABLE, CLEANING, MAINTENANCE, OUT_OF_SERVICE]
+    CreateServiceOfferingRequest:
+      type: object
+      required:
+        - serviceOfferingId
+        - code
+        - name
+        - priceAmount
+        - priceCurrency
+        - active
+      properties:
+        serviceOfferingId:
+          type: integer
+          format: int64
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        priceAmount:
+          type: number
+          minimum: 0
+        priceCurrency:
+          type: string
+        active:
+          type: boolean
+        availabilityRule:
+          type: string
+    UpdateServiceOfferingRequest:
+      type: object
+      required:
+        - code
+        - name
+        - priceAmount
+        - priceCurrency
+        - active
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        priceAmount:
+          type: number
+          minimum: 0
+        priceCurrency:
+          type: string
+        active:
+          type: boolean
+        availabilityRule:
+          type: string
     BookingPet:
       type: object
       required:
@@ -364,6 +1780,7 @@ components:
           minimum: 1
         childrenAges:
           type: array
+          description: Ages of all accompanying minors, including infants. The backend classifies each age using the selected hotel's infantMaxAge, childMaxAge, and adultEquivalentAge; infants count against maxInfants, children count against maxChildren, and adult-equivalent minors count against maxAdults/maxTotalGuests.
           items:
             type: integer
             minimum: 0
@@ -397,6 +1814,7 @@ components:
           minimum: 1
         childrenAges:
           type: array
+          description: Ages of all accompanying minors, including infants. The backend classifies each age using the selected hotel's infantMaxAge, childMaxAge, and adultEquivalentAge; infants count against maxInfants, children count against maxChildren, and adult-equivalent minors count against maxAdults/maxTotalGuests.
           items:
             type: integer
             minimum: 0
@@ -404,6 +1822,143 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BookingPet'
+        contactEmail:
+          type: string
+          format: email
+          nullable: true
+          description: Per-booking contact email. When null, backend uses the Guest profile email.
+        contactPhone:
+          type: string
+          nullable: true
+          maxLength: 32
+          description: Per-booking contact phone. When null, backend falls back to the Guest profile phone when available.
+        specialRequests:
+          type: string
+          nullable: true
+          maxLength: 500
+          description: Free-form note from the guest to the hotel. Stored with the reservation; not a binding promise.
+        serviceOfferings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservationServiceSelection'
+    PublicCreateReservationRequest:
+      type: object
+      required:
+        - hotelId
+        - roomTypeId
+        - firstName
+        - lastName
+        - email
+        - phone
+        - checkIn
+        - checkOut
+        - adults
+      properties:
+        hotelId:
+          type: integer
+          format: int64
+        roomTypeId:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        checkIn:
+          type: string
+          format: date
+        checkOut:
+          type: string
+          format: date
+        adults:
+          type: integer
+          minimum: 1
+        childrenAges:
+          type: array
+          description: Ages of all accompanying minors, including infants. The backend classifies each age using the selected hotel's infantMaxAge, childMaxAge, and adultEquivalentAge; infants count against maxInfants, children count against maxChildren, and adult-equivalent minors count against maxAdults/maxTotalGuests.
+          items:
+            type: integer
+            minimum: 0
+        pets:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingPet'
+        serviceOfferings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservationServiceSelection'
+    StaffCreateReservationRequest:
+      type: object
+      required:
+        - hotelId
+        - roomTypeId
+        - checkIn
+        - checkOut
+        - adults
+      properties:
+        hotelId:
+          type: integer
+          format: int64
+        roomTypeId:
+          type: integer
+          format: int64
+        guestId:
+          type: integer
+          format: int64
+          description: Existing Guest profile id. Staff/admin only.
+        firstName:
+          type: string
+          description: Required with lastName, email, and phone when guestId is not provided.
+        lastName:
+          type: string
+          description: Required with firstName, email, and phone when guestId is not provided.
+        email:
+          type: string
+          format: email
+          description: Required with firstName, lastName, and phone when guestId is not provided.
+        phone:
+          type: string
+          description: Required with firstName, lastName, and email when guestId is not provided.
+        checkIn:
+          type: string
+          format: date
+        checkOut:
+          type: string
+          format: date
+        adults:
+          type: integer
+          minimum: 1
+        childrenAges:
+          type: array
+          description: Ages of all accompanying minors, including infants. The backend classifies each age using the selected hotel's infantMaxAge, childMaxAge, and adultEquivalentAge; infants count against maxInfants, children count against maxChildren, and adult-equivalent minors count against maxAdults/maxTotalGuests.
+          items:
+            type: integer
+            minimum: 0
+        pets:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingPet'
+        serviceOfferings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservationServiceSelection'
+    ReservationServiceSelection:
+      type: object
+      required:
+        - serviceOfferingId
+        - quantity
+      properties:
+        serviceOfferingId:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          minimum: 1
     CreateReservationResponse:
       allOf:
         - $ref: '#/components/schemas/ReservationResponse'
@@ -412,6 +1967,7 @@ components:
       required:
         - reservationId
         - hotelId
+        - guestId
         - roomTypeId
         - checkIn
         - checkOut
@@ -425,6 +1981,9 @@ components:
         reservationId:
           type: string
         hotelId:
+          type: integer
+          format: int64
+        guestId:
           type: integer
           format: int64
         roomId:
@@ -444,12 +2003,45 @@ components:
           type: integer
         childrenAges:
           type: array
+          description: Ages of all accompanying minors exactly as submitted, including infants. Infant/child classification is derived from the hotel's age policy.
           items:
             type: integer
         pets:
           type: array
           items:
             $ref: '#/components/schemas/BookingPet'
+        contactEmail:
+          type: string
+          format: email
+          nullable: true
+        contactPhone:
+          type: string
+          nullable: true
+          maxLength: 32
+        specialRequests:
+          type: string
+          nullable: true
+          maxLength: 500
+        basePriceAmount:
+          type: number
+        basePriceCurrency:
+          type: string
+        servicesPriceAmount:
+          type: number
+        servicesPriceCurrency:
+          type: string
+        discountAmount:
+          type: number
+        discountCurrency:
+          type: string
+        finalPriceAmount:
+          type: number
+        finalPriceCurrency:
+          type: string
+        serviceItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservationServiceItemResponse'
         status:
           type: string
         createdAt:
@@ -461,6 +2053,66 @@ components:
           nullable: true
         createdBy:
           type: string
+    ReservationServiceItemResponse:
+      type: object
+      required:
+        - serviceOfferingId
+        - serviceName
+        - priceAmount
+        - priceCurrency
+        - quantity
+        - totalPriceAmount
+        - totalPriceCurrency
+      properties:
+        serviceOfferingId:
+          type: integer
+          format: int64
+        serviceName:
+          type: string
+        priceAmount:
+          type: number
+        priceCurrency:
+          type: string
+        quantity:
+          type: integer
+        totalPriceAmount:
+          type: number
+        totalPriceCurrency:
+          type: string
+    UpdateRoomStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [AVAILABLE, CLEANING, MAINTENANCE, OUT_OF_SERVICE]
+    RoomOperationResponse:
+      type: object
+      required:
+        - roomId
+        - hotelId
+        - roomNumber
+        - roomTypeId
+        - capacity
+        - status
+      properties:
+        roomId:
+          type: integer
+          format: int64
+        hotelId:
+          type: integer
+          format: int64
+        roomNumber:
+          type: string
+        roomTypeId:
+          type: integer
+          format: int64
+        capacity:
+          type: integer
+        status:
+          type: string
+          enum: [AVAILABLE, OCCUPIED, CLEANING, MAINTENANCE, OUT_OF_SERVICE]
     AvailableRoomResponse:
       type: object
       required:
@@ -506,6 +2158,40 @@ components:
           type: string
         availableCount:
           type: integer
+        bedSetup:
+          type: string
+          nullable: true
+          maxLength: 120
+          description: Human-readable bed configuration as a single line. Null when not yet configured.
+          example: 1 king bed + sofa bed
+        roomSizeSqm:
+          type: number
+          format: float
+          nullable: true
+          minimum: 1
+          maximum: 1000
+          description: Room floor area in square metres. Null when unknown.
+          example: 28.5
+        amenities:
+          type: array
+          description: Room amenities as stable enum codes. Frontend maps each code to an icon and a localized label.
+          items:
+            $ref: '#/components/schemas/RoomAmenityCode'
+          example: [WIFI, AIR_CONDITIONING, PRIVATE_BATHROOM, SEA_VIEW]
+    RoomTypeAvailabilityCalendarDayResponse:
+      type: object
+      required:
+        - date
+        - availableCount
+        - available
+      properties:
+        date:
+          type: string
+          format: date
+        availableCount:
+          type: integer
+        available:
+          type: boolean
     ErrorResponse:
       type: object
       description: RFC 7807 problem details response returned by the REST layer.

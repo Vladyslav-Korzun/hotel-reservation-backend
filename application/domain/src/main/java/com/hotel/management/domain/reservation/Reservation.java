@@ -2,6 +2,7 @@ package com.hotel.management.domain.reservation;
 
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.AccommodationParty;
+import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.shared.value.StayPeriod;
 
@@ -19,6 +20,9 @@ public final class Reservation {
     private final LocalDate checkIn;
     private final LocalDate checkOut;
     private final AccommodationParty accommodationParty;
+    private final EmailAddress contactEmail;
+    private final String contactPhone;
+    private final String specialRequests;
     private final ReservationPriceSnapshot priceSnapshot;
     private final List<ReservationServiceItem> serviceItems;
     private final ReservationStatus status;
@@ -35,6 +39,9 @@ public final class Reservation {
             LocalDate checkIn,
             LocalDate checkOut,
             AccommodationParty accommodationParty,
+            EmailAddress contactEmail,
+            String contactPhone,
+            String specialRequests,
             ReservationPriceSnapshot priceSnapshot,
             List<ReservationServiceItem> serviceItems,
             ReservationStatus status,
@@ -44,7 +51,7 @@ public final class Reservation {
     ) {
         this.id = requireText(id, "reservationId is required");
         this.hotelId = require(hotelId, "hotelId is required");
-        this.guestId = guestId;
+        this.guestId = require(guestId, "guestId is required");
         this.roomId = roomId;
         this.roomTypeId = require(roomTypeId, "roomTypeId is required");
         this.checkIn = require(checkIn, "checkIn is required");
@@ -53,6 +60,9 @@ public final class Reservation {
             throw new ValidationException("checkOut must be after checkIn");
         }
         this.accommodationParty = require(accommodationParty, "accommodationParty is required");
+        this.contactEmail = contactEmail;
+        this.contactPhone = normalizeContactPhone(contactPhone);
+        this.specialRequests = normalizeSpecialRequests(specialRequests);
         this.priceSnapshot = require(priceSnapshot, "priceSnapshot is required");
         this.serviceItems = List.copyOf(require(serviceItems, "serviceItems is required"));
         this.status = require(status, "status is required");
@@ -83,6 +93,40 @@ public final class Reservation {
             Instant createdAt,
             String createdBy
     ) {
+        return createPending(
+                id,
+                hotelId,
+                guestId,
+                roomTypeId,
+                checkIn,
+                checkOut,
+                accommodationParty,
+                null,
+                null,
+                null,
+                priceSnapshot,
+                serviceItems,
+                createdAt,
+                createdBy
+        );
+    }
+
+    public static Reservation createPending(
+            String id,
+            Long hotelId,
+            Long guestId,
+            Long roomTypeId,
+            LocalDate checkIn,
+            LocalDate checkOut,
+            AccommodationParty accommodationParty,
+            EmailAddress contactEmail,
+            String contactPhone,
+            String specialRequests,
+            ReservationPriceSnapshot priceSnapshot,
+            List<ReservationServiceItem> serviceItems,
+            Instant createdAt,
+            String createdBy
+    ) {
         return new Reservation(
                 id,
                 hotelId,
@@ -92,140 +136,14 @@ public final class Reservation {
                 checkIn,
                 checkOut,
                 accommodationParty,
+                contactEmail,
+                contactPhone,
+                specialRequests,
                 priceSnapshot,
                 serviceItems,
                 ReservationStatus.PENDING,
                 createdAt,
                 null,
-                createdBy
-        );
-    }
-
-    public static Reservation createPending(
-            String id,
-            Long hotelId,
-            Long guestId,
-            Long roomTypeId,
-            LocalDate checkIn,
-            LocalDate checkOut,
-            AccommodationParty accommodationParty,
-            Instant createdAt,
-            String createdBy
-    ) {
-        return createPending(
-                id,
-                hotelId,
-                guestId,
-                roomTypeId,
-                checkIn,
-                checkOut,
-                accommodationParty,
-                zeroPriceSnapshot(),
-                List.of(),
-                createdAt,
-                createdBy
-        );
-    }
-
-    public static Reservation createPending(
-            String id,
-            Long hotelId,
-            Long roomTypeId,
-            LocalDate checkIn,
-            LocalDate checkOut,
-            AccommodationParty accommodationParty,
-            Instant createdAt,
-            String createdBy
-    ) {
-        return createPending(
-                id,
-                hotelId,
-                null,
-                roomTypeId,
-                checkIn,
-                checkOut,
-                accommodationParty,
-                zeroPriceSnapshot(),
-                List.of(),
-                createdAt,
-                createdBy
-        );
-    }
-
-    public static Reservation rehydrate(
-            String id,
-            Long hotelId,
-            Long roomTypeId,
-            LocalDate checkIn,
-            LocalDate checkOut,
-            AccommodationParty accommodationParty,
-            ReservationStatus status,
-            Instant createdAt,
-            Instant cancelledAt,
-            String createdBy
-    ) {
-        return rehydrate(id, hotelId, null, null, roomTypeId, checkIn, checkOut, accommodationParty, status, createdAt, cancelledAt, createdBy);
-    }
-
-    public static Reservation rehydrate(
-            String id,
-            Long hotelId,
-            Long guestId,
-            Long roomId,
-            Long roomTypeId,
-            LocalDate checkIn,
-            LocalDate checkOut,
-            AccommodationParty accommodationParty,
-            ReservationStatus status,
-            Instant createdAt,
-            Instant cancelledAt,
-            String createdBy
-    ) {
-        return rehydrate(
-                id,
-                hotelId,
-                guestId,
-                roomId,
-                roomTypeId,
-                checkIn,
-                checkOut,
-                accommodationParty,
-                zeroPriceSnapshot(),
-                List.of(),
-                status,
-                createdAt,
-                cancelledAt,
-                createdBy
-        );
-    }
-
-    public static Reservation rehydrate(
-            String id,
-            Long hotelId,
-            Long roomId,
-            Long roomTypeId,
-            LocalDate checkIn,
-            LocalDate checkOut,
-            AccommodationParty accommodationParty,
-            ReservationStatus status,
-            Instant createdAt,
-            Instant cancelledAt,
-            String createdBy
-    ) {
-        return rehydrate(
-                id,
-                hotelId,
-                null,
-                roomId,
-                roomTypeId,
-                checkIn,
-                checkOut,
-                accommodationParty,
-                zeroPriceSnapshot(),
-                List.of(),
-                status,
-                createdAt,
-                cancelledAt,
                 createdBy
         );
     }
@@ -246,6 +164,46 @@ public final class Reservation {
             Instant cancelledAt,
             String createdBy
     ) {
+        return rehydrate(
+                id,
+                hotelId,
+                guestId,
+                roomId,
+                roomTypeId,
+                checkIn,
+                checkOut,
+                accommodationParty,
+                null,
+                null,
+                null,
+                priceSnapshot,
+                serviceItems,
+                status,
+                createdAt,
+                cancelledAt,
+                createdBy
+        );
+    }
+
+    public static Reservation rehydrate(
+            String id,
+            Long hotelId,
+            Long guestId,
+            Long roomId,
+            Long roomTypeId,
+            LocalDate checkIn,
+            LocalDate checkOut,
+            AccommodationParty accommodationParty,
+            EmailAddress contactEmail,
+            String contactPhone,
+            String specialRequests,
+            ReservationPriceSnapshot priceSnapshot,
+            List<ReservationServiceItem> serviceItems,
+            ReservationStatus status,
+            Instant createdAt,
+            Instant cancelledAt,
+            String createdBy
+    ) {
         return new Reservation(
                 id,
                 hotelId,
@@ -255,6 +213,9 @@ public final class Reservation {
                 checkIn,
                 checkOut,
                 accommodationParty,
+                contactEmail,
+                contactPhone,
+                specialRequests,
                 priceSnapshot,
                 serviceItems,
                 status,
@@ -291,6 +252,9 @@ public final class Reservation {
                 checkIn,
                 checkOut,
                 accommodationParty,
+                contactEmail,
+                contactPhone,
+                specialRequests,
                 priceSnapshot,
                 serviceItems,
                 ReservationStatus.CANCELLED,
@@ -323,6 +287,9 @@ public final class Reservation {
                 checkIn,
                 checkOut,
                 accommodationParty,
+                contactEmail,
+                contactPhone,
+                specialRequests,
                 priceSnapshot,
                 serviceItems,
                 ReservationStatus.CHECKED_IN,
@@ -348,6 +315,9 @@ public final class Reservation {
                 checkIn,
                 checkOut,
                 accommodationParty,
+                contactEmail,
+                contactPhone,
+                specialRequests,
                 priceSnapshot,
                 serviceItems,
                 ReservationStatus.CHECKED_OUT,
@@ -379,6 +349,9 @@ public final class Reservation {
                 checkIn,
                 checkOut,
                 accommodationParty,
+                contactEmail,
+                contactPhone,
+                specialRequests,
                 priceSnapshot,
                 serviceItems,
                 ReservationStatus.NO_SHOW,
@@ -432,6 +405,18 @@ public final class Reservation {
 
     public AccommodationParty accommodationParty() {
         return accommodationParty;
+    }
+
+    public EmailAddress contactEmail() {
+        return contactEmail;
+    }
+
+    public String contactPhone() {
+        return contactPhone;
+    }
+
+    public String specialRequests() {
+        return specialRequests;
     }
 
     public ReservationPriceSnapshot priceSnapshot() {
@@ -488,8 +473,26 @@ public final class Reservation {
         return value;
     }
 
-    private static ReservationPriceSnapshot zeroPriceSnapshot() {
-        Money zero = Money.zero("EUR");
-        return new ReservationPriceSnapshot(zero, zero, zero, zero);
+    private static String normalizeContactPhone(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim();
+        if (normalized.length() > 32) {
+            throw new ValidationException("contactPhone must not exceed 32 characters");
+        }
+        return normalized;
     }
+
+    private static String normalizeSpecialRequests(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim();
+        if (normalized.length() > 500) {
+            throw new ValidationException("specialRequests must not exceed 500 characters");
+        }
+        return normalized;
+    }
+
 }

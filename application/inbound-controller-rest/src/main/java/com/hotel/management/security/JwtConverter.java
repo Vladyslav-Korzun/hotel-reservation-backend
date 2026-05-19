@@ -29,7 +29,7 @@ class JwtConverter extends AbstractAuthenticationToken {
 
     @Override
     public Object getPrincipal() {
-        return new AuthenticatedUser(extractUserId(source), extractRoles(source));
+        return new AuthenticatedUser(extractUserId(source), extractRoles(source), extractGuestId(source));
     }
 
     private static Collection<? extends GrantedAuthority> toAuthorities(Jwt source) {
@@ -61,5 +61,28 @@ class JwtConverter extends AbstractAuthenticationToken {
             return preferredUsername;
         }
         return source.getSubject();
+    }
+
+    private static Long extractGuestId(Jwt source) {
+        Object claim = source.getClaims().get("guest_id");
+        if (claim == null) {
+            claim = source.getClaims().get("guestId");
+        }
+        if (claim instanceof Number number) {
+            return number.longValue();
+        }
+        if (claim instanceof String value && !value.isBlank()) {
+            return Long.valueOf(value);
+        }
+        if (claim instanceof List<?> values && !values.isEmpty()) {
+            Object firstValue = values.getFirst();
+            if (firstValue instanceof Number number) {
+                return number.longValue();
+            }
+            if (firstValue instanceof String value && !value.isBlank()) {
+                return Long.valueOf(value);
+            }
+        }
+        return null;
     }
 }

@@ -44,6 +44,23 @@
       ],
       "webOrigins": [
         "*"
+      ],
+      "protocolMappers": [
+        {
+          "name": "guest_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "guest_id",
+            "claim.name": "guest_id",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "false"
+          }
+        }
       ]
     },
     {
@@ -65,7 +82,24 @@
       ],
       "attributes": {
         "post.logout.redirect.uris": "http://localhost:4200/*"
-      }
+      },
+      "protocolMappers": [
+        {
+          "name": "guest_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "guest_id",
+            "claim.name": "guest_id",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "false"
+          }
+        }
+      ]
     }
   ],
   "users": [
@@ -75,6 +109,11 @@
       "emailVerified": true,
       "firstName": "Guest",
       "lastName": "User",
+      "attributes": {
+        "guest_id": [
+          "11"
+        ]
+      },
       "credentials": [
         {
           "type": "password",

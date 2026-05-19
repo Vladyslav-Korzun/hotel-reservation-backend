@@ -1,0 +1,87 @@
+databaseChangeLog:
+  - changeSet:
+      id: 020-add-room-type-features
+      author: Vladyslav Korzun
+      changes:
+        - addColumn:
+            tableName: room_types
+            columns:
+              - column:
+                  name: bed_setup
+                  type: varchar(120)
+              - column:
+                  name: room_size_sqm
+                  type: numeric(5,1)
+              - column:
+                  name: amenities_json
+                  type: varchar(4000)
+                  defaultValue: "[]"
+                  constraints:
+                    nullable: false
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              alter table room_types
+              add constraint chk_room_types_room_size_sqm
+              check (room_size_sqm is null or (room_size_sqm > 0 and room_size_sqm <= 1000));
+
+              update room_types
+              set bed_setup = case id
+                    when 1101 then '1 twin bed'
+                    when 1102 then '1 queen bed'
+                    when 1103 then '1 queen bed + sofa bed'
+                    when 2101 then '1 king bed'
+                    when 2102 then '1 queen bed + sofa bed'
+                    when 2103 then '2 queen beds + sofa bed'
+                    when 3101 then '1 twin bed'
+                    when 3102 then '1 queen bed'
+                    when 3103 then '1 king bed + sofa bed'
+                    when 4101 then '1 twin bed'
+                    when 4102 then '1 queen bed'
+                    when 4103 then '1 queen bed + sofa bed'
+                    when 5101 then '2 twin beds'
+                    when 5102 then '1 queen bed'
+                    when 6101 then '1 king bed'
+                    when 6102 then '1 king bed + sofa bed'
+                    else bed_setup
+                  end,
+                  room_size_sqm = case id
+                    when 1101 then 18.0
+                    when 1102 then 28.5
+                    when 1103 then 42.0
+                    when 2101 then 30.0
+                    when 2102 then 38.0
+                    when 2103 then 55.0
+                    when 3101 then 17.0
+                    when 3102 then 25.0
+                    when 3103 then 48.0
+                    when 4101 then 16.0
+                    when 4102 then 27.0
+                    when 4103 then 39.0
+                    when 5101 then 21.0
+                    when 5102 then 26.0
+                    when 6101 then 32.0
+                    when 6102 then 52.0
+                    else room_size_sqm
+                  end,
+                  amenities_json = case id
+                    when 1101 then '["WIFI","HEATING","PRIVATE_BATHROOM","SHOWER","SMART_TV","WORKSPACE"]'
+                    when 1102 then '["WIFI","AIR_CONDITIONING","PRIVATE_BATHROOM","SHOWER","HAIRDRYER","SAFE","SMART_TV"]'
+                    when 1103 then '["WIFI","AIR_CONDITIONING","PRIVATE_BATHROOM","BATHTUB","HAIRDRYER","SAFE","MINIBAR","SMART_TV"]'
+                    when 2101 then '["WIFI","HEATING","PRIVATE_BATHROOM","SHOWER","HAIRDRYER","BALCONY","MOUNTAIN_VIEW"]'
+                    when 2102 then '["WIFI","HEATING","PRIVATE_BATHROOM","BATHTUB","HAIRDRYER","MINIBAR","BALCONY","MOUNTAIN_VIEW"]'
+                    when 2103 then '["WIFI","HEATING","PRIVATE_BATHROOM","BATHTUB","SHOWER","HAIRDRYER","MINIBAR","BALCONY","MOUNTAIN_VIEW"]'
+                    when 3101 then '["WIFI","AIR_CONDITIONING","PRIVATE_BATHROOM","SHOWER","SMART_TV","WORKSPACE"]'
+                    when 3102 then '["WIFI","AIR_CONDITIONING","PRIVATE_BATHROOM","SHOWER","HAIRDRYER","SAFE","SMART_TV","CITY_VIEW"]'
+                    when 3103 then '["WIFI","AIR_CONDITIONING","PRIVATE_BATHROOM","BATHTUB","COFFEE_MACHINE","SMART_TV","WORKSPACE","CITY_VIEW"]'
+                    when 4101 then '["WIFI","HEATING","PRIVATE_BATHROOM","SHOWER","WORKSPACE"]'
+                    when 4102 then '["WIFI","AIR_CONDITIONING","PRIVATE_BATHROOM","SHOWER","HAIRDRYER","SMART_TV","CITY_VIEW"]'
+                    when 4103 then '["WIFI","AIR_CONDITIONING","PRIVATE_BATHROOM","BATHTUB","HAIRDRYER","SMART_TV","WORKSPACE","CITY_VIEW"]'
+                    when 5101 then '["WIFI","HEATING","PRIVATE_BATHROOM","SHOWER","SMART_TV"]'
+                    when 5102 then '["WIFI","HEATING","PRIVATE_BATHROOM","SHOWER","HAIRDRYER","SMART_TV"]'
+                    when 6101 then '["WIFI","AIR_CONDITIONING","PRIVATE_BATHROOM","SHOWER","HAIRDRYER","SAFE","MINIBAR","BALCONY"]'
+                    when 6102 then '["WIFI","AIR_CONDITIONING","PRIVATE_BATHROOM","BATHTUB","SHOWER","HAIRDRYER","SAFE","MINIBAR","COFFEE_MACHINE","BALCONY"]'
+                    else amenities_json
+                  end
+              where id in (1101, 1102, 1103, 2101, 2102, 2103, 3101, 3102, 3103, 4101, 4102, 4103, 5101, 5102, 6101, 6102);

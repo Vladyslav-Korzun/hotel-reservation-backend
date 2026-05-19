@@ -1,6 +1,8 @@
 package com.hotel.management;
 
 import com.hotel.management.service.availability.SearchAvailabilityFacade;
+import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarFacade;
+import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarService;
 import com.hotel.management.service.availability.SearchAvailabilityService;
 import com.hotel.management.domain.hotel.HotelRepository;
 import com.hotel.management.domain.room.RoomRepository;
@@ -27,6 +29,21 @@ public class AvailabilityBeanConfiguration {
                 roomTypeRepository,
                 reservationQueryPort,
                 accommodationPolicyValidator
+        );
+    }
+
+    @Bean
+    GetRoomTypeAvailabilityCalendarFacade getRoomTypeAvailabilityCalendarFacade(
+            HotelRepository hotelRepository,
+            RoomTypeRepository roomTypeRepository,
+            RoomRepository roomRepository,
+            ReservationQueryPort reservationQueryPort
+    ) {
+        return new GetRoomTypeAvailabilityCalendarService(
+                hotelRepository,
+                roomTypeRepository,
+                roomRepository,
+                reservationQueryPort
         );
     }
 }

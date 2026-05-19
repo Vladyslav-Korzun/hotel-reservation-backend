@@ -1,7 +1,9 @@
 package com.hotel.management;
 
 import com.hotel.management.service.reservation.CreateReservationCommand;
+import com.hotel.management.service.reservation.CreatePublicReservationCommand;
 import com.hotel.management.service.reservation.CreateReservationResult;
+import com.hotel.management.service.reservation.CreateStaffReservationCommand;
 import com.hotel.management.service.reservation.GetReservationResult;
 import com.hotel.management.service.reservation.ReservationFacade;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +25,27 @@ public class TransactionalReservationFacade implements ReservationFacade {
     }
 
     @Override
+    @Transactional
+    public CreateReservationResult createPublicReservation(CreatePublicReservationCommand command) {
+        return delegate.createPublicReservation(command);
+    }
+
+    @Override
+    @Transactional
+    public CreateReservationResult createStaffReservation(CreateStaffReservationCommand command) {
+        return delegate.createStaffReservation(command);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<GetReservationResult> listReservations(int limit) {
         return delegate.listReservations(limit);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GetReservationResult> listMyReservations(int limit) {
+        return delegate.listMyReservations(limit);
     }
 
     @Override

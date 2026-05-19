@@ -1,100 +1,143 @@
 # Hotel Reservation Application
 
-Backend application for hotel room availability search, reservation management, and staff stay operations.
+Backend MVP for a hotel network reservation system. The project is built as a modular monolith with hexagonal architecture: domain use cases stay independent from Spring, REST, JPA, PostgreSQL, and generated OpenAPI DTOs.
 
-## Project Scope
+## Architecture
 
-The current implementation covers these backend capabilities:
+Maven modules:
 
-- search available room types by city or by specific hotel
-- create a reservation for an authenticated guest or administrator
+- `application/domain` - domain entities, value objects, repository ports, integration ports, facades, services, factories, predicates, domain exceptions
+- `application/api-spec` - OpenAPI contract and generated REST API interfaces/DTOs
+- `application/inbound-controller-rest` - REST controllers, DTO mappers, security, exception handling
+- `application/outbound-repository-jpa` - JPA adapters, Spring Data repositories, ORM mapping, Liquibase migrations
+- `application/outbound-integration` - external integration adapters; currently no-op notifications for MVP
+- `application/springboot` - application bootstrap, bean wiring, transaction decorators, runtime configuration
+
+Dependency direction:
+
+```text
+domain
+api-spec
+inbound-controller-rest -> domain + api-spec
+outbound-repository-jpa -> domain
+outbound-integration -> domain
+springboot -> inbound-controller-rest + outbound-repository-jpa + outbound-integration
+```
+
+The domain module does not depend on Spring, JPA, REST, security, or OpenAPI-generated DTOs.
+
+## Implemented MVP
+
+Guest and public flows:
+
+- list hotels
+- view hotel details
+- list hotel service offerings
+- search available room types by city or hotel
+- create reservation
 - view reservation details
-- cancel a reservation
-- list all reservations for staff and administrators
-- perform guest check-in
-- perform guest check-out
+- list current user's reservations
+- cancel reservation
 
-The codebase is organized as a modular Spring Boot application with these layers:
+Staff flows:
 
-- `application/domain` for `domain.*`, `service.*` facades, services, ports, and exceptions
-- `application/api-spec` for OpenAPI-generated contracts
-- `application/inbound-controller-rest` for REST controllers and security
-- `application/outbound-repository-jpa` for persistence adapters
-- `application/springboot` for application wiring, Liquibase, and integration tests
+- list reservations
+- check in reservation
+- check out reservation
+- mark reservation as no-show
+- update room status
 
-## Main Concepts
+Admin flows:
 
-### Room Status
+- create/update hotels
+- create/update room types
+- create/update rooms
+- create/update/deactivate hotel service offerings
 
-- `AVAILABLE`
-- `OCCUPIED`
-- `CLEANING`
-- `MAINTENANCE`
-- `OUT_OF_SERVICE`
+Persistence and operations:
 
-### Reservation Status
+- PostgreSQL schema via Liquibase
+- JPA adapters behind domain repository ports
+- ORM XML mapping
+- reservation price snapshot
+- reservation service item snapshot
+- guest persistence
+- stay/occupancy records
+- audit log for key actions
+- JWT resource server security with `GUEST`, `STAFF`, `ADMIN`
 
-- `PENDING`
-- `CONFIRMED`
-- `CHECKED_IN`
-- `CHECKED_OUT`
-- `CANCELLED`
-- `NO_SHOW`
+Intentionally not included in MVP:
 
-## Implemented Use Cases
+- loyalty system
+- payments
+- reports
+- dynamic seasonal pricing
+- Kafka/events
+- microservices
 
-### UC01 Create Reservation
+## Main Rules
 
-Authenticated guest selects hotel, stay dates, room type, and guest count. The system validates hotel and room type, checks room inventory for the selected period, and creates a reservation in status `PENDING`.
+- `Reservation` protects reservation state transitions.
+- `Room` protects room status transitions.
+- `ServiceOffering` is a separate model with hotel ownership, price, active flag, and snapshot usage in reservations.
+- Controllers only translate HTTP/DTO input and call facades.
+- Services orchestrate use cases through domain ports.
+- JPA and external systems are adapters, not business logic owners.
 
-### UC02 Check-In
+## REST API
 
-Staff or administrator checks in a reservation on the allowed date. The system locks the reservation, selects an available room of the requested type, assigns the room to the reservation, and changes:
+The API contract is defined in:
 
-- reservation status to `CHECKED_IN`
-- room status to `OCCUPIED`
+```text
+application/api-spec/src/main/resources/openapi/hotel-reservation.yaml
+```
 
-### UC03 Check-Out
+Implemented paths:
 
-Staff or administrator checks out a reservation that is currently checked in. The system locks the reservation, completes the stay, and changes:
-
-- reservation status to `CHECKED_OUT`
-- room status to `CLEANING`
-
-## Business Rules
-
-- `checkOut` must be after `checkIn`
-- `guestCount` must be greater than zero
-- reservation can only be created for an active hotel
-- reservation can only be created for a room type that can host the requested guest count
-- active overlapping reservations consume room inventory
-- cancelled, checked-in, checked-out, and no-show reservations cannot be cancelled arbitrarily
-- checked-in and checked-out reservations must have an assigned room
-- only staff or administrators can perform stay operations
-- guests can access only their own reservations
-- staff and administrators can access all reservations
+- `GET /hotels`
+- `GET /hotels/{hotelId}`
+- `GET /hotels/{hotelId}/services`
+- `POST /rooms/search`
+- `POST /reservations`
+- `GET /reservations`
+- `GET /reservations/{reservationId}`
+- `POST /reservations/{reservationId}/cancel`
+- `GET /me/reservations`
+- `POST /staff/reservations/{reservationId}/check-in`
+- `POST /staff/reservations/{reservationId}/check-out`
+- `POST /staff/reservations/{reservationId}/no-show`
+- `PATCH /staff/rooms/{roomId}/status`
+- `POST /admin/hotels`
+- `PUT /admin/hotels/{hotelId}`
+- `POST /admin/room-types`
+- `PUT /admin/room-types/{roomTypeId}`
+- `POST /admin/rooms`
+- `PUT /admin/rooms/{roomId}`
+- `POST /admin/hotels/{hotelId}/services`
+- `PUT /admin/hotels/{hotelId}/services/{serviceId}`
+- `DELETE /admin/hotels/{hotelId}/services/{serviceId}`
 
 ## Local Run
 
-Infrastructure for local development is defined in [docker-compose.yml](docker-compose.yml):
-
-- PostgreSQL on `localhost:5432`
-- Keycloak on `localhost:8081`
-- realm import from [keycloak/realms/hotel-reservation-realm.json](./keycloak/realms/hotel-reservation-realm.json)
-- demo hotel catalog seeded automatically on an empty database
-
-Application defaults are in `application/springboot/src/main/resources/application.yaml`.
-
-If local startup fails during Liquibase because of old dev data and foreign keys, reset the
-local PostgreSQL volume and start again:
+Infrastructure:
 
 ```powershell
-docker compose down -v
 docker compose up -d
 ```
 
-If your Keycloak realm was created manually before these changes, recreate Keycloak once so the
-project-managed realm import is applied:
+This starts:
+
+- PostgreSQL on `localhost:5432`
+- Keycloak on `localhost:8081`
+- Keycloak realm import from `keycloak/realms/hotel-reservation-realm.json`
+
+Application defaults are in:
+
+```text
+application/springboot/src/main/resources/application.yaml
+```
+
+If old local data conflicts with Liquibase migrations:
 
 ```powershell
 docker compose down -v
@@ -103,6 +146,18 @@ docker compose up -d
 
 ## Testing
 
-- domain and module tests run with Maven
-- integration coverage is provided by `CreateReservationFlowIntegrationTest`
-- integration test execution requires Docker because it uses Testcontainers with PostgreSQL
+Run:
+
+```powershell
+mvn.cmd clean test
+```
+
+The test suite includes:
+
+- domain unit tests
+- service orchestration tests
+- REST controller tests
+- Spring Boot integration tests with Testcontainers/PostgreSQL
+- JPA adapter tests
+- security tests
+- ArchUnit architecture rules

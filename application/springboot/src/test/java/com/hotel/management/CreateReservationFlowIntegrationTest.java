@@ -2,16 +2,16 @@ package com.hotel.management;
 
 import com.hotel.management.service.availability.SearchAvailableRoomsCommand;
 import com.hotel.management.service.availability.SearchAvailabilityFacade;
+import com.hotel.management.jpa.guest.JpaGuestEntity;
 import com.hotel.management.jpa.hotel.JpaHotelEntity;
-import com.hotel.management.jpa.hotel.JpaHotelSpringDataRepository;
-import com.hotel.management.jpa.reservation.JpaReservationSpringDataRepository;
+import com.hotel.management.jpa.reservation.JpaReservationEntity;
 import com.hotel.management.jpa.room.JpaRoomEntity;
-import com.hotel.management.jpa.room.JpaRoomSpringDataRepository;
 import com.hotel.management.jpa.room.JpaRoomTypeEntity;
-import com.hotel.management.jpa.room.JpaRoomTypeSpringDataRepository;
+import com.hotel.management.jpa.stay.JpaStayEntity;
 import com.hotel.management.domain.shared.value.AccommodationParty;
 import com.hotel.management.domain.shared.value.GuestComposition;
 import com.hotel.management.domain.shared.value.StayPeriod;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -40,7 +41,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
+@Transactional
 class CreateReservationFlowIntegrationTest {
 
     @Container
@@ -53,16 +55,7 @@ class CreateReservationFlowIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private JpaReservationSpringDataRepository reservationRepository;
-
-    @Autowired
-    private JpaHotelSpringDataRepository hotelRepository;
-
-    @Autowired
-    private JpaRoomTypeSpringDataRepository roomTypeRepository;
-
-    @Autowired
-    private JpaRoomSpringDataRepository roomRepository;
+    private EntityManager entityManager;
 
     @Autowired
     private SearchAvailabilityFacade searchAvailabilityFacade;
@@ -77,34 +70,33 @@ class CreateReservationFlowIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        reservationRepository.deleteAll();
-        roomRepository.deleteAll();
-        roomTypeRepository.deleteAll();
-        hotelRepository.deleteAll();
+        entityManager.createQuery("delete from JpaAuditLogEntity").executeUpdate();
+        entityManager.createQuery("delete from JpaStayEntity").executeUpdate();
+        entityManager.createQuery("delete from JpaReservationServiceItemEntity").executeUpdate();
+        entityManager.createQuery("delete from JpaReservationEntity").executeUpdate();
+        entityManager.createQuery("delete from JpaServiceOfferingEntity").executeUpdate();
+        entityManager.createQuery("delete from JpaRoomEntity").executeUpdate();
+        entityManager.createQuery("delete from JpaRoomTypeEntity").executeUpdate();
+        entityManager.createQuery("delete from JpaGuestEntity").executeUpdate();
+        entityManager.createQuery("delete from JpaHotelEntity").executeUpdate();
         seedDefaultCatalog();
+        flushAndClear();
     }
 
     @Test
     void shouldCreateReservationThroughSecuredEndpoint() throws Exception {
         mockMvc.perform(post("/reservations")
-                        .with(jwtFor("guest-demo", "GUEST"))
+                        .with(jwtFor("guest-demo", "GUEST", 10L))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "hotelId": 1,
-                                  "roomTypeId": 2,
-                                  "checkIn": "2026-05-10",
-                                  "checkOut": "2026-05-12",
-                                  "adults": 2
-                                }
-                                """))
+                        .content(reservationRequest(1L, 2L, futureCheckIn(), futureCheckOut(), 2)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.createdBy").value("guest-demo"))
                 .andReturn();
 
-        assertThat(reservationRepository.count()).isEqualTo(1);
-        var savedReservation = reservationRepository.findAll().getFirst();
+        flushAndClear();
+        assertThat(reservationCount()).isEqualTo(1);
+        var savedReservation = firstReservation();
         assertThat(savedReservation.getHotelId()).isEqualTo(1L);
         assertThat(savedReservation.getCreatedBy()).isEqualTo("guest-demo");
         assertThat(savedReservation.getAdultsCount()).isEqualTo(2);
@@ -120,7 +112,8 @@ class CreateReservationFlowIntegrationTest {
                         .with(jwtFor("guest-demo", "GUEST")))
                 .andExpect(status().isNoContent());
 
-        var cancelledReservation = reservationRepository.findById(savedReservation.getId()).orElseThrow();
+        flushAndClear();
+        var cancelledReservation = reservationById(savedReservation.getId());
         assertThat(cancelledReservation.getStatus()).isEqualTo("CANCELLED");
         assertThat(cancelledReservation.getCancelledAt()).isNotNull();
 
@@ -132,22 +125,97 @@ class CreateReservationFlowIntegrationTest {
     }
 
     @Test
-    void shouldRejectAccessToReservationOwnedByAnotherUser() throws Exception {
+    void shouldRejectSelfBookingWhenLinkedGuestProfileDoesNotExist() throws Exception {
         mockMvc.perform(post("/reservations")
-                        .with(jwtFor("owner-user", "GUEST"))
+                        .with(jwtFor("guest-demo", "GUEST", 99L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reservationRequest(1L, 2L, futureCheckIn(), futureCheckOut(), 2)))
+                .andExpect(status().isNotFound());
+
+        flushAndClear();
+        assertThat(reservationCount()).isZero();
+    }
+
+    @Test
+    void shouldCreatePublicReservationAndCreateGuestProfile() throws Exception {
+        mockMvc.perform(post("/public/reservations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "hotelId": 1,
                                   "roomTypeId": 2,
-                                  "checkIn": "2026-05-10",
-                                  "checkOut": "2026-05-12",
+                                  "firstName": "Anonymous",
+                                  "lastName": "Guest",
+                                  "email": "anonymous.guest@example.com",
+                                  "phone": "+421900000099",
+                                  "checkIn": "%s",
+                                  "checkOut": "%s",
                                   "adults": 2
                                 }
-                                """))
+                                """.formatted(futureCheckIn(), futureCheckOut())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.guestId").isNumber())
+                .andExpect(jsonPath("$.createdBy").isNotEmpty());
+
+        flushAndClear();
+        assertThat(reservationCount()).isEqualTo(1);
+        var savedReservation = firstReservation();
+        assertThat(savedReservation.getGuestId()).isNotNull();
+        assertThat(savedReservation.getCreatedBy()).isEqualTo("public:" + savedReservation.getGuestId());
+    }
+
+    @Test
+    void shouldRejectPublicReservationWhenCallerIsAuthenticated() throws Exception {
+        mockMvc.perform(post("/public/reservations")
+                        .with(jwtFor("guest-demo", "GUEST", 10L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "hotelId": 1,
+                                  "roomTypeId": 2,
+                                  "firstName": "Demo",
+                                  "lastName": "Guest",
+                                  "email": "demo.public@example.com",
+                                  "phone": "+421900000098",
+                                  "checkIn": "%s",
+                                  "checkOut": "%s",
+                                  "adults": 2
+                                }
+                                """.formatted(futureCheckIn(), futureCheckOut())))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void shouldCreateStaffReservationForSelectedGuest() throws Exception {
+        mockMvc.perform(post("/staff/reservations")
+                        .with(jwtFor("staff-user", "STAFF"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "hotelId": 1,
+                                  "roomTypeId": 2,
+                                  "guestId": 10,
+                                  "checkIn": "%s",
+                                  "checkOut": "%s",
+                                  "adults": 2
+                                }
+                                """.formatted(futureCheckIn(), futureCheckOut())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.guestId").value(10))
+                .andExpect(jsonPath("$.createdBy").value("staff-user"));
+    }
+
+    @Test
+    void shouldRejectAccessToReservationOwnedByAnotherUser() throws Exception {
+        mockMvc.perform(post("/reservations")
+                        .with(jwtFor("owner-user", "GUEST", 10L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reservationRequest(1L, 2L, futureCheckIn(), futureCheckOut(), 2)))
                 .andExpect(status().isCreated());
 
-        var savedReservation = reservationRepository.findAll().getFirst();
+        flushAndClear();
+        var savedReservation = firstReservation();
 
         mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
                         .with(jwtFor("other-user", "GUEST")))
@@ -161,20 +229,13 @@ class CreateReservationFlowIntegrationTest {
     @Test
     void shouldAllowAdminToAccessAnotherUsersReservation() throws Exception {
         mockMvc.perform(post("/reservations")
-                        .with(jwtFor("owner-user", "GUEST"))
+                        .with(jwtFor("owner-user", "GUEST", 10L))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "hotelId": 1,
-                                  "roomTypeId": 2,
-                                  "checkIn": "2026-05-10",
-                                  "checkOut": "2026-05-12",
-                                  "adults": 2
-                                }
-                                """))
+                        .content(reservationRequest(1L, 2L, futureCheckIn(), futureCheckOut(), 2)))
                 .andExpect(status().isCreated());
 
-        var savedReservation = reservationRepository.findAll().getFirst();
+        flushAndClear();
+        var savedReservation = firstReservation();
 
         mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
                         .with(jwtFor("admin-user", "ADMIN")))
@@ -184,20 +245,13 @@ class CreateReservationFlowIntegrationTest {
     @Test
     void shouldAllowStaffToAccessAnotherUsersReservation() throws Exception {
         mockMvc.perform(post("/reservations")
-                        .with(jwtFor("owner-user", "GUEST"))
+                        .with(jwtFor("owner-user", "GUEST", 10L))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "hotelId": 1,
-                                  "roomTypeId": 2,
-                                  "checkIn": "2026-05-10",
-                                  "checkOut": "2026-05-12",
-                                  "adults": 2
-                                }
-                                """))
+                        .content(reservationRequest(1L, 2L, futureCheckIn(), futureCheckOut(), 2)))
                 .andExpect(status().isCreated());
 
-        var savedReservation = reservationRepository.findAll().getFirst();
+        flushAndClear();
+        var savedReservation = firstReservation();
 
         mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
                         .with(jwtFor("staff-user", "STAFF")))
@@ -210,7 +264,7 @@ class CreateReservationFlowIntegrationTest {
         var checkOut = checkIn.plusDays(2);
 
         mockMvc.perform(post("/reservations")
-                        .with(jwtFor("guest-demo", "GUEST"))
+                        .with(jwtFor("guest-demo", "GUEST", 10L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -223,7 +277,8 @@ class CreateReservationFlowIntegrationTest {
                                 """.formatted(checkIn, checkOut)))
                 .andExpect(status().isCreated());
 
-        var savedReservation = reservationRepository.findAll().getFirst();
+        flushAndClear();
+        var savedReservation = firstReservation();
 
         mockMvc.perform(post("/staff/reservations/{reservationId}/check-in", savedReservation.getId())
                         .with(jwtFor("staff-user", "STAFF")))
@@ -231,10 +286,15 @@ class CreateReservationFlowIntegrationTest {
                 .andExpect(jsonPath("$.status").value("CHECKED_IN"))
                 .andExpect(jsonPath("$.roomId").value(10));
 
-        var checkedInReservation = reservationRepository.findById(savedReservation.getId()).orElseThrow();
+        flushAndClear();
+        var checkedInReservation = reservationById(savedReservation.getId());
         assertThat(checkedInReservation.getStatus()).isEqualTo("CHECKED_IN");
         assertThat(checkedInReservation.getRoomId()).isEqualTo(10L);
-        assertThat(roomRepository.findById(10L).orElseThrow().getStatus()).isEqualTo("OCCUPIED");
+        assertThat(roomById(10L).getStatus()).isEqualTo("OCCUPIED");
+        var activeStay = stayByReservationId(savedReservation.getId());
+        assertThat(activeStay.getRoomId()).isEqualTo(10L);
+        assertThat(activeStay.getStatus()).isEqualTo("ACTIVE");
+        assertThat(activeStay.getCheckedOutAt()).isNull();
 
         mockMvc.perform(post("/staff/reservations/{reservationId}/check-out", savedReservation.getId())
                         .with(jwtFor("staff-user", "STAFF")))
@@ -242,39 +302,27 @@ class CreateReservationFlowIntegrationTest {
                 .andExpect(jsonPath("$.status").value("CHECKED_OUT"))
                 .andExpect(jsonPath("$.roomId").value(10));
 
-        var checkedOutReservation = reservationRepository.findById(savedReservation.getId()).orElseThrow();
+        flushAndClear();
+        var checkedOutReservation = reservationById(savedReservation.getId());
         assertThat(checkedOutReservation.getStatus()).isEqualTo("CHECKED_OUT");
-        assertThat(roomRepository.findById(10L).orElseThrow().getStatus()).isEqualTo("CLEANING");
+        assertThat(roomById(10L).getStatus()).isEqualTo("CLEANING");
+        var completedStay = stayByReservationId(savedReservation.getId());
+        assertThat(completedStay.getStatus()).isEqualTo("COMPLETED");
+        assertThat(completedStay.getCheckedOutAt()).isNotNull();
     }
 
     @Test
     void shouldAllowStaffAndAdminToListAllReservations() throws Exception {
         mockMvc.perform(post("/reservations")
-                        .with(jwtFor("guest-one", "GUEST"))
+                        .with(jwtFor("guest-one", "GUEST", 10L))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "hotelId": 1,
-                                  "roomTypeId": 2,
-                                  "checkIn": "2026-05-10",
-                                  "checkOut": "2026-05-12",
-                                  "adults": 2
-                                }
-                                """))
+                        .content(reservationRequest(1L, 2L, futureCheckIn(), futureCheckOut(), 2)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/reservations")
-                        .with(jwtFor("guest-two", "GUEST"))
+                        .with(jwtFor("guest-two", "GUEST", 10L))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "hotelId": 5,
-                                  "roomTypeId": 7,
-                                  "checkIn": "2026-06-01",
-                                  "checkOut": "2026-06-03",
-                                  "adults": 1
-                                }
-                                """))
+                        .content(reservationRequest(5L, 7L, futureCheckIn().plusDays(5), futureCheckOut().plusDays(5), 1)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/reservations")
@@ -297,29 +345,22 @@ class CreateReservationFlowIntegrationTest {
 
     @Test
     void shouldSearchAvailableRoomsThroughJpaAdapters() throws Exception {
-        hotelRepository.save(hotel(9L, "Danube Hotel", "Bratislava"));
-        roomTypeRepository.save(roomType(10L, 9L, "Standard", 2));
-        roomRepository.save(room(100L, 9L, "101", 10L, 2, "AVAILABLE"));
-        roomRepository.save(room(101L, 9L, "102", 10L, 2, "AVAILABLE"));
-        roomRepository.save(room(102L, 9L, "103", 10L, 2, "MAINTENANCE"));
+        save(hotel(9L, "Danube Hotel", "Bratislava"));
+        save(roomType(10L, 9L, "Standard", 2));
+        save(room(100L, 9L, "101", 10L, 2, "AVAILABLE"));
+        save(room(101L, 9L, "102", 10L, 2, "AVAILABLE"));
+        save(room(102L, 9L, "103", 10L, 2, "MAINTENANCE"));
+        flushAndClear();
 
         mockMvc.perform(post("/reservations")
-                        .with(jwtFor("guest-one", "GUEST"))
+                        .with(jwtFor("guest-one", "GUEST", 10L))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "hotelId": 9,
-                                  "roomTypeId": 10,
-                                  "checkIn": "2026-05-10",
-                                  "checkOut": "2026-05-12",
-                                  "adults": 2
-                                }
-                                """))
+                        .content(reservationRequest(9L, 10L, futureCheckIn(), futureCheckOut(), 2)))
                 .andExpect(status().isCreated());
 
         var result = searchAvailabilityFacade.searchAvailableRooms(SearchAvailableRoomsCommand.byCity(
                 "Bratislava",
-                new StayPeriod(LocalDate.parse("2026-05-10"), LocalDate.parse("2026-05-12")),
+                new StayPeriod(futureCheckIn(), futureCheckOut()),
                 party(2)
         ));
 
@@ -334,11 +375,11 @@ class CreateReservationFlowIntegrationTest {
                         .content("""
                                 {
                                   "city": "Bratislava",
-                                  "checkIn": "2026-05-10",
-                                  "checkOut": "2026-05-12",
+                                  "checkIn": "%s",
+                                  "checkOut": "%s",
                                   "adults": 2
                                 }
-                                """))
+                                """.formatted(futureCheckIn(), futureCheckOut())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].hotelId").value(9))
@@ -347,25 +388,97 @@ class CreateReservationFlowIntegrationTest {
     }
 
     private void seedDefaultCatalog() {
-        hotelRepository.save(hotel(1L, "Default Hotel", "Kosice"));
-        roomTypeRepository.save(roomType(2L, 1L, "Standard", 2));
-        roomRepository.save(room(10L, 1L, "101", 2L, 2, "AVAILABLE"));
+        save(guest(10L, "guest@example.com"));
 
-        hotelRepository.save(hotel(5L, "Second Hotel", "Zilina"));
-        roomTypeRepository.save(roomType(7L, 5L, "Single", 1));
-        roomRepository.save(room(50L, 5L, "201", 7L, 1, "AVAILABLE"));
+        save(hotel(1L, "Default Hotel", "Kosice"));
+        save(roomType(2L, 1L, "Standard", 2));
+        save(room(10L, 1L, "101", 2L, 2, "AVAILABLE"));
+
+        save(hotel(5L, "Second Hotel", "Zilina"));
+        save(roomType(7L, 5L, "Single", 1));
+        save(room(50L, 5L, "201", 7L, 1, "AVAILABLE"));
+    }
+
+    private void save(Object entity) {
+        entityManager.merge(entity);
+    }
+
+    private void flushAndClear() {
+        entityManager.flush();
+        entityManager.clear();
+    }
+
+    private long reservationCount() {
+        return entityManager.createQuery("select count(reservation) from JpaReservationEntity reservation", Long.class)
+                .getSingleResult();
+    }
+
+    private JpaReservationEntity firstReservation() {
+        return entityManager.createQuery(
+                        "select reservation from JpaReservationEntity reservation order by reservation.createdAt desc",
+                        JpaReservationEntity.class)
+                .setMaxResults(1)
+                .getSingleResult();
+    }
+
+    private JpaReservationEntity reservationById(String reservationId) {
+        return entityManager.find(JpaReservationEntity.class, reservationId);
+    }
+
+    private JpaRoomEntity roomById(Long roomId) {
+        return entityManager.find(JpaRoomEntity.class, roomId);
+    }
+
+    private JpaStayEntity stayByReservationId(String reservationId) {
+        return entityManager.createQuery(
+                        "select stay from JpaStayEntity stay where stay.reservationId = :reservationId",
+                        JpaStayEntity.class)
+                .setParameter("reservationId", reservationId)
+                .getSingleResult();
     }
 
     private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor jwtFor(
             String username,
             String role
     ) {
+        return jwtFor(username, role, null);
+    }
+
+    private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor jwtFor(
+            String username,
+            String role,
+            Long guestId
+    ) {
         return jwt()
-                .jwt(jwt -> jwt
-                        .subject(username + "-sub")
-                        .claim("preferred_username", username)
-                        .claim("roles", List.of(role)))
+                .jwt(jwt -> {
+                    jwt.subject(username + "-sub")
+                            .claim("preferred_username", username)
+                            .claim("roles", List.of(role));
+                    if (guestId != null) {
+                        jwt.claim("guest_id", guestId);
+                    }
+                })
                 .authorities(new SimpleGrantedAuthority("ROLE_" + role));
+    }
+
+    private static LocalDate futureCheckIn() {
+        return LocalDate.now(ZoneOffset.UTC).plusDays(30);
+    }
+
+    private static LocalDate futureCheckOut() {
+        return futureCheckIn().plusDays(2);
+    }
+
+    private static String reservationRequest(long hotelId, long roomTypeId, LocalDate checkIn, LocalDate checkOut, int adults) {
+        return """
+                {
+                  "hotelId": %d,
+                  "roomTypeId": %d,
+                  "checkIn": "%s",
+                  "checkOut": "%s",
+                  "adults": %d
+                }
+                """.formatted(hotelId, roomTypeId, checkIn, checkOut, adults);
     }
 
     private static JpaHotelEntity hotel(Long id, String name, String city) {
@@ -381,8 +494,19 @@ class CreateReservationFlowIntegrationTest {
         hotel.setChildrenAllowed(true);
         hotel.setPetsAllowed(true);
         hotel.setInfantMaxAge(2);
-        hotel.setChildMaxAge(11);
+        hotel.setChildMaxAge(12);
+        hotel.setAdultEquivalentAge(13);
         return hotel;
+    }
+
+    private static JpaGuestEntity guest(Long id, String email) {
+        var guest = new JpaGuestEntity();
+        guest.setId(id);
+        guest.setFirstName("Demo");
+        guest.setLastName("Guest");
+        guest.setEmail(email);
+        guest.setPhone("+421900000000");
+        return guest;
     }
 
     private static JpaRoomTypeEntity roomType(Long id, Long hotelId, String name, int capacity) {

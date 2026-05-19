@@ -23,4 +23,10 @@ public class TransactionalStaffReservationFacade implements StaffReservationFaca
     public StaffReservationResult checkOut(String reservationId) {
         return delegate.checkOut(reservationId);
     }
+
+    @Override
+    @Transactional
+    public StaffReservationResult markNoShow(String reservationId) {
+        return delegate.markNoShow(reservationId);
+    }
 }

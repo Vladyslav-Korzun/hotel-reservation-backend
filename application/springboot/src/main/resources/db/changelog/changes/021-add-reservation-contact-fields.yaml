@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 021-add-reservation-contact-fields
+      author: Vladyslav Korzun
+      changes:
+        - addColumn:
+            tableName: reservations
+            columns:
+              - column:
+                  name: contact_email
+                  type: varchar(255)
+              - column:
+                  name: contact_phone
+                  type: varchar(32)
+              - column:
+                  name: special_requests
+                  type: varchar(500)
