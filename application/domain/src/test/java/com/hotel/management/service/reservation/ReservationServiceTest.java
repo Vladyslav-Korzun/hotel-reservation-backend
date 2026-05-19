@@ -27,12 +27,12 @@ import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.service.accommodation.AccommodationPolicyValidator;
 import com.hotel.management.service.exception.ForbiddenException;
-import com.hotel.management.service.port.AuditLogPort;
-import com.hotel.management.service.port.ClockPort;
-import com.hotel.management.service.port.NotificationPort;
-import com.hotel.management.service.reservation.locking.ReservationLockPort;
-import com.hotel.management.service.security.AuthenticatedUser;
-import com.hotel.management.service.security.CurrentUserPort;
+import com.hotel.management.domain.audit.AuditLogPort;
+import com.hotel.management.domain.shared.ClockPort;
+import com.hotel.management.domain.shared.NotificationPort;
+import com.hotel.management.domain.reservation.ReservationLockPort;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,6 +53,9 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import com.hotel.management.domain.reservation.ReservationQueryPort;
+import com.hotel.management.domain.reservation.RoomInventoryPort;
+import com.hotel.management.domain.reservation.ActiveReservationView;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationServiceTest {

@@ -1,4 +1,4 @@
-package com.hotel.management.service.reservation;
+package com.hotel.management.domain.reservation;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -6,8 +6,9 @@ import java.util.List;
 
 import com.hotel.management.domain.shared.value.PetDetails;
 import com.hotel.management.domain.shared.value.Money;
+import com.hotel.management.domain.reservation.ReservationServiceItemResult;
 
-public record CreateReservationResult(
+public record GetReservationResult(
         String reservationId,
         Long hotelId,
         Long guestId,

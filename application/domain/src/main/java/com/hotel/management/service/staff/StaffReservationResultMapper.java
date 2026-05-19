@@ -1,6 +1,8 @@
 package com.hotel.management.service.staff;
 
 import com.hotel.management.domain.reservation.Reservation;
+import com.hotel.management.domain.reservation.ReservationServiceItemResult;
+import com.hotel.management.domain.reservation.StaffReservationResult;
 
 public class StaffReservationResultMapper {
 
@@ -24,7 +26,7 @@ public class StaffReservationResultMapper {
                 reservation.discountAmount(),
                 reservation.finalPrice(),
                 reservation.serviceItems().stream()
-                        .map(item -> new com.hotel.management.service.reservation.ReservationServiceItemResult(
+                        .map(item -> new com.hotel.management.domain.reservation.ReservationServiceItemResult(
                                 item.serviceOfferingId(),
                                 item.serviceNameSnapshot(),
                                 item.priceSnapshot(),

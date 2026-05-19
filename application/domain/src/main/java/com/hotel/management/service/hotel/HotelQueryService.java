@@ -7,6 +7,8 @@ import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 
 import java.util.List;
+import com.hotel.management.domain.hotel.HotelResult;
+import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
 
 public class HotelQueryService implements HotelQueryFacade {
 

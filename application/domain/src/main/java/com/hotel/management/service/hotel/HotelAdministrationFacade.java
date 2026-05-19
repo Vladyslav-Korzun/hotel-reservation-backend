@@ -1,4 +1,8 @@
 package com.hotel.management.service.hotel;
+import com.hotel.management.domain.hotel.HotelResult;
+import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
+import com.hotel.management.domain.room.RoomResult;
+import com.hotel.management.domain.room.RoomTypeResult;
 
 public interface HotelAdministrationFacade {
 

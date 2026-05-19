@@ -1,6 +1,6 @@
 package com.hotel.management.service.predicate.reservation;
 
-import com.hotel.management.service.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 
 import java.util.function.Predicate;
 

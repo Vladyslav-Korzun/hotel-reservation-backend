@@ -1,8 +1,10 @@
-package com.hotel.management.service.reservation;
+package com.hotel.management.domain.reservation;
 import com.hotel.management.domain.shared.value.StayPeriod;
 
 import java.time.LocalDate;
 import java.util.List;
+import com.hotel.management.domain.reservation.ActiveReservationView;
+import com.hotel.management.domain.reservation.BookedRoomTypePeriodView;
 
 public interface ReservationQueryPort {
 

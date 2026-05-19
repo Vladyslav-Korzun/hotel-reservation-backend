@@ -1,4 +1,4 @@
-package com.hotel.management.service.reservation.locking;
+package com.hotel.management.domain.reservation;
 
 import com.hotel.management.domain.reservation.Reservation;
 

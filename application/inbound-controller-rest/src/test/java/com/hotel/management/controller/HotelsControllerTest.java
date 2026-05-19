@@ -7,10 +7,10 @@ import com.hotel.management.mapper.AvailabilityMapper;
 import com.hotel.management.mapper.HotelMapper;
 import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarFacade;
 import com.hotel.management.service.availability.GetRoomTypeAvailabilityCalendarQuery;
-import com.hotel.management.service.availability.RoomTypeAvailabilityCalendarDayResult;
+import com.hotel.management.domain.room.RoomTypeAvailabilityCalendarDayResult;
 import com.hotel.management.service.hotel.HotelQueryFacade;
-import com.hotel.management.service.hotel.HotelResult;
-import com.hotel.management.service.hotel.HotelServiceOfferingResult;
+import com.hotel.management.domain.hotel.HotelResult;
+import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
 import com.hotel.management.service.hotel.ListHotelsQuery;
 import org.junit.jupiter.api.Test;
 

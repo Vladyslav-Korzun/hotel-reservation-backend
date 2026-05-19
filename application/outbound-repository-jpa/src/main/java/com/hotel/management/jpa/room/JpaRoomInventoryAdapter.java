@@ -1,6 +1,6 @@
 package com.hotel.management.jpa.room;
 
-import com.hotel.management.service.reservation.RoomInventoryPort;
+import com.hotel.management.domain.reservation.RoomInventoryPort;
 import org.springframework.stereotype.Component;
 
 @Component

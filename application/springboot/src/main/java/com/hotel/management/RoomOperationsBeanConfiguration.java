@@ -1,12 +1,12 @@
 package com.hotel.management;
 
 import com.hotel.management.domain.room.RoomRepository;
-import com.hotel.management.service.port.AuditLogPort;
-import com.hotel.management.service.port.ClockPort;
+import com.hotel.management.domain.audit.AuditLogPort;
+import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.service.room.RoomOperationResultMapper;
 import com.hotel.management.service.room.RoomOperationsFacade;
 import com.hotel.management.service.room.RoomOperationsService;
-import com.hotel.management.service.security.CurrentUserPort;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

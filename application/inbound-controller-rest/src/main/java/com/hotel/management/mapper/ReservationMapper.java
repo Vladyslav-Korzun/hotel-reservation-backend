@@ -17,12 +17,12 @@ import com.hotel.management.domain.shared.value.PetSize;
 import com.hotel.management.domain.shared.value.PetType;
 import com.hotel.management.service.reservation.CreatePublicReservationCommand;
 import com.hotel.management.service.reservation.CreateReservationCommand;
-import com.hotel.management.service.reservation.CreateReservationResult;
+import com.hotel.management.domain.reservation.CreateReservationResult;
 import com.hotel.management.service.reservation.CreateStaffReservationCommand;
-import com.hotel.management.service.reservation.GetReservationResult;
+import com.hotel.management.domain.reservation.GetReservationResult;
 import com.hotel.management.service.reservation.GuestContactCommand;
-import com.hotel.management.service.reservation.ReservationServiceItemResult;
-import com.hotel.management.service.staff.StaffReservationResult;
+import com.hotel.management.domain.reservation.ReservationServiceItemResult;
+import com.hotel.management.domain.reservation.StaffReservationResult;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;

@@ -1,4 +1,5 @@
 package com.hotel.management.service.staff;
+import com.hotel.management.domain.reservation.StaffReservationResult;
 
 public interface StaffReservationFacade {
 

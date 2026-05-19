@@ -1,8 +1,8 @@
 package com.hotel.management.jpa.reservation;
 
-import com.hotel.management.service.reservation.ActiveReservationView;
-import com.hotel.management.service.reservation.BookedRoomTypePeriodView;
-import com.hotel.management.service.reservation.ReservationQueryPort;
+import com.hotel.management.domain.reservation.ActiveReservationView;
+import com.hotel.management.domain.reservation.BookedRoomTypePeriodView;
+import com.hotel.management.domain.reservation.ReservationQueryPort;
 import com.hotel.management.domain.reservation.ReservationStatus;
 import com.hotel.management.domain.shared.value.StayPeriod;
 import org.springframework.stereotype.Component;

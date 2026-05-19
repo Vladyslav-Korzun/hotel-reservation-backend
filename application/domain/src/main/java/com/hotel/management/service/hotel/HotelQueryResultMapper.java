@@ -4,6 +4,10 @@ import com.hotel.management.domain.hotel.Hotel;
 import com.hotel.management.domain.room.Room;
 import com.hotel.management.domain.room.RoomType;
 import com.hotel.management.domain.serviceoffering.ServiceOffering;
+import com.hotel.management.domain.hotel.HotelResult;
+import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
+import com.hotel.management.domain.room.RoomResult;
+import com.hotel.management.domain.room.RoomTypeResult;
 
 public class HotelQueryResultMapper {
 

@@ -1,6 +1,6 @@
 package com.hotel.management.security;
 
-import com.hotel.management.service.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
 

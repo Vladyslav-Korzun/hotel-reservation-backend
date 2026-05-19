@@ -32,7 +32,7 @@ import com.hotel.management.domain.stay.Stay;
 import com.hotel.management.domain.stay.StayRepository;
 import com.hotel.management.domain.stay.StayStatus;
 import com.hotel.management.jpa.audit.JpaAuditLogEntity;
-import com.hotel.management.service.port.AuditLogPort;
+import com.hotel.management.domain.audit.AuditLogPort;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

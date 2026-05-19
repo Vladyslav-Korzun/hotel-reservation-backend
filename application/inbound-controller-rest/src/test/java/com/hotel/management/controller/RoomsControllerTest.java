@@ -8,7 +8,7 @@ import com.hotel.management.domain.shared.value.GuestComposition;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.shared.value.StayPeriod;
 import com.hotel.management.mapper.AvailabilityMapper;
-import com.hotel.management.service.availability.AvailableRoomResult;
+import com.hotel.management.domain.room.AvailableRoomResult;
 import com.hotel.management.service.availability.SearchAvailabilityFacade;
 import com.hotel.management.service.availability.SearchAvailableRoomsCommand;
 import org.junit.jupiter.api.Test;

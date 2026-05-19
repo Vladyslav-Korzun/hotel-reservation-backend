@@ -11,9 +11,9 @@ import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.service.hotel.HotelAdministrationFacade;
 import com.hotel.management.service.hotel.HotelAdministrationService;
 import com.hotel.management.service.hotel.HotelQueryResultMapper;
-import com.hotel.management.service.port.AuditLogPort;
-import com.hotel.management.service.port.ClockPort;
-import com.hotel.management.service.security.CurrentUserPort;
+import com.hotel.management.domain.audit.AuditLogPort;
+import com.hotel.management.domain.shared.ClockPort;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

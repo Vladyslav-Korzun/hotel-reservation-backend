@@ -1,7 +1,7 @@
 package com.hotel.management.security;
 
-import com.hotel.management.service.security.AuthenticatedUser;
-import com.hotel.management.service.security.CurrentUserPort;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;

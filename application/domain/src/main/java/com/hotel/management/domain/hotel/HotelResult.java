@@ -1,4 +1,4 @@
-package com.hotel.management.service.hotel;
+package com.hotel.management.domain.hotel;
 
 public record HotelResult(
         Long hotelId,

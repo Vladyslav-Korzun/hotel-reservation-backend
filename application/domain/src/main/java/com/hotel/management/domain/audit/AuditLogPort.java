@@ -1,4 +1,4 @@
-package com.hotel.management.service.port;
+package com.hotel.management.domain.audit;
 
 import com.hotel.management.domain.audit.AuditLogEntry;
 

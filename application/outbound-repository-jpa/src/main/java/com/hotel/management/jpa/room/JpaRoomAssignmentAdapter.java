@@ -1,6 +1,6 @@
 package com.hotel.management.jpa.room;
 
-import com.hotel.management.service.staff.RoomAssignmentPort;
+import com.hotel.management.domain.reservation.RoomAssignmentPort;
 import com.hotel.management.domain.room.Room;
 import com.hotel.management.domain.room.RoomStatus;
 import org.springframework.stereotype.Component;

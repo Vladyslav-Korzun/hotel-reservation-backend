@@ -1,6 +1,9 @@
 package com.hotel.management.service.reservation;
 
 import com.hotel.management.domain.reservation.Reservation;
+import com.hotel.management.domain.reservation.CreateReservationResult;
+import com.hotel.management.domain.reservation.GetReservationResult;
+import com.hotel.management.domain.reservation.ReservationServiceItemResult;
 
 public class ReservationResultMapper {
 

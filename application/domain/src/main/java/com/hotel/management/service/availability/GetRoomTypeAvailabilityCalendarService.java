@@ -7,14 +7,15 @@ import com.hotel.management.domain.room.RoomType;
 import com.hotel.management.domain.room.RoomTypeRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
-import com.hotel.management.service.reservation.BookedRoomTypePeriodView;
-import com.hotel.management.service.reservation.ReservationQueryPort;
+import com.hotel.management.domain.reservation.BookedRoomTypePeriodView;
+import com.hotel.management.domain.reservation.ReservationQueryPort;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.LongStream;
+import com.hotel.management.domain.room.RoomTypeAvailabilityCalendarDayResult;
 
 public class GetRoomTypeAvailabilityCalendarService implements GetRoomTypeAvailabilityCalendarFacade {
 

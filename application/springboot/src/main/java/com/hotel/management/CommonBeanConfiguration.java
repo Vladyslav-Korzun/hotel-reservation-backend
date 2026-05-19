@@ -1,6 +1,6 @@
 package com.hotel.management;
 
-import com.hotel.management.service.port.ClockPort;
+import com.hotel.management.domain.shared.ClockPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

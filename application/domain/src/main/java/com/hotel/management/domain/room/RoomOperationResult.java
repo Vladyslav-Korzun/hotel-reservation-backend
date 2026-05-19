@@ -1,6 +1,6 @@
-package com.hotel.management.service.hotel;
+package com.hotel.management.domain.room;
 
-public record RoomResult(
+public record RoomOperationResult(
         Long roomId,
         Long hotelId,
         String roomNumber,

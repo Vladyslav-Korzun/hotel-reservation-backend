@@ -1,4 +1,4 @@
-package com.hotel.management.service.availability;
+package com.hotel.management.domain.room;
 
 import com.hotel.management.domain.room.RoomAmenity;
 import com.hotel.management.domain.shared.value.Money;

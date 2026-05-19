@@ -1,6 +1,6 @@
 package com.hotel.management.security;
 
-import com.hotel.management.service.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

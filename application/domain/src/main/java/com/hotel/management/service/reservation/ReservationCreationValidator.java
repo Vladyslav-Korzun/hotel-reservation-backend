@@ -15,10 +15,12 @@ import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.StayPeriod;
 import com.hotel.management.service.accommodation.AccommodationPolicyValidator;
-import com.hotel.management.service.port.ClockPort;
+import com.hotel.management.domain.shared.ClockPort;
 
 import java.time.ZoneOffset;
 import java.util.List;
+import com.hotel.management.domain.reservation.ReservationQueryPort;
+import com.hotel.management.domain.reservation.RoomInventoryPort;
 
 public class ReservationCreationValidator {
 

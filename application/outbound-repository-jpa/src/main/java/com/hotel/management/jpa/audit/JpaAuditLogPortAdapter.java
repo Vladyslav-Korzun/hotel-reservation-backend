@@ -1,7 +1,7 @@
 package com.hotel.management.jpa.audit;
 
 import com.hotel.management.domain.audit.AuditLogEntry;
-import com.hotel.management.service.port.AuditLogPort;
+import com.hotel.management.domain.audit.AuditLogPort;
 import org.springframework.stereotype.Component;
 
 @Component

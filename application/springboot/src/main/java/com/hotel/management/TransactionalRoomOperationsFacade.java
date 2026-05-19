@@ -1,6 +1,6 @@
 package com.hotel.management;
 
-import com.hotel.management.service.room.RoomOperationResult;
+import com.hotel.management.domain.room.RoomOperationResult;
 import com.hotel.management.service.room.RoomOperationsFacade;
 import com.hotel.management.service.room.UpdateRoomStatusCommand;
 import org.springframework.transaction.annotation.Transactional;

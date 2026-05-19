@@ -2,7 +2,7 @@ package com.hotel.management.jpa.reservation;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.hotel.management.domain.reservation.ReservationPriceSnapshot;
-import com.hotel.management.service.reservation.locking.ReservationLockPort;
+import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.reservation.Reservation;
 import com.hotel.management.domain.reservation.ReservationStatus;
 import com.hotel.management.domain.shared.value.AccommodationParty;

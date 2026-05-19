@@ -6,7 +6,7 @@ import com.hotel.management.domain.reservation.ReservationStatus;
 import com.hotel.management.domain.shared.value.AccommodationParty;
 import com.hotel.management.domain.shared.value.GuestComposition;
 import com.hotel.management.domain.shared.value.Money;
-import com.hotel.management.service.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

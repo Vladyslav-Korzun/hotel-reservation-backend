@@ -13,20 +13,22 @@ import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.StayPeriod;
 import com.hotel.management.service.exception.ForbiddenException;
-import com.hotel.management.service.port.AuditLogPort;
-import com.hotel.management.service.port.ClockPort;
-import com.hotel.management.service.port.NotificationPort;
+import com.hotel.management.domain.audit.AuditLogPort;
+import com.hotel.management.domain.shared.ClockPort;
+import com.hotel.management.domain.shared.NotificationPort;
 import com.hotel.management.service.predicate.reservation.IsAdminPredicate;
 import com.hotel.management.service.predicate.reservation.IsGuestPredicate;
 import com.hotel.management.service.predicate.reservation.IsReservationOwnerPredicate;
 import com.hotel.management.service.predicate.reservation.IsStaffOrAdminPredicate;
-import com.hotel.management.service.reservation.locking.ReservationLockPort;
-import com.hotel.management.service.security.AuthenticatedUser;
-import com.hotel.management.service.security.CurrentUserPort;
+import com.hotel.management.domain.reservation.ReservationLockPort;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import com.hotel.management.domain.reservation.CreateReservationResult;
+import com.hotel.management.domain.reservation.GetReservationResult;
 
 public class ReservationService implements ReservationFacade {
 

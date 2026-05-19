@@ -23,11 +23,15 @@ import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.service.exception.ForbiddenException;
-import com.hotel.management.service.port.AuditLogPort;
-import com.hotel.management.service.port.ClockPort;
+import com.hotel.management.domain.audit.AuditLogPort;
+import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.service.predicate.reservation.IsAdminPredicate;
-import com.hotel.management.service.security.AuthenticatedUser;
-import com.hotel.management.service.security.CurrentUserPort;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
+import com.hotel.management.domain.hotel.HotelResult;
+import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
+import com.hotel.management.domain.room.RoomResult;
+import com.hotel.management.domain.room.RoomTypeResult;
 
 public class HotelAdministrationService implements HotelAdministrationFacade {
 

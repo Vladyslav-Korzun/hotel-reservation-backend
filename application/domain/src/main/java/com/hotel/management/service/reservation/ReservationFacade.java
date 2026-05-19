@@ -1,6 +1,8 @@
 package com.hotel.management.service.reservation;
 
 import java.util.List;
+import com.hotel.management.domain.reservation.CreateReservationResult;
+import com.hotel.management.domain.reservation.GetReservationResult;
 
 public interface ReservationFacade {
 

@@ -1,6 +1,7 @@
 package com.hotel.management.service.room;
 
 import com.hotel.management.domain.room.Room;
+import com.hotel.management.domain.room.RoomOperationResult;
 
 public class RoomOperationResultMapper {
 

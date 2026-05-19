@@ -10,7 +10,7 @@ import com.hotel.management.domain.room.RoomTypeRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.service.accommodation.AccommodationPolicyValidator;
-import com.hotel.management.service.reservation.ReservationQueryPort;
+import com.hotel.management.domain.reservation.ReservationQueryPort;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.hotel.management.domain.room.AvailableRoomResult;
 
 public class SearchAvailabilityService implements SearchAvailabilityFacade {
 

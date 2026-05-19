@@ -1,4 +1,4 @@
-package com.hotel.management.service.reservation;
+package com.hotel.management.domain.reservation;
 
 public record ActiveReservationView(
         Long hotelId,

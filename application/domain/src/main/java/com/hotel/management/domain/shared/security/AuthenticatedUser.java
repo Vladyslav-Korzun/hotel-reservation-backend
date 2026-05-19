@@ -1,4 +1,4 @@
-package com.hotel.management.service.security;
+package com.hotel.management.domain.shared.security;
 
 import java.util.Set;
 

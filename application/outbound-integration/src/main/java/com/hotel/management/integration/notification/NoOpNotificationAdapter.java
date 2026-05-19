@@ -1,6 +1,6 @@
 package com.hotel.management.integration.notification;
 
-import com.hotel.management.service.port.NotificationPort;
+import com.hotel.management.domain.shared.NotificationPort;
 import org.springframework.stereotype.Component;
 
 @Component

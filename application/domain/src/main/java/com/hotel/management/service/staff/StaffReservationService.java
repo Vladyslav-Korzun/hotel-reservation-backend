@@ -12,16 +12,18 @@ import com.hotel.management.domain.stay.StayRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.service.exception.ForbiddenException;
-import com.hotel.management.service.port.AuditLogPort;
-import com.hotel.management.service.port.ClockPort;
+import com.hotel.management.domain.audit.AuditLogPort;
+import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.service.predicate.reservation.IsBeforeReservationCheckOutDatePredicate;
 import com.hotel.management.service.predicate.reservation.IsCheckInDateReachedPredicate;
 import com.hotel.management.service.predicate.reservation.IsStaffOrAdminPredicate;
-import com.hotel.management.service.reservation.locking.ReservationLockPort;
-import com.hotel.management.service.security.AuthenticatedUser;
-import com.hotel.management.service.security.CurrentUserPort;
+import com.hotel.management.domain.reservation.ReservationLockPort;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
+import com.hotel.management.domain.shared.security.CurrentUserPort;
 
 import java.time.ZoneOffset;
+import com.hotel.management.domain.reservation.RoomAssignmentPort;
+import com.hotel.management.domain.reservation.StaffReservationResult;
 
 public class StaffReservationService implements StaffReservationFacade {
 
