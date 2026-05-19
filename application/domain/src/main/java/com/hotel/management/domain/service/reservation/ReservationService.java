@@ -15,7 +15,6 @@ import com.hotel.management.domain.shared.value.StayPeriod;
 import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.predicate.reservation.IsAdminPredicate;
-import com.hotel.management.domain.predicate.reservation.IsGuestPredicate;
 import com.hotel.management.domain.predicate.reservation.IsReservationOwnerPredicate;
 import com.hotel.management.domain.predicate.reservation.IsStaffOrAdminPredicate;
 import com.hotel.management.domain.reservation.ReservationLockPort;
@@ -70,7 +69,7 @@ public class ReservationService implements ReservationFacade {
     public CreateReservationResult createReservation(CreateReservationCommand command) {
         requireCommand(command);
         var currentUser = currentUserPort.getCurrentUser();
-        Long guestId = resolveSelfBookingGuestId(currentUser);
+        Long guestId = currentUser.requireGuestId();
         return createResolvedReservation(ResolvedCreateReservationCommand.from(command, guestId), currentUser);
     }
 
@@ -89,7 +88,7 @@ public class ReservationService implements ReservationFacade {
     public CreateReservationResult createStaffReservation(CreateStaffReservationCommand command) {
         requireCommand(command);
         var currentUser = currentUserPort.getCurrentUser();
-        assertCanCreateStaffReservation(currentUser);
+        currentUser.requireStaffOrAdmin();
         Long guestId = resolveStaffBookingGuestId(command);
         return createResolvedReservation(
                 ResolvedCreateReservationCommand.from(command.toReservationCommand(), guestId),
@@ -145,7 +144,7 @@ public class ReservationService implements ReservationFacade {
     @Override
     public List<GetReservationResult> listReservations(int limit) {
         var currentUser = currentUserPort.getCurrentUser();
-        assertCanList(currentUser);
+        currentUser.requireStaffOrAdmin();
         validateLimit(limit);
 
         return reservationRepository.findAll(limit).stream()
@@ -211,33 +210,6 @@ public class ReservationService implements ReservationFacade {
         if (!IsReservationOwnerPredicate.INSTANCE.test(reservation, currentUser)) {
             throw new ForbiddenException("Access to this reservation is denied");
         }
-    }
-
-    private void assertCanList(AuthenticatedUser currentUser) {
-        if (IsStaffOrAdminPredicate.INSTANCE.test(currentUser)) {
-            return;
-        }
-
-        throw new ForbiddenException("Access to all reservations is denied");
-    }
-
-    private Long resolveSelfBookingGuestId(AuthenticatedUser currentUser) {
-        if (!IsGuestPredicate.INSTANCE.test(currentUser)) {
-            throw new ForbiddenException("Only guest can create reservation");
-        }
-
-        if (currentUser.guestId() == null) {
-            throw new ForbiddenException("guestId claim is required to create reservation");
-        }
-
-        return currentUser.guestId();
-    }
-
-    private void assertCanCreateStaffReservation(AuthenticatedUser currentUser) {
-        if (IsStaffOrAdminPredicate.INSTANCE.test(currentUser)) {
-            return;
-        }
-        throw new ForbiddenException("Only staff or admin can create staff reservation");
     }
 
     private Long resolveStaffBookingGuestId(CreateStaffReservationCommand command) {

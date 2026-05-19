@@ -11,13 +11,10 @@ import com.hotel.management.domain.stay.Stay;
 import com.hotel.management.domain.stay.StayRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
-import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.predicate.reservation.IsBeforeReservationCheckOutDatePredicate;
 import com.hotel.management.domain.predicate.reservation.IsCheckInDateReachedPredicate;
-import com.hotel.management.domain.predicate.reservation.IsStaffOrAdminPredicate;
 import com.hotel.management.domain.reservation.ReservationLockPort;
-import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
 
 import java.time.ZoneOffset;
@@ -61,7 +58,8 @@ public class StaffReservationService implements StaffReservationFacade {
 
     @Override
     public StaffReservationResult checkIn(String reservationId) {
-        var currentUser = requireStaffOrAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireStaffOrAdmin();
         var reservation = loadReservationForChange(reservationId);
         assertCheckInDateAllowed(reservation);
         var room = findAvailableRoomFor(reservation);
@@ -83,7 +81,8 @@ public class StaffReservationService implements StaffReservationFacade {
 
     @Override
     public StaffReservationResult checkOut(String reservationId) {
-        var currentUser = requireStaffOrAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireStaffOrAdmin();
         var reservation = loadReservationForChange(reservationId);
         var checkedOutReservation = reservation.completeCheckOut();
         var stay = stayRepository.findActiveByReservationId(reservation.id())
@@ -107,7 +106,8 @@ public class StaffReservationService implements StaffReservationFacade {
 
     @Override
     public StaffReservationResult markNoShow(String reservationId) {
-        var currentUser = requireStaffOrAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireStaffOrAdmin();
         var reservation = loadReservationForChange(reservationId);
         assertNoShowDateAllowed(reservation);
 
@@ -122,14 +122,6 @@ public class StaffReservationService implements StaffReservationFacade {
         );
 
         return staffReservationResultMapper.toResult(noShowReservation);
-    }
-
-    private AuthenticatedUser requireStaffOrAdmin() {
-        var currentUser = currentUserPort.getCurrentUser();
-        if (IsStaffOrAdminPredicate.INSTANCE.test(currentUser)) {
-            return currentUser;
-        }
-        throw new ForbiddenException("Only staff or admin can manage stay operations");
     }
 
     private Reservation loadReservationForChange(String reservationId) {

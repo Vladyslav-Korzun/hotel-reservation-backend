@@ -22,9 +22,6 @@ import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.Money;
-import com.hotel.management.domain.shared.exception.ForbiddenException;
-import com.hotel.management.domain.predicate.reservation.IsAdminPredicate;
-import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
 import com.hotel.management.domain.hotel.HotelResult;
 import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
@@ -74,7 +71,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public HotelResult createHotel(CreateHotelCommand command) {
-        var currentUser = requireAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireAdmin();
         requireCreateCommand(command);
         if (hotelRepository.findById(command.hotelId()).isPresent()) {
             throw new ValidationException("Hotel already exists: " + command.hotelId());
@@ -104,7 +102,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public HotelResult updateHotel(UpdateHotelCommand command) {
-        var currentUser = requireAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireAdmin();
         requireUpdateCommand(command);
         var hotel = hotelRepository.findById(command.hotelId())
                 .orElseThrow(() -> new NotFoundException("Hotel not found: " + command.hotelId()));
@@ -132,7 +131,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public RoomTypeResult createRoomType(CreateRoomTypeCommand command) {
-        var currentUser = requireAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireAdmin();
         requireCreateRoomTypeCommand(command);
         assertHotelExists(command.hotelId());
         if (roomTypeRepository.findById(command.roomTypeId()).isPresent()) {
@@ -162,7 +162,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public RoomTypeResult updateRoomType(UpdateRoomTypeCommand command) {
-        var currentUser = requireAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireAdmin();
         requireUpdateRoomTypeCommand(command);
         var roomType = roomTypeRepository.findById(command.roomTypeId())
                 .orElseThrow(() -> new NotFoundException("Room type not found: " + command.roomTypeId()));
@@ -189,7 +190,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public RoomResult createRoom(CreateRoomCommand command) {
-        var currentUser = requireAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireAdmin();
         requireCreateRoomCommand(command);
         var roomType = loadRoomType(command.roomTypeId());
         assertRoomTypeBelongsToHotel(roomType, command.hotelId());
@@ -219,7 +221,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public RoomResult updateRoom(UpdateRoomCommand command) {
-        var currentUser = requireAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireAdmin();
         requireUpdateRoomCommand(command);
         var room = roomRepository.findById(command.roomId())
                 .orElseThrow(() -> new NotFoundException("Room not found: " + command.roomId()));
@@ -247,7 +250,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public HotelServiceOfferingResult createServiceOffering(CreateServiceOfferingCommand command) {
-        var currentUser = requireAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireAdmin();
         requireCreateServiceOfferingCommand(command);
         assertHotelExists(command.hotelId());
         if (serviceOfferingRepository.findById(command.serviceOfferingId()).isPresent()) {
@@ -277,7 +281,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public HotelServiceOfferingResult updateServiceOffering(UpdateServiceOfferingCommand command) {
-        var currentUser = requireAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireAdmin();
         requireUpdateServiceOfferingCommand(command);
         assertHotelExists(command.hotelId());
         var serviceOffering = loadServiceOffering(command.serviceOfferingId());
@@ -304,7 +309,8 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public void deactivateServiceOffering(DeactivateServiceOfferingCommand command) {
-        var currentUser = requireAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireAdmin();
         requireDeactivateServiceOfferingCommand(command);
         assertHotelExists(command.hotelId());
         var serviceOffering = loadServiceOffering(command.serviceOfferingId());
@@ -318,14 +324,6 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 String.valueOf(deactivatedServiceOffering.id()),
                 "Service offering deactivated"
         );
-    }
-
-    private AuthenticatedUser requireAdmin() {
-        var currentUser = currentUserPort.getCurrentUser();
-        if (IsAdminPredicate.INSTANCE.test(currentUser)) {
-            return currentUser;
-        }
-        throw new ForbiddenException("Only admin can manage hotels");
     }
 
     private void requireCreateCommand(CreateHotelCommand command) {

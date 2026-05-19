@@ -8,9 +8,6 @@ import com.hotel.management.domain.room.RoomRepository;
 import com.hotel.management.domain.room.RoomStatus;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
-import com.hotel.management.domain.shared.exception.ForbiddenException;
-import com.hotel.management.domain.predicate.reservation.IsStaffOrAdminPredicate;
-import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
 import com.hotel.management.domain.room.RoomOperationResult;
 import com.hotel.management.domain.service.mapper.RoomOperationResultMapper;
@@ -36,7 +33,8 @@ public class RoomOperationsService implements RoomOperationsFacade {
 
     @Override
     public RoomOperationResult updateRoomStatus(UpdateRoomStatusCommand command) {
-        var currentUser = requireStaffOrAdmin();
+        var currentUser = currentUserPort.getCurrentUser();
+        currentUser.requireStaffOrAdmin();
         requireCommand(command);
 
         var room = roomRepository.findById(command.roomId())
@@ -52,14 +50,6 @@ public class RoomOperationsService implements RoomOperationsFacade {
                 "Room status changed to " + savedRoom.status().name()
         );
         return roomOperationResultMapper.toResult(savedRoom);
-    }
-
-    private AuthenticatedUser requireStaffOrAdmin() {
-        var currentUser = currentUserPort.getCurrentUser();
-        if (IsStaffOrAdminPredicate.INSTANCE.test(currentUser)) {
-            return currentUser;
-        }
-        throw new ForbiddenException("Only staff or admin can manage room operations");
     }
 
     private void requireCommand(UpdateRoomStatusCommand command) {
