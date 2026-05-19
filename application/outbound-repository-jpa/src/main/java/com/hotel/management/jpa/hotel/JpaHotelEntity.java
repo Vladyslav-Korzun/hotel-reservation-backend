@@ -1,19 +1,52 @@
 package com.hotel.management.jpa.hotel;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "hotels")
 public class JpaHotelEntity {
 
+    @Id
+    @Column(name = "id", nullable = false)
     private Long id;
+
+    @Column(name = "name", nullable = false, length = 160)
     private String name;
+
+    @Column(name = "city", nullable = false, length = 120)
     private String city;
+
+    @Column(name = "country", nullable = false, length = 120)
     private String country;
+
+    @Column(name = "address", nullable = false, length = 255)
     private String address;
+
+    @Column(name = "stars", nullable = false)
     private Integer stars;
+
+    @Column(name = "description", length = 1000)
     private String description;
+
+    @Column(name = "status", nullable = false, length = 32)
     private String status;
+
+    @Column(name = "children_allowed", nullable = false)
     private Boolean childrenAllowed;
+
+    @Column(name = "pets_allowed", nullable = false)
     private Boolean petsAllowed;
+
+    @Column(name = "infant_max_age", nullable = false)
     private Integer infantMaxAge;
+
+    @Column(name = "child_max_age", nullable = false)
     private Integer childMaxAge;
+
+    @Column(name = "adult_equivalent_age", nullable = false)
     private Integer adultEquivalentAge;
 
     public Long getId() {

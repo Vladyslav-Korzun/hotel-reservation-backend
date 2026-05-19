@@ -1,27 +1,72 @@
 package com.hotel.management.jpa.room;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import java.math.BigDecimal;
 
+@Entity
+@Table(name = "room_types")
 public class JpaRoomTypeEntity {
 
+    @Id
+    @Column(name = "id", nullable = false)
     private Long id;
+
+    @Column(name = "hotel_id", nullable = false)
     private Long hotelId;
+
+    @Column(name = "name", nullable = false, length = 120)
     private String name;
+
+    @Column(name = "max_adults", nullable = false)
     private Integer maxAdults;
+
+    @Column(name = "max_children", nullable = false)
     private Integer maxChildren;
+
+    @Column(name = "max_infants", nullable = false)
     private Integer maxInfants;
+
+    @Column(name = "max_total_guests", nullable = false)
     private Integer maxTotalGuests;
+
+    @Column(name = "pets_allowed", nullable = false)
     private Boolean petsAllowed;
+
+    @Column(name = "max_pets", nullable = false)
     private Integer maxPets;
+
+    @Column(name = "allowed_pet_types_json", nullable = false, length = 2000)
     private String allowedPetTypesJson;
+
+    @Column(name = "max_pet_weight_kg", precision = 10, scale = 2)
     private BigDecimal maxPetWeightKg;
+
+    @Column(name = "pet_fee_amount", precision = 12, scale = 2)
     private BigDecimal petFeeAmount;
+
+    @Column(name = "pet_fee_currency", length = 3)
     private String petFeeCurrency;
+
+    @Column(name = "base_price_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal basePriceAmount;
+
+    @Column(name = "base_price_currency", nullable = false, length = 3)
     private String basePriceCurrency;
+
+    @Column(name = "description", length = 1000)
     private String description;
+
+    @Column(name = "bed_setup", length = 120)
     private String bedSetup;
+
+    @Column(name = "room_size_sqm", precision = 5, scale = 1)
     private BigDecimal roomSizeSqm;
+
+    @Column(name = "amenities_json", nullable = false, length = 4000)
     private String amenitiesJson = "[]";
 
     public Long getId() {

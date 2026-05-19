@@ -1,38 +1,92 @@
 package com.hotel.management.jpa.reservation;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "reservations")
 public class JpaReservationEntity {
 
+    @Id
+    @Column(name = "id", nullable = false, length = 64)
     private String id;
+
+    @Column(name = "hotel_id", nullable = false)
     private Long hotelId;
+
+    @Column(name = "guest_id", nullable = false)
     private Long guestId;
+
+    @Column(name = "room_id")
     private Long roomId;
+
+    @Column(name = "room_type_id", nullable = false)
     private Long roomTypeId;
+
+    @Column(name = "check_in", nullable = false)
     private LocalDate checkIn;
+
+    @Column(name = "check_out", nullable = false)
     private LocalDate checkOut;
+
+    @Column(name = "adults_count", nullable = false)
     private Integer adultsCount;
+
+    @Column(name = "children_ages_json", nullable = false, length = 2000)
     private String childrenAgesJson;
+
+    @Column(name = "pets_json", nullable = false, length = 4000)
     private String petsJson;
+
+    @Column(name = "contact_email", length = 255)
     private String contactEmail;
+
+    @Column(name = "contact_phone", length = 32)
     private String contactPhone;
+
+    @Column(name = "special_requests", length = 500)
     private String specialRequests;
+
+    @Column(name = "base_price_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal basePriceAmount;
+
+    @Column(name = "base_price_currency", nullable = false, length = 3)
     private String basePriceCurrency;
+
+    @Column(name = "services_price_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal servicesPriceAmount;
+
+    @Column(name = "services_price_currency", nullable = false, length = 3)
     private String servicesPriceCurrency;
+
+    @Column(name = "discount_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal discountAmount;
+
+    @Column(name = "discount_currency", nullable = false, length = 3)
     private String discountCurrency;
+
+    @Column(name = "final_price_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal finalPriceAmount;
+
+    @Column(name = "final_price_currency", nullable = false, length = 3)
     private String finalPriceCurrency;
+
+    @Column(name = "status", nullable = false, length = 32)
     private String status;
+
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @Column(name = "cancelled_at")
     private Instant cancelledAt;
+
+    @Column(name = "created_by", nullable = false, length = 128)
     private String createdBy;
 
     public String getId() {

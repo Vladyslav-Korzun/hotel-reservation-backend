@@ -1,11 +1,28 @@
 package com.hotel.management.jpa.guest;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "guests")
 public class JpaGuestEntity {
 
+    @Id
+    @Column(name = "id", nullable = false)
     private Long id;
+
+    @Column(name = "first_name", nullable = false, length = 120)
     private String firstName;
+
+    @Column(name = "last_name", nullable = false, length = 120)
     private String lastName;
+
+    @Column(name = "email", nullable = false, length = 255)
     private String email;
+
+    @Column(name = "phone", length = 64)
     private String phone;
 
     public Long getId() {

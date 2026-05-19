@@ -1,12 +1,31 @@
 package com.hotel.management.jpa.room;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "rooms")
 public class JpaRoomEntity {
 
+    @Id
+    @Column(name = "id", nullable = false)
     private Long id;
+
+    @Column(name = "hotel_id", nullable = false)
     private Long hotelId;
+
+    @Column(name = "room_number", nullable = false, length = 32)
     private String number;
+
+    @Column(name = "room_type_id", nullable = false)
     private Long roomTypeId;
+
+    @Column(name = "capacity", nullable = false)
     private Integer capacity;
+
+    @Column(name = "status", nullable = false, length = 32)
     private String status;
 
     public Long getId() {
