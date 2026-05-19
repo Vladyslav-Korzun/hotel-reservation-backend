@@ -17,7 +17,7 @@ import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.AccommodationParty;
 import com.hotel.management.domain.shared.value.GuestComposition;
 import com.hotel.management.domain.shared.value.Money;
-import com.hotel.management.domain.service.exception.ForbiddenException;
+import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;

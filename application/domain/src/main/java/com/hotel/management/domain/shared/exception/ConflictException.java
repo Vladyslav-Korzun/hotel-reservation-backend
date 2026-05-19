@@ -1,6 +1,4 @@
-package com.hotel.management.domain.service.exception;
-
-import com.hotel.management.domain.shared.exception.HotelReservationException;
+package com.hotel.management.domain.shared.exception;
 
 public class ConflictException extends HotelReservationException {
 

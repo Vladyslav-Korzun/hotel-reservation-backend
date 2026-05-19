@@ -2,8 +2,8 @@ package com.hotel.management.controller;
 
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
-import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.service.exception.UnauthorizedException;
+import com.hotel.management.domain.shared.exception.ForbiddenException;
+import com.hotel.management.domain.shared.exception.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;

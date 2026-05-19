@@ -26,7 +26,7 @@ import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.shared.value.PetType;
-import com.hotel.management.domain.service.exception.ForbiddenException;
+import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.junit.jupiter.api.Test;

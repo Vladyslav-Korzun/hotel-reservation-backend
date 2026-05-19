@@ -1,8 +1,8 @@
 package com.hotel.management.controller;
 
-import com.hotel.management.domain.service.exception.ConflictException;
-import com.hotel.management.domain.service.exception.ForbiddenException;
-import com.hotel.management.domain.service.exception.UnauthorizedException;
+import com.hotel.management.domain.shared.exception.ConflictException;
+import com.hotel.management.domain.shared.exception.ForbiddenException;
+import com.hotel.management.domain.shared.exception.UnauthorizedException;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import org.springframework.http.HttpStatus;

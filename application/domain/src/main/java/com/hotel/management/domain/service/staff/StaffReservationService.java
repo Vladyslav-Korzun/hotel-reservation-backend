@@ -11,7 +11,7 @@ import com.hotel.management.domain.stay.Stay;
 import com.hotel.management.domain.stay.StayRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
-import com.hotel.management.domain.service.exception.ForbiddenException;
+import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.predicate.reservation.IsBeforeReservationCheckOutDatePredicate;
 import com.hotel.management.domain.predicate.reservation.IsCheckInDateReachedPredicate;

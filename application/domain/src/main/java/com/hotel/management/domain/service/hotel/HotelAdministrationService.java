@@ -22,7 +22,7 @@ import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.Money;
-import com.hotel.management.domain.service.exception.ForbiddenException;
+import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.predicate.reservation.IsAdminPredicate;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;

@@ -12,7 +12,7 @@ import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.StayPeriod;
-import com.hotel.management.domain.service.exception.ForbiddenException;
+import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.predicate.reservation.IsAdminPredicate;
 import com.hotel.management.domain.predicate.reservation.IsGuestPredicate;
