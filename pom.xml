@@ -30,7 +30,6 @@
         <module>application/api-spec</module>
         <module>application/inbound-controller-rest</module>
         <module>application/outbound-repository-jpa</module>
-        <module>application/outbound-integration</module>
         <module>application/springboot</module>
     </modules>
 </project>

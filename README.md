@@ -10,7 +10,6 @@ Maven modules:
 - `application/api-spec` - OpenAPI contract and generated REST API interfaces/DTOs
 - `application/inbound-controller-rest` - REST controllers, DTO mappers, security, exception handling
 - `application/outbound-repository-jpa` - JPA adapters, Spring Data repositories, ORM mapping, Liquibase migrations
-- `application/outbound-integration` - external integration adapters; currently no-op notifications for MVP
 - `application/springboot` - application bootstrap, bean wiring, transaction decorators, runtime configuration
 
 Dependency direction:
@@ -20,8 +19,7 @@ domain
 api-spec
 inbound-controller-rest -> domain + api-spec
 outbound-repository-jpa -> domain
-outbound-integration -> domain
-springboot -> inbound-controller-rest + outbound-repository-jpa + outbound-integration
+springboot -> inbound-controller-rest + outbound-repository-jpa
 ```
 
 The domain module does not depend on Spring, JPA, REST, security, or OpenAPI-generated DTOs.

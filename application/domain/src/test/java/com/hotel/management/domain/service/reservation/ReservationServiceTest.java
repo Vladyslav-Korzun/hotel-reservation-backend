@@ -29,7 +29,6 @@ import com.hotel.management.domain.service.accommodation.AccommodationPolicyVali
 import com.hotel.management.domain.service.exception.ForbiddenException;
 import com.hotel.management.domain.audit.AuditLogPort;
 import com.hotel.management.domain.shared.ClockPort;
-import com.hotel.management.domain.shared.NotificationPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
@@ -97,9 +96,6 @@ class ReservationServiceTest {
     @Mock
     private AuditLogPort auditLogPort;
 
-    @Mock
-    private NotificationPort notificationPort;
-
     private ReservationCreationValidator reservationCreationValidator;
 
     private ReservationService facade;
@@ -126,8 +122,7 @@ class ReservationServiceTest {
                 new ReservationFactory(),
                 new ReservationPricingCalculator(),
                 new ReservationResultMapper(),
-                auditLogPort,
-                notificationPort
+                auditLogPort
         );
     }
 
@@ -155,7 +150,6 @@ class ReservationServiceTest {
         assertEquals("guest-123", result.createdBy());
         assertEquals(2, result.adults());
         assertEquals(Instant.parse("2026-04-03T12:00:00Z"), result.createdAt());
-        verify(notificationPort).reservationCreated(result.reservationId());
     }
 
     @Test
@@ -419,7 +413,6 @@ class ReservationServiceTest {
         facade.cancelReservation("reservation-1");
 
         verify(repository).save(any(Reservation.class));
-        verify(notificationPort).reservationCancelled("reservation-1");
     }
 
     @Test

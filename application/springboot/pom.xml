@@ -24,11 +24,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.hotel.management</groupId>
-            <artifactId>outbound-integration</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>

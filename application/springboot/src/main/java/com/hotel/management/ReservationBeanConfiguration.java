@@ -9,7 +9,6 @@ import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.service.accommodation.AccommodationPolicyValidator;
 import com.hotel.management.domain.audit.AuditLogPort;
 import com.hotel.management.domain.shared.ClockPort;
-import com.hotel.management.domain.shared.NotificationPort;
 import com.hotel.management.domain.service.reservation.ReservationCreationValidator;
 import com.hotel.management.domain.service.reservation.ReservationFacade;
 import com.hotel.management.domain.service.reservation.ReservationPricingCalculator;
@@ -74,8 +73,7 @@ public class ReservationBeanConfiguration {
             ReservationFactory reservationFactory,
             ReservationPricingCalculator reservationPricingCalculator,
             ReservationResultMapper reservationResultMapper,
-            AuditLogPort auditLogPort,
-            NotificationPort notificationPort
+            AuditLogPort auditLogPort
     ) {
         var reservationService = new ReservationService(
                 reservationRepository,
@@ -87,8 +85,7 @@ public class ReservationBeanConfiguration {
                 reservationFactory,
                 reservationPricingCalculator,
                 reservationResultMapper,
-                auditLogPort,
-                notificationPort
+                auditLogPort
         );
         return new TransactionalReservationFacade(reservationService);
     }

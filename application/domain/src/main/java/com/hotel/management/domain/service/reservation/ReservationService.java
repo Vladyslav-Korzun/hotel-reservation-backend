@@ -15,7 +15,6 @@ import com.hotel.management.domain.shared.value.StayPeriod;
 import com.hotel.management.domain.service.exception.ForbiddenException;
 import com.hotel.management.domain.audit.AuditLogPort;
 import com.hotel.management.domain.shared.ClockPort;
-import com.hotel.management.domain.shared.NotificationPort;
 import com.hotel.management.domain.predicate.reservation.IsAdminPredicate;
 import com.hotel.management.domain.predicate.reservation.IsGuestPredicate;
 import com.hotel.management.domain.predicate.reservation.IsReservationOwnerPredicate;
@@ -43,7 +42,6 @@ public class ReservationService implements ReservationFacade {
     private final ReservationPricingCalculator reservationPricingCalculator;
     private final ReservationResultMapper reservationResultMapper;
     private final AuditLogPort auditLogPort;
-    private final NotificationPort notificationPort;
 
     public ReservationService(
             ReservationRepository reservationRepository,
@@ -55,8 +53,7 @@ public class ReservationService implements ReservationFacade {
             ReservationFactory reservationFactory,
             ReservationPricingCalculator reservationPricingCalculator,
             ReservationResultMapper reservationResultMapper,
-            AuditLogPort auditLogPort,
-            NotificationPort notificationPort
+            AuditLogPort auditLogPort
     ) {
         this.reservationRepository = reservationRepository;
         this.guestRepository = guestRepository;
@@ -68,7 +65,6 @@ public class ReservationService implements ReservationFacade {
         this.reservationPricingCalculator = reservationPricingCalculator;
         this.reservationResultMapper = reservationResultMapper;
         this.auditLogPort = auditLogPort;
-        this.notificationPort = notificationPort;
     }
 
     @Override
@@ -143,7 +139,6 @@ public class ReservationService implements ReservationFacade {
                 savedReservation.id(),
                 "Reservation created"
         ));
-        notificationPort.reservationCreated(savedReservation.id());
         return reservationResultMapper.toCreateResult(savedReservation);
     }
 
@@ -188,7 +183,6 @@ public class ReservationService implements ReservationFacade {
                 cancelledReservation.id(),
                 "Reservation cancelled"
         ));
-        notificationPort.reservationCancelled(cancelledReservation.id());
     }
 
     private Reservation loadReservation(String reservationId) {
