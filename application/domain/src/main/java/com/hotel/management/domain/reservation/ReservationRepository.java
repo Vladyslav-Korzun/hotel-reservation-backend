@@ -11,5 +11,5 @@ public interface ReservationRepository {
 
     List<Reservation> findAll(int limit);
 
-    List<Reservation> findByCreatedBy(String createdBy, int limit);
+    List<Reservation> findByGuestId(Long guestId, int limit);
 }

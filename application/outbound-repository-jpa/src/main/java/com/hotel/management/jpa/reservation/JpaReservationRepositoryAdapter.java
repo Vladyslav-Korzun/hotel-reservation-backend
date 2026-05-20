@@ -99,8 +99,8 @@ public class JpaReservationRepositoryAdapter implements ReservationRepository {
     }
 
     @Override
-    public List<Reservation> findByCreatedBy(String createdBy, int limit) {
-        return springDataReservationRepository.findByCreatedByOrderByCreatedAtDesc(createdBy, PageRequest.of(0, limit)).stream()
+    public List<Reservation> findByGuestId(Long guestId, int limit) {
+        return springDataReservationRepository.findByGuestIdOrderByCreatedAtDesc(guestId, PageRequest.of(0, limit)).stream()
                 .map(this::toDomain)
                 .toList();
     }

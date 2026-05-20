@@ -51,7 +51,7 @@ class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, "/hotels/*/room-types/*/availability-calendar").permitAll()
                 .requestMatchers(HttpMethod.POST, "/public/reservations").permitAll()
                 .requestMatchers(HttpMethod.POST, "/rooms/search").hasAnyRole("GUEST", "ADMIN", "STAFF")
-                .requestMatchers(HttpMethod.GET, "/me/reservations").hasAnyRole("GUEST", "ADMIN", "STAFF")
+                .requestMatchers(HttpMethod.GET, "/me/reservations").hasRole("GUEST")
                 .requestMatchers(HttpMethod.POST, "/reservations").hasRole("GUEST")
                 .requestMatchers(HttpMethod.GET, "/reservations").hasAnyRole("ADMIN", "STAFF")
                 .requestMatchers(HttpMethod.POST, "/reservations/*/cancel").hasAnyRole("GUEST", "ADMIN")

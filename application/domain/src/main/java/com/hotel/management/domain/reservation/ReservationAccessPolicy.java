@@ -14,7 +14,7 @@ public final class ReservationAccessPolicy {
         if (actor != null && (actor.isAdmin() || actor.isStaff())) {
             return;
         }
-        if (actor != null && actor.isGuest() && reservation != null && reservation.belongsTo(actor.userId())) {
+        if (actor != null && actor.isGuest() && reservation != null && reservation.isOwnedBy(actor.guestId())) {
             return;
         }
         throw new ForbiddenException("Cannot view this reservation");
@@ -24,7 +24,7 @@ public final class ReservationAccessPolicy {
         if (actor != null && actor.isAdmin()) {
             return;
         }
-        if (actor != null && reservation != null && reservation.belongsTo(actor.userId())) {
+        if (actor != null && actor.isGuest() && reservation != null && reservation.isOwnedBy(actor.guestId())) {
             return;
         }
         throw new ForbiddenException("Cannot cancel this reservation");

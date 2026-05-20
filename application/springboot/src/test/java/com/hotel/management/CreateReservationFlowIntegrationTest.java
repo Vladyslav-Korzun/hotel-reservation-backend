@@ -102,14 +102,14 @@ class CreateReservationFlowIntegrationTest {
         assertThat(savedReservation.getAdultsCount()).isEqualTo(2);
 
         mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
-                        .with(jwtFor("guest-demo", "GUEST")))
+                        .with(jwtFor("guest-demo", "GUEST", 10L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reservationId").value(savedReservation.getId()))
                 .andExpect(jsonPath("$.hotelId").value(1))
                 .andExpect(jsonPath("$.status").value("PENDING"));
 
         mockMvc.perform(post("/reservations/{reservationId}/cancel", savedReservation.getId())
-                        .with(jwtFor("guest-demo", "GUEST")))
+                        .with(jwtFor("guest-demo", "GUEST", 10L)))
                 .andExpect(status().isNoContent());
 
         flushAndClear();
@@ -118,7 +118,7 @@ class CreateReservationFlowIntegrationTest {
         assertThat(cancelledReservation.getCancelledAt()).isNotNull();
 
         mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
-                        .with(jwtFor("guest-demo", "GUEST")))
+                        .with(jwtFor("guest-demo", "GUEST", 10L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"))
                 .andExpect(jsonPath("$.cancelledAt").isNotEmpty());
@@ -218,11 +218,11 @@ class CreateReservationFlowIntegrationTest {
         var savedReservation = firstReservation();
 
         mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
-                        .with(jwtFor("other-user", "GUEST")))
+                        .with(jwtFor("other-user", "GUEST", 99L)))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/reservations/{reservationId}/cancel", savedReservation.getId())
-                        .with(jwtFor("other-user", "GUEST")))
+                        .with(jwtFor("other-user", "GUEST", 99L)))
                 .andExpect(status().isForbidden());
     }
 

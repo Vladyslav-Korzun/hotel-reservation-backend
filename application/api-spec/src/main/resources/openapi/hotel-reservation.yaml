@@ -683,7 +683,7 @@ paths:
         - Reservations
       operationId: listMyReservations
       summary: List current user's reservations
-      description: Returns reservations created by the authenticated user.
+      description: Returns reservations belonging to the authenticated guest profile.
       security:
         - bearerAuth: []
       parameters:

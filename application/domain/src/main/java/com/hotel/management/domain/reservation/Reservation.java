@@ -225,8 +225,8 @@ public final class Reservation {
         );
     }
 
-    public boolean belongsTo(String actorId) {
-        return createdBy.equals(requireText(actorId, "actorId is required"));
+    public boolean isOwnedBy(Long guestId) {
+        return guestId != null && this.guestId.equals(guestId);
     }
 
     public Reservation cancel(Instant cancelledAt) {

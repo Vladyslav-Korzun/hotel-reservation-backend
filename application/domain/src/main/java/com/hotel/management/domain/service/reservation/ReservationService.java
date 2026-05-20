@@ -150,9 +150,10 @@ public class ReservationService implements ReservationFacade {
 
     @Override
     public List<GetReservationResult> listMyReservations(AuthenticatedUser actor, int limit) {
+        Long guestId = actor.requireGuestId();
         validateLimit(limit);
 
-        return reservationRepository.findByCreatedBy(actor.userId(), limit).stream()
+        return reservationRepository.findByGuestId(guestId, limit).stream()
                 .map(reservationResultMapper::toGetResult)
                 .toList();
     }

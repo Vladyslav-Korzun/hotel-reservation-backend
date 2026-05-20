@@ -202,7 +202,7 @@ class JpaRepositoryAdapterIntegrationTest {
         assertThat(saved.serviceItems().getFirst().serviceOfferingId()).isEqualTo(1000L);
         assertThat(saved.serviceItems().getFirst().totalPrice().amount()).isEqualByComparingTo("30.00");
 
-        assertThat(reservationRepository.findByCreatedBy("guest-1", 10))
+        assertThat(reservationRepository.findByGuestId(10L, 10))
                 .extracting(Reservation::id)
                 .containsExactly("reservation-1");
     }

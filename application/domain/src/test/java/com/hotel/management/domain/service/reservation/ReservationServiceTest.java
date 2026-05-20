@@ -330,7 +330,7 @@ class ReservationServiceTest {
         Reservation reservation = pendingReservation("reservation-1", 1L, null, 2L, "guest-123");
         when(repository.findById("reservation-1")).thenReturn(Optional.of(reservation));
 
-        var result = facade.getReservation(guestWithoutClaim(), "reservation-1");
+        var result = facade.getReservation(guest(), "reservation-1");
 
         assertEquals("reservation-1", result.reservationId());
         assertEquals(1L, result.hotelId());
@@ -362,9 +362,9 @@ class ReservationServiceTest {
     void shouldListCurrentUserReservations() {
         Reservation firstReservation = pendingReservation("reservation-1", 1L, null, 2L, "guest-123");
         Reservation secondReservation = pendingReservation("reservation-2", 1L, null, 2L, "guest-123");
-        when(repository.findByCreatedBy("guest-123", 100)).thenReturn(List.of(firstReservation, secondReservation));
+        when(repository.findByGuestId(10L, 100)).thenReturn(List.of(firstReservation, secondReservation));
 
-        var result = facade.listMyReservations(guestWithoutClaim(), 100);
+        var result = facade.listMyReservations(guest(), 100);
 
         assertEquals(2, result.size());
         assertEquals("guest-123", result.getFirst().createdBy());
@@ -373,8 +373,8 @@ class ReservationServiceTest {
 
     @Test
     void shouldRejectInvalidLimitForCurrentUserReservations() {
-        assertThrows(ValidationException.class, () -> facade.listMyReservations(guestWithoutClaim(), 0));
-        verify(repository, never()).findByCreatedBy(any(), anyInt());
+        assertThrows(ValidationException.class, () -> facade.listMyReservations(guest(), 0));
+        verify(repository, never()).findByGuestId(any(), anyInt());
     }
 
     @Test
@@ -397,7 +397,7 @@ class ReservationServiceTest {
         when(clockPort.now()).thenReturn(Instant.parse("2026-04-04T10:00:00Z"));
         when(repository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        facade.cancelReservation(guestWithoutClaim(), "reservation-1");
+        facade.cancelReservation(guest(), "reservation-1");
 
         verify(repository).save(any(Reservation.class));
     }
@@ -414,7 +414,7 @@ class ReservationServiceTest {
         Reservation reservation = pendingReservation("reservation-1", 1L, null, 2L, "guest-123");
         when(repository.findById("reservation-1")).thenReturn(Optional.of(reservation));
 
-        assertThrows(ForbiddenException.class, () -> facade.getReservation(new AuthenticatedUser("guest-999", Set.of("GUEST")), "reservation-1"));
+        assertThrows(ForbiddenException.class, () -> facade.getReservation(new AuthenticatedUser("guest-999", Set.of("GUEST"), 999L), "reservation-1"));
         verify(repository, never()).save(any());
     }
 
@@ -442,7 +442,7 @@ class ReservationServiceTest {
         );
         when(reservationLockPort.findReservationForChange("reservation-1")).thenReturn(Optional.of(reservation));
 
-        assertThrows(ValidationException.class, () -> facade.cancelReservation(guestWithoutClaim(), "reservation-1"));
+        assertThrows(ValidationException.class, () -> facade.cancelReservation(guest(), "reservation-1"));
         verify(repository, never()).save(any());
     }
 
@@ -459,7 +459,7 @@ class ReservationServiceTest {
         );
         when(reservationLockPort.findReservationForChange("reservation-1")).thenReturn(Optional.of(reservation));
 
-        assertThrows(ValidationException.class, () -> facade.cancelReservation(guestWithoutClaim(), "reservation-1"));
+        assertThrows(ValidationException.class, () -> facade.cancelReservation(guest(), "reservation-1"));
         verify(repository, never()).save(any());
     }
 
@@ -476,7 +476,7 @@ class ReservationServiceTest {
         );
         when(reservationLockPort.findReservationForChange("reservation-1")).thenReturn(Optional.of(reservation));
 
-        assertThrows(ValidationException.class, () -> facade.cancelReservation(guestWithoutClaim(), "reservation-1"));
+        assertThrows(ValidationException.class, () -> facade.cancelReservation(guest(), "reservation-1"));
         verify(repository, never()).save(any());
     }
 
@@ -493,7 +493,7 @@ class ReservationServiceTest {
         );
         when(reservationLockPort.findReservationForChange("reservation-1")).thenReturn(Optional.of(reservation));
 
-        assertThrows(ValidationException.class, () -> facade.cancelReservation(guestWithoutClaim(), "reservation-1"));
+        assertThrows(ValidationException.class, () -> facade.cancelReservation(guest(), "reservation-1"));
         verify(repository, never()).save(any());
     }
 

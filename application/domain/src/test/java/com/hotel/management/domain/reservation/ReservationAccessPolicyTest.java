@@ -29,7 +29,7 @@ class ReservationAccessPolicyTest {
     void shouldAllowGuestToViewOwnReservation() {
         Reservation reservation = reservation("guest-123");
 
-        assertDoesNotThrow(() -> ReservationAccessPolicy.INSTANCE.assertCanView(user("guest-123", "GUEST"), reservation));
+        assertDoesNotThrow(() -> ReservationAccessPolicy.INSTANCE.assertCanView(user("guest-123", "GUEST", 10L), reservation));
     }
 
     @Test
@@ -38,7 +38,7 @@ class ReservationAccessPolicyTest {
 
         assertThrows(
                 ForbiddenException.class,
-                () -> ReservationAccessPolicy.INSTANCE.assertCanView(user("guest-999", "GUEST"), reservation)
+                () -> ReservationAccessPolicy.INSTANCE.assertCanView(user("guest-999", "GUEST", 999L), reservation)
         );
     }
 
@@ -47,7 +47,7 @@ class ReservationAccessPolicyTest {
         Reservation reservation = reservation("guest-123");
 
         assertDoesNotThrow(() -> ReservationAccessPolicy.INSTANCE.assertCanCancel(user("admin-1", "ADMIN"), reservation));
-        assertDoesNotThrow(() -> ReservationAccessPolicy.INSTANCE.assertCanCancel(user("guest-123", "GUEST"), reservation));
+        assertDoesNotThrow(() -> ReservationAccessPolicy.INSTANCE.assertCanCancel(user("guest-123", "GUEST", 10L), reservation));
     }
 
     @Test
@@ -60,12 +60,16 @@ class ReservationAccessPolicyTest {
         );
         assertThrows(
                 ForbiddenException.class,
-                () -> ReservationAccessPolicy.INSTANCE.assertCanCancel(user("guest-999", "GUEST"), reservation)
+                () -> ReservationAccessPolicy.INSTANCE.assertCanCancel(user("guest-999", "GUEST", 999L), reservation)
         );
     }
 
     private static AuthenticatedUser user(String id, String role) {
         return new AuthenticatedUser(id, Set.of(role));
+    }
+
+    private static AuthenticatedUser user(String id, String role, Long guestId) {
+        return new AuthenticatedUser(id, Set.of(role), guestId);
     }
 
     private static Reservation reservation(String createdBy) {
