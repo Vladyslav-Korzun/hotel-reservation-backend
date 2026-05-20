@@ -6,18 +6,15 @@ import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.guest.Guest;
 import com.hotel.management.domain.guest.GuestRepository;
 import com.hotel.management.domain.reservation.Reservation;
+import com.hotel.management.domain.reservation.ReservationAccessPolicy;
 import com.hotel.management.domain.reservation.ReservationFactory;
 import com.hotel.management.domain.reservation.ReservationRepository;
+import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.StayPeriod;
-import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.ClockPort;
-import com.hotel.management.domain.predicate.reservation.IsAdminPredicate;
-import com.hotel.management.domain.predicate.reservation.IsReservationOwnerPredicate;
-import com.hotel.management.domain.predicate.reservation.IsStaffOrAdminPredicate;
-import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 
 import java.util.List;
@@ -163,14 +160,14 @@ public class ReservationService implements ReservationFacade {
     @Override
     public GetReservationResult getReservation(AuthenticatedUser actor, String reservationId) {
         var reservation = loadReservation(reservationId);
-        assertCanView(reservation, actor);
+        ReservationAccessPolicy.INSTANCE.assertCanView(actor, reservation);
         return reservationResultMapper.toGetResult(reservation);
     }
 
     @Override
     public void cancelReservation(AuthenticatedUser actor, String reservationId) {
         var reservation = loadReservationForChange(reservationId);
-        assertCanManage(reservation, actor);
+        ReservationAccessPolicy.INSTANCE.assertCanCancel(actor, reservation);
         Reservation cancelledReservation = reservationRepository.save(reservation.cancel(clockPort.now()));
         auditTrail.record(
                 actor,
@@ -197,15 +194,6 @@ public class ReservationService implements ReservationFacade {
 
         return reservationLockPort.findReservationForChange(reservationId)
                 .orElseThrow(() -> new NotFoundException("Reservation not found: " + reservationId));
-    }
-
-    private void assertCanView(Reservation reservation, AuthenticatedUser currentUser) {
-        if (IsStaffOrAdminPredicate.INSTANCE.test(currentUser)) {
-            return;
-        }
-        if (!IsReservationOwnerPredicate.INSTANCE.test(reservation, currentUser)) {
-            throw new ForbiddenException("Access to this reservation is denied");
-        }
     }
 
     private Long resolveStaffBookingGuestId(CreateStaffReservationCommand command) {
@@ -252,12 +240,6 @@ public class ReservationService implements ReservationFacade {
     private void validateLimit(int limit) {
         if (limit <= 0 || limit > 200) {
             throw new ValidationException("limit must be between 1 and 200");
-        }
-    }
-
-    private void assertCanManage(Reservation reservation, AuthenticatedUser currentUser) {
-        if (!IsAdminPredicate.INSTANCE.test(currentUser) && !IsReservationOwnerPredicate.INSTANCE.test(reservation, currentUser)) {
-            throw new ForbiddenException("Access to this reservation is denied");
         }
     }
 
