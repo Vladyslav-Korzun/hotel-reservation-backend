@@ -68,8 +68,10 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public HotelResult createHotel(AuthenticatedUser actor, CreateHotelCommand command) {
+        if (command == null) {
+            throw new ValidationException("create hotel command is required");
+        }
         actor.requireAdmin();
-        requireCreateCommand(command);
         if (hotelRepository.findById(command.hotelId()).isPresent()) {
             throw new ValidationException("Hotel already exists: " + command.hotelId());
         }
@@ -98,8 +100,10 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public HotelResult updateHotel(AuthenticatedUser actor, UpdateHotelCommand command) {
+        if (command == null) {
+            throw new ValidationException("update hotel command is required");
+        }
         actor.requireAdmin();
-        requireUpdateCommand(command);
         var hotel = hotelRepository.findById(command.hotelId())
                 .orElseThrow(() -> new NotFoundException("Hotel not found: " + command.hotelId()));
 
@@ -126,8 +130,10 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public RoomTypeResult createRoomType(AuthenticatedUser actor, CreateRoomTypeCommand command) {
+        if (command == null) {
+            throw new ValidationException("create room type command is required");
+        }
         actor.requireAdmin();
-        requireCreateRoomTypeCommand(command);
         assertHotelExists(command.hotelId());
         if (roomTypeRepository.findById(command.roomTypeId()).isPresent()) {
             throw new ValidationException("Room type already exists: " + command.roomTypeId());
@@ -156,8 +162,10 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public RoomTypeResult updateRoomType(AuthenticatedUser actor, UpdateRoomTypeCommand command) {
+        if (command == null) {
+            throw new ValidationException("update room type command is required");
+        }
         actor.requireAdmin();
-        requireUpdateRoomTypeCommand(command);
         var roomType = roomTypeRepository.findById(command.roomTypeId())
                 .orElseThrow(() -> new NotFoundException("Room type not found: " + command.roomTypeId()));
         assertHotelExists(roomType.hotelId());
@@ -183,8 +191,10 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public RoomResult createRoom(AuthenticatedUser actor, CreateRoomCommand command) {
+        if (command == null) {
+            throw new ValidationException("create room command is required");
+        }
         actor.requireAdmin();
-        requireCreateRoomCommand(command);
         var roomType = loadRoomType(command.roomTypeId());
         assertRoomTypeBelongsToHotel(roomType, command.hotelId());
         if (roomRepository.findById(command.roomId()).isPresent()) {
@@ -213,8 +223,10 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public RoomResult updateRoom(AuthenticatedUser actor, UpdateRoomCommand command) {
+        if (command == null) {
+            throw new ValidationException("update room command is required");
+        }
         actor.requireAdmin();
-        requireUpdateRoomCommand(command);
         var room = roomRepository.findById(command.roomId())
                 .orElseThrow(() -> new NotFoundException("Room not found: " + command.roomId()));
         var roomType = loadRoomType(command.roomTypeId());
@@ -241,8 +253,10 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public HotelServiceOfferingResult createServiceOffering(AuthenticatedUser actor, CreateServiceOfferingCommand command) {
+        if (command == null) {
+            throw new ValidationException("create service offering command is required");
+        }
         actor.requireAdmin();
-        requireCreateServiceOfferingCommand(command);
         assertHotelExists(command.hotelId());
         if (serviceOfferingRepository.findById(command.serviceOfferingId()).isPresent()) {
             throw new ValidationException("Service offering already exists: " + command.serviceOfferingId());
@@ -271,8 +285,10 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public HotelServiceOfferingResult updateServiceOffering(AuthenticatedUser actor, UpdateServiceOfferingCommand command) {
+        if (command == null) {
+            throw new ValidationException("update service offering command is required");
+        }
         actor.requireAdmin();
-        requireUpdateServiceOfferingCommand(command);
         assertHotelExists(command.hotelId());
         var serviceOffering = loadServiceOffering(command.serviceOfferingId());
         assertServiceOfferingBelongsToHotel(serviceOffering, command.hotelId());
@@ -298,8 +314,10 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
 
     @Override
     public void deactivateServiceOffering(AuthenticatedUser actor, DeactivateServiceOfferingCommand command) {
+        if (command == null) {
+            throw new ValidationException("deactivate service offering command is required");
+        }
         actor.requireAdmin();
-        requireDeactivateServiceOfferingCommand(command);
         assertHotelExists(command.hotelId());
         var serviceOffering = loadServiceOffering(command.serviceOfferingId());
         assertServiceOfferingBelongsToHotel(serviceOffering, command.hotelId());
@@ -312,117 +330,6 @@ public class HotelAdministrationService implements HotelAdministrationFacade {
                 String.valueOf(deactivatedServiceOffering.id()),
                 "Service offering deactivated"
         );
-    }
-
-    private void requireCreateCommand(CreateHotelCommand command) {
-        if (command == null) {
-            throw new ValidationException("create hotel command is required");
-        }
-        if (command.hotelId() == null) {
-            throw new ValidationException("hotelId is required");
-        }
-    }
-
-    private void requireUpdateCommand(UpdateHotelCommand command) {
-        if (command == null) {
-            throw new ValidationException("update hotel command is required");
-        }
-        if (command.hotelId() == null) {
-            throw new ValidationException("hotelId is required");
-        }
-    }
-
-    private void requireCreateRoomTypeCommand(CreateRoomTypeCommand command) {
-        if (command == null) {
-            throw new ValidationException("create room type command is required");
-        }
-        if (command.roomTypeId() == null) {
-            throw new ValidationException("roomTypeId is required");
-        }
-        if (command.hotelId() == null) {
-            throw new ValidationException("hotelId is required");
-        }
-    }
-
-    private void requireUpdateRoomTypeCommand(UpdateRoomTypeCommand command) {
-        if (command == null) {
-            throw new ValidationException("update room type command is required");
-        }
-        if (command.roomTypeId() == null) {
-            throw new ValidationException("roomTypeId is required");
-        }
-    }
-
-    private void requireCreateRoomCommand(CreateRoomCommand command) {
-        if (command == null) {
-            throw new ValidationException("create room command is required");
-        }
-        if (command.roomId() == null) {
-            throw new ValidationException("roomId is required");
-        }
-        if (command.hotelId() == null) {
-            throw new ValidationException("hotelId is required");
-        }
-        if (command.roomTypeId() == null) {
-            throw new ValidationException("roomTypeId is required");
-        }
-        if (command.status() == null) {
-            throw new ValidationException("roomStatus is required");
-        }
-    }
-
-    private void requireUpdateRoomCommand(UpdateRoomCommand command) {
-        if (command == null) {
-            throw new ValidationException("update room command is required");
-        }
-        if (command.roomId() == null) {
-            throw new ValidationException("roomId is required");
-        }
-        if (command.hotelId() == null) {
-            throw new ValidationException("hotelId is required");
-        }
-        if (command.roomTypeId() == null) {
-            throw new ValidationException("roomTypeId is required");
-        }
-        if (command.status() == null) {
-            throw new ValidationException("roomStatus is required");
-        }
-    }
-
-    private void requireCreateServiceOfferingCommand(CreateServiceOfferingCommand command) {
-        if (command == null) {
-            throw new ValidationException("create service offering command is required");
-        }
-        if (command.hotelId() == null) {
-            throw new ValidationException("hotelId is required");
-        }
-        if (command.serviceOfferingId() == null) {
-            throw new ValidationException("serviceOfferingId is required");
-        }
-    }
-
-    private void requireUpdateServiceOfferingCommand(UpdateServiceOfferingCommand command) {
-        if (command == null) {
-            throw new ValidationException("update service offering command is required");
-        }
-        if (command.hotelId() == null) {
-            throw new ValidationException("hotelId is required");
-        }
-        if (command.serviceOfferingId() == null) {
-            throw new ValidationException("serviceOfferingId is required");
-        }
-    }
-
-    private void requireDeactivateServiceOfferingCommand(DeactivateServiceOfferingCommand command) {
-        if (command == null) {
-            throw new ValidationException("deactivate service offering command is required");
-        }
-        if (command.hotelId() == null) {
-            throw new ValidationException("hotelId is required");
-        }
-        if (command.serviceOfferingId() == null) {
-            throw new ValidationException("serviceOfferingId is required");
-        }
     }
 
     private HotelPolicy hotelPolicy(

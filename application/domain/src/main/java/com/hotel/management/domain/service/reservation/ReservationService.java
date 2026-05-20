@@ -63,14 +63,18 @@ public class ReservationService implements ReservationFacade {
 
     @Override
     public CreateReservationResult createReservation(AuthenticatedUser actor, CreateReservationCommand command) {
-        requireCommand(command);
+        if (command == null) {
+            throw new ValidationException("reservation command is required");
+        }
         Long guestId = actor.requireGuestId();
         return createResolvedReservation(ResolvedCreateReservationCommand.from(command, guestId), actor);
     }
 
     @Override
     public CreateReservationResult createPublicReservation(CreatePublicReservationCommand command) {
-        requireCommand(command);
+        if (command == null) {
+            throw new ValidationException("reservation command is required");
+        }
         Guest guest = findOrCreateGuest(command.guestContact());
         var actor = new AuthenticatedUser("public:" + guest.id(), Set.of("PUBLIC"), guest.id());
         return createResolvedReservation(
@@ -81,7 +85,9 @@ public class ReservationService implements ReservationFacade {
 
     @Override
     public CreateReservationResult createStaffReservation(AuthenticatedUser actor, CreateStaffReservationCommand command) {
-        requireCommand(command);
+        if (command == null) {
+            throw new ValidationException("reservation command is required");
+        }
         actor.requireStaffOrAdmin();
         Long guestId = resolveStaffBookingGuestId(command);
         return createResolvedReservation(
@@ -241,12 +247,6 @@ public class ReservationService implements ReservationFacade {
     ) {
         String value = trimToNull(command.contactPhone());
         return value == null ? creationDetails.guest().phone() : value;
-    }
-
-    private void requireCommand(Object command) {
-        if (command == null) {
-            throw new ValidationException("reservation command is required");
-        }
     }
 
     private void validateLimit(int limit) {
