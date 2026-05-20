@@ -11,6 +11,7 @@ import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.GuestComposition;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.shared.value.PetDetails;
+import com.hotel.management.domain.shared.value.StayingGuest;
 import com.hotel.management.jpa.shared.JsonColumnCodec;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
@@ -45,6 +46,7 @@ public class JpaReservationRepositoryAdapter implements ReservationRepository {
         entity.setCheckOut(reservation.checkOut());
         entity.setAdultsCount(reservation.accommodationParty().guests().adults());
         entity.setChildrenAgesJson(JsonColumnCodec.write(reservation.accommodationParty().guests().childrenAges()));
+        entity.setStayingGuestsJson(JsonColumnCodec.write(reservation.accommodationParty().stayingGuests()));
         entity.setPetsJson(JsonColumnCodec.write(reservation.accommodationParty().pets()));
         entity.setContactEmail(reservation.contactEmail() == null ? null : reservation.contactEmail().value());
         entity.setContactPhone(reservation.contactPhone());
@@ -133,7 +135,8 @@ public class JpaReservationRepositoryAdapter implements ReservationRepository {
                         entity.getAdultsCount(),
                         JsonColumnCodec.read(entity.getChildrenAgesJson(), new TypeReference<List<Integer>>() { }, List.of())
                 ),
-                JsonColumnCodec.read(entity.getPetsJson(), new TypeReference<List<PetDetails>>() { }, List.of())
+                JsonColumnCodec.read(entity.getPetsJson(), new TypeReference<List<PetDetails>>() { }, List.of()),
+                JsonColumnCodec.read(entity.getStayingGuestsJson(), new TypeReference<List<StayingGuest>>() { }, List.of())
         );
     }
 

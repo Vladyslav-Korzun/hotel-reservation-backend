@@ -91,6 +91,8 @@ class CreateReservationFlowIntegrationTest {
                         .content(reservationRequest(1L, 2L, futureCheckIn(), futureCheckOut(), 2)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.stayingGuests.length()").value(2))
+                .andExpect(jsonPath("$.adults").value(2))
                 .andExpect(jsonPath("$.createdBy").value("guest-demo"))
                 .andReturn();
 
@@ -100,12 +102,14 @@ class CreateReservationFlowIntegrationTest {
         assertThat(savedReservation.getHotelId()).isEqualTo(1L);
         assertThat(savedReservation.getCreatedBy()).isEqualTo("guest-demo");
         assertThat(savedReservation.getAdultsCount()).isEqualTo(2);
+        assertThat(savedReservation.getStayingGuestsJson()).contains("Guest1");
 
         mockMvc.perform(get("/reservations/{reservationId}", savedReservation.getId())
                         .with(jwtFor("guest-demo", "GUEST", 10L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reservationId").value(savedReservation.getId()))
                 .andExpect(jsonPath("$.hotelId").value(1))
+                .andExpect(jsonPath("$.stayingGuests.length()").value(2))
                 .andExpect(jsonPath("$.status").value("PENDING"));
 
         mockMvc.perform(post("/reservations/{reservationId}/cancel", savedReservation.getId())
@@ -150,9 +154,9 @@ class CreateReservationFlowIntegrationTest {
                                   "phone": "+421900000099",
                                   "checkIn": "%s",
                                   "checkOut": "%s",
-                                  "adults": 2
+                                  "stayingGuests": %s
                                 }
-                                """.formatted(futureCheckIn(), futureCheckOut())))
+                                """.formatted(futureCheckIn(), futureCheckOut(), stayingGuests(2))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.guestId").isNumber())
@@ -180,9 +184,9 @@ class CreateReservationFlowIntegrationTest {
                                   "phone": "+421900000098",
                                   "checkIn": "%s",
                                   "checkOut": "%s",
-                                  "adults": 2
+                                  "stayingGuests": %s
                                 }
-                                """.formatted(futureCheckIn(), futureCheckOut())))
+                                """.formatted(futureCheckIn(), futureCheckOut(), stayingGuests(2))))
                 .andExpect(status().isConflict());
     }
 
@@ -198,9 +202,9 @@ class CreateReservationFlowIntegrationTest {
                                   "guestId": 10,
                                   "checkIn": "%s",
                                   "checkOut": "%s",
-                                  "adults": 2
+                                  "stayingGuests": %s
                                 }
-                                """.formatted(futureCheckIn(), futureCheckOut())))
+                                """.formatted(futureCheckIn(), futureCheckOut(), stayingGuests(2))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.guestId").value(10))
                 .andExpect(jsonPath("$.createdBy").value("staff-user"));
@@ -272,9 +276,9 @@ class CreateReservationFlowIntegrationTest {
                                   "roomTypeId": 2,
                                   "checkIn": "%s",
                                   "checkOut": "%s",
-                                  "adults": 2
+                                  "stayingGuests": %s
                                 }
-                                """.formatted(checkIn, checkOut)))
+                                """.formatted(checkIn, checkOut, stayingGuests(2))))
                 .andExpect(status().isCreated());
 
         flushAndClear();
@@ -476,9 +480,27 @@ class CreateReservationFlowIntegrationTest {
                   "roomTypeId": %d,
                   "checkIn": "%s",
                   "checkOut": "%s",
-                  "adults": %d
+                  "stayingGuests": %s
                 }
-                """.formatted(hotelId, roomTypeId, checkIn, checkOut, adults);
+                """.formatted(hotelId, roomTypeId, checkIn, checkOut, stayingGuests(adults));
+    }
+
+    private static String stayingGuests(int adults) {
+        var guests = new StringBuilder("[");
+        for (int index = 1; index <= adults; index++) {
+            if (index > 1) {
+                guests.append(",");
+            }
+            guests.append("""
+                    {
+                      "firstName": "Guest%s",
+                      "lastName": "Tester",
+                      "age": %d,
+                      "gender": "OTHER"
+                    }
+                    """.formatted(index, 20 + index));
+        }
+        return guests.append("]").toString();
     }
 
     private static JpaHotelEntity hotel(Long id, String name, String city) {

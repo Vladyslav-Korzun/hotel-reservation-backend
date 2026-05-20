@@ -778,8 +778,19 @@ paths:
                   roomTypeId: 1102
                   checkIn: '2026-05-10'
                   checkOut: '2026-05-12'
-                  adults: 2
-                  childrenAges: [7, 1]
+                  stayingGuests:
+                    - firstName: Vladyslav
+                      lastName: Korzun
+                      age: 22
+                      gender: MALE
+                    - firstName: Anna
+                      lastName: Korzun
+                      age: 7
+                      gender: FEMALE
+                    - firstName: Mia
+                      lastName: Korzun
+                      age: 1
+                      gender: FEMALE
                   pets:
                     - type: DOG
                       size: SMALL
@@ -833,8 +844,15 @@ paths:
                   phone: '+421900000011'
                   checkIn: '2026-05-10'
                   checkOut: '2026-05-12'
-                  adults: 2
-                  childrenAges: [7]
+                  stayingGuests:
+                    - firstName: Anna
+                      lastName: Tester
+                      age: 32
+                      gender: FEMALE
+                    - firstName: Mia
+                      lastName: Tester
+                      age: 7
+                      gender: FEMALE
       responses:
         '201':
           description: Reservation created
@@ -951,7 +969,15 @@ paths:
                   guestId: 11
                   checkIn: '2026-05-10'
                   checkOut: '2026-05-12'
-                  adults: 2
+                  stayingGuests:
+                    - firstName: John
+                      lastName: Smith
+                      age: 34
+                      gender: MALE
+                    - firstName: Jane
+                      lastName: Smith
+                      age: 32
+                      gender: FEMALE
       responses:
         '201':
           description: Reservation created
@@ -1209,18 +1235,18 @@ components:
           enum: [ACTIVE, INACTIVE, UNDER_MAINTENANCE]
         childrenAllowed:
           type: boolean
-          description: Whether this hotel accepts children and infants. If false, childrenAges must be empty when searching or creating a reservation.
+          description: Whether this hotel accepts children and infants. If false, minors are not allowed when searching or creating a reservation.
         petsAllowed:
           type: boolean
         infantMaxAge:
           type: integer
-          description: Inclusive maximum age classified as an infant for this hotel. Infants are submitted inside childrenAges.
+          description: Inclusive maximum age classified as an infant for this hotel. Infant ages are supplied in childrenAges for search and derived from stayingGuests for reservation creation.
         childMaxAge:
           type: integer
           description: Inclusive maximum age that counts as a child for this hotel. Older minors from adultEquivalentAge count against adult occupancy instead.
         adultEquivalentAge:
           type: integer
-          description: Inclusive age from which a minor submitted in childrenAges counts as an adult for occupancy limits. Must be less than 18.
+          description: Inclusive age from which a minor counts as an adult for occupancy limits. Must be less than 18.
     HotelServiceOfferingResponse:
       type: object
       required:
@@ -1290,13 +1316,13 @@ components:
           enum: [ACTIVE, INACTIVE, UNDER_MAINTENANCE]
         childrenAllowed:
           type: boolean
-          description: Whether this hotel accepts children and infants. If false, childrenAges must be empty when searching or creating a reservation.
+          description: Whether this hotel accepts children and infants. If false, minors are not allowed when searching or creating a reservation.
         petsAllowed:
           type: boolean
         infantMaxAge:
           type: integer
           minimum: 0
-          description: Inclusive maximum age classified as an infant for this hotel. Infants are submitted inside childrenAges.
+          description: Inclusive maximum age classified as an infant for this hotel. Infant ages are supplied in childrenAges for search and derived from stayingGuests for reservation creation.
         childMaxAge:
           type: integer
           minimum: 0
@@ -1305,7 +1331,7 @@ components:
           type: integer
           minimum: 1
           maximum: 17
-          description: Inclusive age from which a minor submitted in childrenAges counts as an adult for occupancy limits. Must be greater than infantMaxAge.
+          description: Inclusive age from which a minor counts as an adult for occupancy limits. Must be greater than infantMaxAge.
     UpdateHotelRequest:
       type: object
       required:
@@ -1340,13 +1366,13 @@ components:
           enum: [ACTIVE, INACTIVE, UNDER_MAINTENANCE]
         childrenAllowed:
           type: boolean
-          description: Whether this hotel accepts children and infants. If false, childrenAges must be empty when searching or creating a reservation.
+          description: Whether this hotel accepts children and infants. If false, minors are not allowed when searching or creating a reservation.
         petsAllowed:
           type: boolean
         infantMaxAge:
           type: integer
           minimum: 0
-          description: Inclusive maximum age classified as an infant for this hotel. Infants are submitted inside childrenAges.
+          description: Inclusive maximum age classified as an infant for this hotel. Infant ages are supplied in childrenAges for search and derived from stayingGuests for reservation creation.
         childMaxAge:
           type: integer
           minimum: 0
@@ -1355,7 +1381,7 @@ components:
           type: integer
           minimum: 1
           maximum: 17
-          description: Inclusive age from which a minor submitted in childrenAges counts as an adult for occupancy limits. Must be greater than infantMaxAge.
+          description: Inclusive age from which a minor counts as an adult for occupancy limits. Must be greater than infantMaxAge.
     RoomAmenityCode:
       type: string
       enum:
@@ -1408,7 +1434,7 @@ components:
           description: Maximum number of non-infant children allowed for this room type.
         maxInfants:
           type: integer
-          description: Maximum number of infants allowed for this room type. Infants are classified from childrenAges using the hotel's infantMaxAge.
+          description: Maximum number of infants allowed for this room type. Infants are classified from search childrenAges or reservation stayingGuests using the hotel's infantMaxAge.
         maxTotalGuests:
           type: integer
           description: Maximum occupancy counted as adults, adult-equivalent minors, and non-infant children. Infants are limited separately by maxInfants.
@@ -1487,7 +1513,7 @@ components:
         maxInfants:
           type: integer
           minimum: 0
-          description: Maximum number of infants allowed for this room type. Infants are classified from childrenAges using the hotel's infantMaxAge.
+          description: Maximum number of infants allowed for this room type. Infants are classified from search childrenAges or reservation stayingGuests using the hotel's infantMaxAge.
         maxTotalGuests:
           type: integer
           minimum: 1
@@ -1563,7 +1589,7 @@ components:
         maxInfants:
           type: integer
           minimum: 0
-          description: Maximum number of infants allowed for this room type. Infants are classified from childrenAges using the hotel's infantMaxAge.
+          description: Maximum number of infants allowed for this room type. Infants are classified from search childrenAges or reservation stayingGuests using the hotel's infantMaxAge.
         maxTotalGuests:
           type: integer
           minimum: 1
@@ -1741,6 +1767,27 @@ components:
           type: boolean
         availabilityRule:
           type: string
+    StayingGuest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - age
+        - gender
+      properties:
+        firstName:
+          type: string
+          maxLength: 120
+        lastName:
+          type: string
+          maxLength: 120
+        age:
+          type: integer
+          minimum: 0
+          maximum: 130
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
     BookingPet:
       type: object
       required:
@@ -1795,7 +1842,7 @@ components:
         - roomTypeId
         - checkIn
         - checkOut
-        - adults
+        - stayingGuests
       properties:
         hotelId:
           type: integer
@@ -1809,15 +1856,12 @@ components:
         checkOut:
           type: string
           format: date
-        adults:
-          type: integer
-          minimum: 1
-        childrenAges:
+        stayingGuests:
           type: array
-          description: Ages of all accompanying minors, including infants. The backend classifies each age using the selected hotel's infantMaxAge, childMaxAge, and adultEquivalentAge; infants count against maxInfants, children count against maxChildren, and adult-equivalent minors count against maxAdults/maxTotalGuests.
+          description: People staying in this reservation. Backend derives adults and childrenAges from this list.
+          minItems: 1
           items:
-            type: integer
-            minimum: 0
+            $ref: '#/components/schemas/StayingGuest'
         pets:
           type: array
           items:
@@ -1852,7 +1896,7 @@ components:
         - phone
         - checkIn
         - checkOut
-        - adults
+        - stayingGuests
       properties:
         hotelId:
           type: integer
@@ -1862,8 +1906,10 @@ components:
           format: int64
         firstName:
           type: string
+          description: Contact/profile first name for creating or finding the Guest profile. Staying people are sent in stayingGuests.
         lastName:
           type: string
+          description: Contact/profile last name for creating or finding the Guest profile. Staying people are sent in stayingGuests.
         email:
           type: string
           format: email
@@ -1875,15 +1921,12 @@ components:
         checkOut:
           type: string
           format: date
-        adults:
-          type: integer
-          minimum: 1
-        childrenAges:
+        stayingGuests:
           type: array
-          description: Ages of all accompanying minors, including infants. The backend classifies each age using the selected hotel's infantMaxAge, childMaxAge, and adultEquivalentAge; infants count against maxInfants, children count against maxChildren, and adult-equivalent minors count against maxAdults/maxTotalGuests.
+          description: People staying in this reservation. Backend derives adults and childrenAges from this list.
+          minItems: 1
           items:
-            type: integer
-            minimum: 0
+            $ref: '#/components/schemas/StayingGuest'
         pets:
           type: array
           items:
@@ -1899,7 +1942,7 @@ components:
         - roomTypeId
         - checkIn
         - checkOut
-        - adults
+        - stayingGuests
       properties:
         hotelId:
           type: integer
@@ -1930,15 +1973,12 @@ components:
         checkOut:
           type: string
           format: date
-        adults:
-          type: integer
-          minimum: 1
-        childrenAges:
+        stayingGuests:
           type: array
-          description: Ages of all accompanying minors, including infants. The backend classifies each age using the selected hotel's infantMaxAge, childMaxAge, and adultEquivalentAge; infants count against maxInfants, children count against maxChildren, and adult-equivalent minors count against maxAdults/maxTotalGuests.
+          description: People staying in this reservation. Backend derives adults and childrenAges from this list.
+          minItems: 1
           items:
-            type: integer
-            minimum: 0
+            $ref: '#/components/schemas/StayingGuest'
         pets:
           type: array
           items:
@@ -1973,6 +2013,7 @@ components:
         - checkOut
         - adults
         - childrenAges
+        - stayingGuests
         - pets
         - status
         - createdAt
@@ -2003,9 +2044,14 @@ components:
           type: integer
         childrenAges:
           type: array
-          description: Ages of all accompanying minors exactly as submitted, including infants. Infant/child classification is derived from the hotel's age policy.
+          description: Derived ages of all accompanying minors, including infants. For new reservations this is derived from stayingGuests.
           items:
             type: integer
+        stayingGuests:
+          type: array
+          description: People staying in this reservation. Empty for legacy reservations created before this field existed.
+          items:
+            $ref: '#/components/schemas/StayingGuest'
         pets:
           type: array
           items:

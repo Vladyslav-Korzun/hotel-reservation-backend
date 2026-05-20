@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 022-add-reservation-staying-guests
+      author: Vladyslav Korzun
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - columnExists:
+                tableName: reservations
+                columnName: staying_guests_json
+      changes:
+        - addColumn:
+            tableName: reservations
+            columns:
+              - column:
+                  name: staying_guests_json
+                  type: varchar(4000)
+                  defaultValue: "[]"
+                  constraints:
+                    nullable: false

@@ -8,9 +8,10 @@ import com.hotel.management.api.dto.ReservationResponse;
 import com.hotel.management.api.dto.ReservationServiceItemResponse;
 import com.hotel.management.api.dto.ReservationServiceSelection;
 import com.hotel.management.api.dto.StaffCreateReservationRequest;
+import com.hotel.management.api.dto.StayingGuest;
 import com.hotel.management.domain.serviceoffering.ServiceOfferingSelection;
 import com.hotel.management.domain.shared.value.AccommodationParty;
-import com.hotel.management.domain.shared.value.GuestComposition;
+import com.hotel.management.domain.shared.value.GuestGender;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.shared.value.PetDetails;
 import com.hotel.management.domain.shared.value.PetSize;
@@ -39,7 +40,7 @@ public class ReservationMapper {
                 request.getRoomTypeId(),
                 request.getCheckIn(),
                 request.getCheckOut(),
-                toAccommodationParty(request.getAdults(), request.getChildrenAges(), request.getPets()),
+                toAccommodationParty(request.getStayingGuests(), request.getPets()),
                 request.getContactEmail(),
                 request.getContactPhone(),
                 request.getSpecialRequests(),
@@ -53,7 +54,7 @@ public class ReservationMapper {
                 request.getRoomTypeId(),
                 request.getCheckIn(),
                 request.getCheckOut(),
-                toAccommodationParty(request.getAdults(), request.getChildrenAges(), request.getPets()),
+                toAccommodationParty(request.getStayingGuests(), request.getPets()),
                 toServiceOfferingSelections(request.getServiceOfferings()),
                 new GuestContactCommand(
                         request.getFirstName(),
@@ -77,7 +78,7 @@ public class ReservationMapper {
                 ),
                 request.getCheckIn(),
                 request.getCheckOut(),
-                toAccommodationParty(request.getAdults(), request.getChildrenAges(), request.getPets()),
+                toAccommodationParty(request.getStayingGuests(), request.getPets()),
                 toServiceOfferingSelections(request.getServiceOfferings())
         );
     }
@@ -93,6 +94,7 @@ public class ReservationMapper {
                 .checkOut(result.checkOut())
                 .adults(result.adults())
                 .childrenAges(result.childrenAges())
+                .stayingGuests(toStayingGuests(result.stayingGuests()))
                 .pets(toPets(result.pets()))
                 .contactEmail(result.contactEmail())
                 .contactPhone(result.contactPhone())
@@ -141,6 +143,7 @@ public class ReservationMapper {
                 .checkOut(result.checkOut())
                 .adults(result.adults())
                 .childrenAges(result.childrenAges())
+                .stayingGuests(toStayingGuests(result.stayingGuests()))
                 .pets(toPets(result.pets()))
                 .contactEmail(result.contactEmail())
                 .contactPhone(result.contactPhone())
@@ -170,6 +173,7 @@ public class ReservationMapper {
                 .checkOut(result.checkOut())
                 .adults(result.adults())
                 .childrenAges(result.childrenAges())
+                .stayingGuests(toStayingGuests(result.stayingGuests()))
                 .pets(toPets(result.pets()))
                 .contactEmail(result.contactEmail())
                 .contactPhone(result.contactPhone())
@@ -199,6 +203,7 @@ public class ReservationMapper {
                 .checkOut(result.checkOut())
                 .adults(result.adults())
                 .childrenAges(result.childrenAges())
+                .stayingGuests(toStayingGuests(result.stayingGuests()))
                 .pets(toPets(result.pets()))
                 .contactEmail(result.contactEmail())
                 .contactPhone(result.contactPhone())
@@ -218,11 +223,8 @@ public class ReservationMapper {
                 .createdBy(result.createdBy());
     }
 
-    private AccommodationParty toAccommodationParty(int adults, List<Integer> childrenAges, List<BookingPet> pets) {
-        return new AccommodationParty(
-                new GuestComposition(adults, childrenAges),
-                toPetDetails(pets)
-        );
+    private AccommodationParty toAccommodationParty(List<StayingGuest> stayingGuests, List<BookingPet> pets) {
+        return AccommodationParty.fromStayingGuests(toDomainStayingGuests(stayingGuests), toPetDetails(pets));
     }
 
     private GuestContactCommand optionalGuestContact(String firstName, String lastName, String email, String phone) {
@@ -255,6 +257,38 @@ public class ReservationMapper {
                         PetSize.valueOf(pet.getSize().getValue()),
                         pet.getWeightKg()
                 ))
+                .toList();
+    }
+
+    private List<com.hotel.management.domain.shared.value.StayingGuest> toDomainStayingGuests(List<StayingGuest> value) {
+        if (value == null) {
+            return List.of();
+        }
+        return value.stream()
+                .map(guest -> guest == null ? null : new com.hotel.management.domain.shared.value.StayingGuest(
+                                guest.getFirstName(),
+                                guest.getLastName(),
+                                guest.getAge(),
+                                toGuestGender(guest.getGender())
+                        )
+                )
+                .toList();
+    }
+
+    private GuestGender toGuestGender(StayingGuest.GenderEnum value) {
+        return value == null ? null : GuestGender.valueOf(value.getValue());
+    }
+
+    private List<StayingGuest> toStayingGuests(List<com.hotel.management.domain.shared.value.StayingGuest> value) {
+        if (value == null) {
+            return List.of();
+        }
+        return value.stream()
+                .map(guest -> new StayingGuest()
+                        .firstName(guest.firstName())
+                        .lastName(guest.lastName())
+                        .age(guest.age())
+                        .gender(StayingGuest.GenderEnum.fromValue(guest.gender().name())))
                 .toList();
     }
 

@@ -41,6 +41,9 @@ public class JpaReservationEntity {
     @Column(name = "children_ages_json", nullable = false, length = 2000)
     private String childrenAgesJson;
 
+    @Column(name = "staying_guests_json", nullable = false, length = 4000)
+    private String stayingGuestsJson;
+
     @Column(name = "pets_json", nullable = false, length = 4000)
     private String petsJson;
 
@@ -159,6 +162,14 @@ public class JpaReservationEntity {
 
     public void setChildrenAgesJson(String childrenAgesJson) {
         this.childrenAgesJson = childrenAgesJson;
+    }
+
+    public String getStayingGuestsJson() {
+        return stayingGuestsJson;
+    }
+
+    public void setStayingGuestsJson(String stayingGuestsJson) {
+        this.stayingGuestsJson = stayingGuestsJson;
     }
 
     public String getPetsJson() {

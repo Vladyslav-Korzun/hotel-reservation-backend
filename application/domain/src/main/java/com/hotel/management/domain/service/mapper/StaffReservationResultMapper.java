@@ -17,6 +17,7 @@ public class StaffReservationResultMapper {
                 reservation.checkOut(),
                 reservation.accommodationParty().guests().adults(),
                 reservation.accommodationParty().guests().childrenAges(),
+                reservation.accommodationParty().stayingGuests(),
                 reservation.accommodationParty().pets(),
                 reservation.contactEmail() == null ? null : reservation.contactEmail().value(),
                 reservation.contactPhone(),

@@ -10,6 +10,7 @@ import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.GuestComposition;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.shared.value.PetDetails;
+import com.hotel.management.domain.shared.value.StayingGuest;
 import com.hotel.management.jpa.shared.JsonColumnCodec;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +47,8 @@ public class JpaReservationLockAdapter implements ReservationLockPort {
                                 entity.getAdultsCount(),
                                 JsonColumnCodec.read(entity.getChildrenAgesJson(), new TypeReference<List<Integer>>() { }, List.of())
                         ),
-                        JsonColumnCodec.read(entity.getPetsJson(), new TypeReference<List<PetDetails>>() { }, List.of())
+                        JsonColumnCodec.read(entity.getPetsJson(), new TypeReference<List<PetDetails>>() { }, List.of()),
+                        JsonColumnCodec.read(entity.getStayingGuestsJson(), new TypeReference<List<StayingGuest>>() { }, List.of())
                 ),
                 toEmailAddress(entity.getContactEmail()),
                 entity.getContactPhone(),

@@ -25,9 +25,11 @@ import com.hotel.management.domain.room.RoomTypeRepository;
 import com.hotel.management.domain.serviceoffering.ServiceOffering;
 import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.shared.value.AccommodationParty;
+import com.hotel.management.domain.shared.value.GuestGender;
 import com.hotel.management.domain.shared.value.EmailAddress;
 import com.hotel.management.domain.shared.value.GuestComposition;
 import com.hotel.management.domain.shared.value.Money;
+import com.hotel.management.domain.shared.value.StayingGuest;
 import com.hotel.management.domain.stay.Stay;
 import com.hotel.management.domain.stay.StayRepository;
 import com.hotel.management.domain.stay.StayStatus;
@@ -168,7 +170,14 @@ class JpaRepositoryAdapterIntegrationTest {
                 10L,
                 LocalDate.of(2026, 6, 1),
                 LocalDate.of(2026, 6, 3),
-                new AccommodationParty(new GuestComposition(2, List.of(7)), List.of()),
+                AccommodationParty.fromStayingGuests(
+                        List.of(
+                                new StayingGuest("John", "Smith", 34, GuestGender.MALE),
+                                new StayingGuest("Anna", "Smith", 32, GuestGender.FEMALE),
+                                new StayingGuest("Mia", "Smith", 7, GuestGender.FEMALE)
+                        ),
+                        List.of()
+                ),
                 new ReservationPriceSnapshot(
                         Money.of("200.00", "EUR"),
                         Money.of("30.00", "EUR"),
@@ -194,6 +203,9 @@ class JpaRepositoryAdapterIntegrationTest {
         var saved = reservationRepository.findById("reservation-1").orElseThrow();
         assertThat(saved.hotelId()).isEqualTo(1L);
         assertThat(saved.accommodationParty().guests().childrenAges()).containsExactly(7);
+        assertThat(saved.accommodationParty().stayingGuests())
+                .extracting(StayingGuest::firstName)
+                .containsExactly("John", "Anna", "Mia");
         assertThat(saved.basePrice().amount()).isEqualByComparingTo("200.00");
         assertThat(saved.servicesPrice().amount()).isEqualByComparingTo("30.00");
         assertThat(saved.finalPrice().amount()).isEqualByComparingTo("230.00");

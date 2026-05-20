@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -47,5 +48,31 @@ class CoreValueObjectTest {
         assertEquals(Money.of("150.00", "EUR"), base.plus(Money.of("50.00", "EUR")));
         assertEquals(Money.of("12.50", "EUR"), Money.of(new BigDecimal("12.50"), "EUR"));
         assertThrows(ValidationException.class, () -> base.plus(Money.of("50.00", "USD")));
+    }
+
+    @Test
+    void shouldDeriveGuestCompositionFromStayingGuests() {
+        AccommodationParty party = AccommodationParty.fromStayingGuests(
+                List.of(
+                        new StayingGuest("John", "Smith", 34, GuestGender.MALE),
+                        new StayingGuest("Anna", "Smith", 12, GuestGender.FEMALE),
+                        new StayingGuest("Mia", "Smith", 1, GuestGender.FEMALE)
+                ),
+                List.of()
+        );
+
+        assertEquals(1, party.guests().adults());
+        assertEquals(List.of(12, 1), party.guests().childrenAges());
+        assertEquals(3, party.stayingGuests().size());
+    }
+
+    @Test
+    void shouldValidateStayingGuests() {
+        assertThrows(ValidationException.class, () -> AccommodationParty.fromStayingGuests(List.of(), List.of()));
+        assertThrows(ValidationException.class, () -> AccommodationParty.fromStayingGuests(
+                List.of(new StayingGuest("Anna", "Smith", 12, GuestGender.FEMALE)),
+                List.of()
+        ));
+        assertThrows(ValidationException.class, () -> new StayingGuest("John", "Smith", null, GuestGender.MALE));
     }
 }

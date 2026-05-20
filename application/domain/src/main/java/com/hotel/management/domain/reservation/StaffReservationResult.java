@@ -7,6 +7,7 @@ import java.util.List;
 import com.hotel.management.domain.shared.value.PetDetails;
 import com.hotel.management.domain.shared.value.Money;
 import com.hotel.management.domain.reservation.ReservationServiceItemResult;
+import com.hotel.management.domain.shared.value.StayingGuest;
 
 public record StaffReservationResult(
         String reservationId,
@@ -18,6 +19,7 @@ public record StaffReservationResult(
         LocalDate checkOut,
         int adults,
         List<Integer> childrenAges,
+        List<StayingGuest> stayingGuests,
         List<PetDetails> pets,
         String contactEmail,
         String contactPhone,

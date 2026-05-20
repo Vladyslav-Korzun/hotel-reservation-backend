@@ -39,3 +39,5 @@ databaseChangeLog:
       file: db/changelog/changes/020-add-room-type-features.yaml
   - include:
       file: db/changelog/changes/021-add-reservation-contact-fields.yaml
+  - include:
+      file: db/changelog/changes/022-add-reservation-staying-guests.yaml
