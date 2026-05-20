@@ -8,8 +8,14 @@ import com.hotel.management.domain.room.RoomTypeFactory;
 import com.hotel.management.domain.room.RoomTypeRepository;
 import com.hotel.management.domain.serviceoffering.ServiceOfferingFactory;
 import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
-import com.hotel.management.domain.service.hotel.HotelAdministrationFacade;
-import com.hotel.management.domain.service.hotel.HotelAdministrationService;
+import com.hotel.management.domain.service.hotel.HotelFacade;
+import com.hotel.management.domain.service.hotel.HotelService;
+import com.hotel.management.domain.service.hotel.RoomAdministrationFacade;
+import com.hotel.management.domain.service.hotel.RoomAdministrationService;
+import com.hotel.management.domain.service.hotel.RoomTypeFacade;
+import com.hotel.management.domain.service.hotel.RoomTypeService;
+import com.hotel.management.domain.service.hotel.ServiceOfferingFacade;
+import com.hotel.management.domain.service.hotel.ServiceOfferingService;
 import com.hotel.management.domain.service.mapper.HotelQueryResultMapper;
 import com.hotel.management.domain.audit.AuditTrail;
 import org.springframework.context.annotation.Bean;
@@ -39,30 +45,74 @@ public class HotelAdministrationBeanConfiguration {
     }
 
     @Bean
-    HotelAdministrationFacade hotelAdministrationFacade(
+    HotelFacade hotelFacade(
             HotelRepository hotelRepository,
-            RoomTypeRepository roomTypeRepository,
-            RoomRepository roomRepository,
-            ServiceOfferingRepository serviceOfferingRepository,
             AuditTrail auditTrail,
             HotelFactory hotelFactory,
+            HotelQueryResultMapper hotelQueryResultMapper
+    ) {
+        var service = new HotelService(
+                hotelRepository,
+                hotelFactory,
+                auditTrail,
+                hotelQueryResultMapper
+        );
+        return new TransactionalHotelFacade(service);
+    }
+
+    @Bean
+    RoomTypeFacade roomTypeFacade(
+            RoomTypeRepository roomTypeRepository,
+            HotelRepository hotelRepository,
+            AuditTrail auditTrail,
             RoomTypeFactory roomTypeFactory,
+            HotelQueryResultMapper hotelQueryResultMapper
+    ) {
+        var service = new RoomTypeService(
+                roomTypeRepository,
+                hotelRepository,
+                roomTypeFactory,
+                auditTrail,
+                hotelQueryResultMapper
+        );
+        return new TransactionalRoomTypeFacade(service);
+    }
+
+    @Bean
+    RoomAdministrationFacade roomAdministrationFacade(
+            RoomRepository roomRepository,
+            RoomTypeRepository roomTypeRepository,
+            HotelRepository hotelRepository,
+            AuditTrail auditTrail,
             RoomFactory roomFactory,
+            HotelQueryResultMapper hotelQueryResultMapper
+    ) {
+        var service = new RoomAdministrationService(
+                roomRepository,
+                roomTypeRepository,
+                hotelRepository,
+                roomFactory,
+                auditTrail,
+                hotelQueryResultMapper
+        );
+        return new TransactionalRoomAdministrationFacade(service);
+    }
+
+    @Bean
+    ServiceOfferingFacade serviceOfferingFacade(
+            ServiceOfferingRepository serviceOfferingRepository,
+            HotelRepository hotelRepository,
+            AuditTrail auditTrail,
             ServiceOfferingFactory serviceOfferingFactory,
             HotelQueryResultMapper hotelQueryResultMapper
     ) {
-        var hotelAdministrationService = new HotelAdministrationService(
-                hotelRepository,
-                roomTypeRepository,
-                roomRepository,
+        var service = new ServiceOfferingService(
                 serviceOfferingRepository,
-                auditTrail,
-                hotelFactory,
-                roomTypeFactory,
-                roomFactory,
+                hotelRepository,
                 serviceOfferingFactory,
+                auditTrail,
                 hotelQueryResultMapper
         );
-        return new TransactionalHotelAdministrationFacade(hotelAdministrationService);
+        return new TransactionalServiceOfferingFacade(service);
     }
 }

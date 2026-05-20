@@ -10,7 +10,10 @@ import com.hotel.management.domain.service.hotel.CreateRoomCommand;
 import com.hotel.management.domain.service.hotel.CreateRoomTypeCommand;
 import com.hotel.management.domain.service.hotel.CreateServiceOfferingCommand;
 import com.hotel.management.domain.service.hotel.DeactivateServiceOfferingCommand;
-import com.hotel.management.domain.service.hotel.HotelAdministrationFacade;
+import com.hotel.management.domain.service.hotel.HotelFacade;
+import com.hotel.management.domain.service.hotel.RoomAdministrationFacade;
+import com.hotel.management.domain.service.hotel.RoomTypeFacade;
+import com.hotel.management.domain.service.hotel.ServiceOfferingFacade;
 import com.hotel.management.domain.hotel.HotelResult;
 import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
 import com.hotel.management.domain.room.RoomResult;
@@ -29,11 +32,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class HotelAdministrationControllerTest {
 
-    private final TestHotelAdministrationFacade hotelAdministrationFacade = new TestHotelAdministrationFacade();
+    private final TestHotelFacade hotelFacade = new TestHotelFacade();
     private final TestCurrentUserPort currentUserPort = new TestCurrentUserPort();
     private final TestHotelMapper hotelMapper = new TestHotelMapper();
     private final HotelAdministrationController controller = new HotelAdministrationController(
-            hotelAdministrationFacade,
+            hotelFacade,
+            new TestRoomTypeFacade(),
+            new TestRoomAdministrationFacade(),
+            new TestServiceOfferingFacade(),
             currentUserPort,
             hotelMapper
     );
@@ -49,9 +55,9 @@ class HotelAdministrationControllerTest {
         assertThat(actual.getStatusCode().value()).isEqualTo(201);
         assertThat(actual.getBody()).isSameAs(hotelMapper.hotelResponse);
         assertThat(hotelMapper.createHotelRequest).isSameAs(request);
-        assertThat(hotelAdministrationFacade.createHotelActor).isSameAs(currentUserPort.user);
-        assertThat(hotelAdministrationFacade.createHotelCommand).isSameAs(hotelMapper.createHotelCommand);
-        assertThat(hotelMapper.hotelResult).isSameAs(hotelAdministrationFacade.hotelResult);
+        assertThat(hotelFacade.createHotelActor).isSameAs(currentUserPort.user);
+        assertThat(hotelFacade.createHotelCommand).isSameAs(hotelMapper.createHotelCommand);
+        assertThat(hotelMapper.hotelResult).isSameAs(hotelFacade.hotelResult);
     }
 
     @Test
@@ -66,11 +72,11 @@ class HotelAdministrationControllerTest {
         assertThat(actual.getBody()).isSameAs(hotelMapper.hotelResponse);
         assertThat(hotelMapper.updateHotelId).isEqualTo(1L);
         assertThat(hotelMapper.updateHotelRequest).isSameAs(request);
-        assertThat(hotelAdministrationFacade.updateHotelActor).isSameAs(currentUserPort.user);
-        assertThat(hotelAdministrationFacade.updateHotelCommand).isSameAs(hotelMapper.updateHotelCommand);
+        assertThat(hotelFacade.updateHotelActor).isSameAs(currentUserPort.user);
+        assertThat(hotelFacade.updateHotelCommand).isSameAs(hotelMapper.updateHotelCommand);
     }
 
-    private static final class TestHotelAdministrationFacade implements HotelAdministrationFacade {
+    private static final class TestHotelFacade implements HotelFacade {
 
         private final HotelResult hotelResult = hotelResult();
         private AuthenticatedUser createHotelActor;
@@ -92,6 +98,10 @@ class HotelAdministrationControllerTest {
             return hotelResult;
         }
 
+    }
+
+    private static final class TestRoomTypeFacade implements RoomTypeFacade {
+
         @Override
         public RoomTypeResult createRoomType(AuthenticatedUser actor, CreateRoomTypeCommand command) {
             throw new UnsupportedOperationException();
@@ -101,6 +111,9 @@ class HotelAdministrationControllerTest {
         public RoomTypeResult updateRoomType(AuthenticatedUser actor, UpdateRoomTypeCommand command) {
             throw new UnsupportedOperationException();
         }
+    }
+
+    private static final class TestRoomAdministrationFacade implements RoomAdministrationFacade {
 
         @Override
         public RoomResult createRoom(AuthenticatedUser actor, CreateRoomCommand command) {
@@ -111,6 +124,9 @@ class HotelAdministrationControllerTest {
         public RoomResult updateRoom(AuthenticatedUser actor, UpdateRoomCommand command) {
             throw new UnsupportedOperationException();
         }
+    }
+
+    private static final class TestServiceOfferingFacade implements ServiceOfferingFacade {
 
         @Override
         public HotelServiceOfferingResult createServiceOffering(AuthenticatedUser actor, CreateServiceOfferingCommand command) {
