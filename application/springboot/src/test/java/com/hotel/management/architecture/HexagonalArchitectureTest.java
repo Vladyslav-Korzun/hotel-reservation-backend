@@ -50,6 +50,19 @@ class HexagonalArchitectureTest {
     }
 
     @Test
+    void domain_services_must_receive_authenticated_actor_as_parameter() {
+        ArchRule rule = noClasses()
+                .that().resideInAPackage("com.hotel.management.domain.service..")
+                .and().haveSimpleNameEndingWith("Service")
+                .should().dependOnClassesThat()
+                .haveFullyQualifiedName("com.hotel.management.domain.shared.security.CurrentUserPort")
+                .because("domain services receive the authenticated actor as a method parameter, "
+                        + "not by reaching into a current-user port");
+
+        rule.check(CLASSES);
+    }
+
+    @Test
     void inbound_adapter_must_not_depend_on_outbound_adapter_or_runtime() {
         ArchRule rule = noClasses()
                 .that().resideInAnyPackage(
