@@ -23,6 +23,16 @@ public record Money(BigDecimal amount, Currency currency) {
         return new Money(new BigDecimal(amount), Currency.getInstance(currencyCode));
     }
 
+    public static Money of(BigDecimal amount, String currencyCode) {
+        if (amount == null) {
+            throw new ValidationException("amount is required");
+        }
+        if (currencyCode == null || currencyCode.isBlank()) {
+            throw new ValidationException("currency is required");
+        }
+        return new Money(amount, Currency.getInstance(currencyCode));
+    }
+
     public Money plus(Money other) {
         if (other == null) {
             throw new ValidationException("money is required");

@@ -14,9 +14,6 @@ import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.value.Money;
 
-import java.math.BigDecimal;
-import java.util.Currency;
-
 public class ServiceOfferingService implements ServiceOfferingFacade {
 
     private final ServiceOfferingRepository serviceOfferingRepository;
@@ -56,7 +53,7 @@ public class ServiceOfferingService implements ServiceOfferingFacade {
                 command.code(),
                 command.name(),
                 command.description(),
-                money(command.priceAmount(), command.priceCurrency(), "serviceOfferingPrice"),
+                Money.of(command.priceAmount(), command.priceCurrency()),
                 command.active(),
                 command.availabilityRule()
         );
@@ -85,7 +82,7 @@ public class ServiceOfferingService implements ServiceOfferingFacade {
                 command.code(),
                 command.name(),
                 command.description(),
-                money(command.priceAmount(), command.priceCurrency(), "serviceOfferingPrice"),
+                Money.of(command.priceAmount(), command.priceCurrency()),
                 command.active(),
                 command.availabilityRule()
         );
@@ -136,13 +133,4 @@ public class ServiceOfferingService implements ServiceOfferingFacade {
         }
     }
 
-    private Money money(BigDecimal amount, String currencyCode, String fieldName) {
-        if (amount == null) {
-            throw new ValidationException(fieldName + " amount is required");
-        }
-        if (currencyCode == null || currencyCode.isBlank()) {
-            throw new ValidationException(fieldName + " currency is required");
-        }
-        return new Money(amount, Currency.getInstance(currencyCode));
-    }
 }

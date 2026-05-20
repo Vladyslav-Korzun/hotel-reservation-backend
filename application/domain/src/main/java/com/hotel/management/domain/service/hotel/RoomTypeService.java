@@ -4,9 +4,6 @@ import com.hotel.management.domain.audit.AuditActionType;
 import com.hotel.management.domain.audit.AuditEntityType;
 import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.hotel.HotelRepository;
-import com.hotel.management.domain.room.OccupancyPolicy;
-import com.hotel.management.domain.room.PetPolicy;
-import com.hotel.management.domain.room.RoomTypeFeatures;
 import com.hotel.management.domain.room.RoomTypeFactory;
 import com.hotel.management.domain.room.RoomTypeRepository;
 import com.hotel.management.domain.room.RoomTypeResult;
@@ -14,10 +11,6 @@ import com.hotel.management.domain.service.mapper.HotelQueryResultMapper;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
-import com.hotel.management.domain.shared.value.Money;
-
-import java.math.BigDecimal;
-import java.util.Currency;
 
 public class RoomTypeService implements RoomTypeFacade {
 
@@ -56,11 +49,11 @@ public class RoomTypeService implements RoomTypeFacade {
                 command.roomTypeId(),
                 command.hotelId(),
                 command.name(),
-                occupancyPolicy(command),
-                petPolicy(command),
-                money(command.basePriceAmount(), command.basePriceCurrency(), "basePrice"),
+                RoomTypeCommandAssembler.toOccupancyPolicy(command),
+                RoomTypeCommandAssembler.toPetPolicy(command),
+                RoomTypeCommandAssembler.toBasePrice(command),
                 command.description(),
-                roomTypeFeatures(command)
+                RoomTypeCommandAssembler.toFeatures(command)
         );
         var savedRoomType = roomTypeRepository.save(roomType);
         auditTrail.record(
@@ -85,11 +78,11 @@ public class RoomTypeService implements RoomTypeFacade {
 
         var updatedRoomType = roomType.updateDetails(
                 command.name(),
-                occupancyPolicy(command),
-                petPolicy(command),
-                money(command.basePriceAmount(), command.basePriceCurrency(), "basePrice"),
+                RoomTypeCommandAssembler.toOccupancyPolicy(command),
+                RoomTypeCommandAssembler.toPetPolicy(command),
+                RoomTypeCommandAssembler.toBasePrice(command),
                 command.description(),
-                roomTypeFeatures(command)
+                RoomTypeCommandAssembler.toFeatures(command)
         );
         var savedRoomType = roomTypeRepository.save(updatedRoomType);
         auditTrail.record(
@@ -107,56 +100,4 @@ public class RoomTypeService implements RoomTypeFacade {
                 .orElseThrow(() -> new NotFoundException("Hotel not found: " + hotelId));
     }
 
-    private OccupancyPolicy occupancyPolicy(CreateRoomTypeCommand command) {
-        return new OccupancyPolicy(command.maxAdults(), command.maxChildren(), command.maxInfants(), command.maxTotalGuests());
-    }
-
-    private OccupancyPolicy occupancyPolicy(UpdateRoomTypeCommand command) {
-        return new OccupancyPolicy(command.maxAdults(), command.maxChildren(), command.maxInfants(), command.maxTotalGuests());
-    }
-
-    private PetPolicy petPolicy(CreateRoomTypeCommand command) {
-        return new PetPolicy(
-                command.petsAllowed(),
-                command.maxPets(),
-                command.allowedPetTypes(),
-                command.maxPetWeightKg(),
-                optionalMoney(command.petFeeAmount(), command.petFeeCurrency(), "petFee")
-        );
-    }
-
-    private PetPolicy petPolicy(UpdateRoomTypeCommand command) {
-        return new PetPolicy(
-                command.petsAllowed(),
-                command.maxPets(),
-                command.allowedPetTypes(),
-                command.maxPetWeightKg(),
-                optionalMoney(command.petFeeAmount(), command.petFeeCurrency(), "petFee")
-        );
-    }
-
-    private RoomTypeFeatures roomTypeFeatures(CreateRoomTypeCommand command) {
-        return new RoomTypeFeatures(command.bedSetup(), command.roomSizeSqm(), command.amenities());
-    }
-
-    private RoomTypeFeatures roomTypeFeatures(UpdateRoomTypeCommand command) {
-        return new RoomTypeFeatures(command.bedSetup(), command.roomSizeSqm(), command.amenities());
-    }
-
-    private Money money(BigDecimal amount, String currencyCode, String fieldName) {
-        if (amount == null) {
-            throw new ValidationException(fieldName + " amount is required");
-        }
-        if (currencyCode == null || currencyCode.isBlank()) {
-            throw new ValidationException(fieldName + " currency is required");
-        }
-        return new Money(amount, Currency.getInstance(currencyCode));
-    }
-
-    private Money optionalMoney(BigDecimal amount, String currencyCode, String fieldName) {
-        if (amount == null && (currencyCode == null || currencyCode.isBlank())) {
-            return null;
-        }
-        return money(amount, currencyCode, fieldName);
-    }
 }

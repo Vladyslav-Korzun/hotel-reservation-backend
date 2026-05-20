@@ -3,6 +3,7 @@ package com.hotel.management.domain.shared.value;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +45,7 @@ class CoreValueObjectTest {
 
         assertEquals(Money.of("300.00", "EUR"), base.multiply(3));
         assertEquals(Money.of("150.00", "EUR"), base.plus(Money.of("50.00", "EUR")));
+        assertEquals(Money.of("12.50", "EUR"), Money.of(new BigDecimal("12.50"), "EUR"));
         assertThrows(ValidationException.class, () -> base.plus(Money.of("50.00", "USD")));
     }
 }

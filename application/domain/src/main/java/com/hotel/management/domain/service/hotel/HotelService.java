@@ -4,7 +4,6 @@ import com.hotel.management.domain.audit.AuditActionType;
 import com.hotel.management.domain.audit.AuditEntityType;
 import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.hotel.HotelFactory;
-import com.hotel.management.domain.hotel.HotelPolicy;
 import com.hotel.management.domain.hotel.HotelRepository;
 import com.hotel.management.domain.hotel.HotelResult;
 import com.hotel.management.domain.service.mapper.HotelQueryResultMapper;
@@ -50,13 +49,7 @@ public class HotelService implements HotelFacade {
                 command.stars(),
                 command.description(),
                 command.status(),
-                hotelPolicy(
-                        command.childrenAllowed(),
-                        command.petsAllowed(),
-                        command.infantMaxAge(),
-                        command.childMaxAge(),
-                        command.adultEquivalentAge()
-                )
+                HotelCommandAssembler.toPolicy(command)
         );
         var savedHotel = hotelRepository.save(hotel);
         auditTrail.record(actor, AuditActionType.CREATE_HOTEL, AuditEntityType.HOTEL, String.valueOf(savedHotel.id()), "Hotel created");
@@ -80,26 +73,11 @@ public class HotelService implements HotelFacade {
                 command.stars(),
                 command.description(),
                 command.status(),
-                hotelPolicy(
-                        command.childrenAllowed(),
-                        command.petsAllowed(),
-                        command.infantMaxAge(),
-                        command.childMaxAge(),
-                        command.adultEquivalentAge()
-                )
+                HotelCommandAssembler.toPolicy(command)
         );
         var savedHotel = hotelRepository.save(updatedHotel);
         auditTrail.record(actor, AuditActionType.UPDATE_HOTEL, AuditEntityType.HOTEL, String.valueOf(savedHotel.id()), "Hotel updated");
         return hotelQueryResultMapper.toResult(savedHotel);
     }
 
-    private HotelPolicy hotelPolicy(
-            boolean childrenAllowed,
-            boolean petsAllowed,
-            int infantMaxAge,
-            int childMaxAge,
-            int adultEquivalentAge
-    ) {
-        return new HotelPolicy(childrenAllowed, petsAllowed, infantMaxAge, childMaxAge, adultEquivalentAge);
-    }
 }
