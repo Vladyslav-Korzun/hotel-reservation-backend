@@ -15,23 +15,11 @@ public record CreateRoomCommand(
     public CreateRoomCommand {
         require(roomId, "roomId is required");
         require(hotelId, "hotelId is required");
-        requireText(roomNumber, "roomNumber is required");
         require(roomTypeId, "roomTypeId is required");
-        if (capacity <= 0) {
-            throw new ValidationException("room capacity must be greater than zero");
-        }
-        require(status, "roomStatus is required");
     }
 
     private static <T> T require(T value, String message) {
         if (value == null) {
-            throw new ValidationException(message);
-        }
-        return value;
-    }
-
-    private static String requireText(String value, String message) {
-        if (value == null || value.isBlank()) {
             throw new ValidationException(message);
         }
         return value;

@@ -21,25 +21,10 @@ public record UpdateHotelCommand(
 
     public UpdateHotelCommand {
         require(hotelId, "hotelId is required");
-        requireText(name, "hotelName is required");
-        requireText(city, "city is required");
-        requireText(country, "country is required");
-        requireText(address, "address is required");
-        if (stars < 1 || stars > 5) {
-            throw new ValidationException("hotel stars must be between 1 and 5");
-        }
-        require(status, "hotelStatus is required");
     }
 
     private static <T> T require(T value, String message) {
         if (value == null) {
-            throw new ValidationException(message);
-        }
-        return value;
-    }
-
-    private static String requireText(String value, String message) {
-        if (value == null || value.isBlank()) {
             throw new ValidationException(message);
         }
         return value;

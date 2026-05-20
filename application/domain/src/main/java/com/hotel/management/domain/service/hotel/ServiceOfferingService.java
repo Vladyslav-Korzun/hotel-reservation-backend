@@ -12,7 +12,6 @@ import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
-import com.hotel.management.domain.shared.value.Money;
 
 public class ServiceOfferingService implements ServiceOfferingFacade {
 
@@ -53,7 +52,7 @@ public class ServiceOfferingService implements ServiceOfferingFacade {
                 command.code(),
                 command.name(),
                 command.description(),
-                Money.of(command.priceAmount(), command.priceCurrency()),
+                ServiceOfferingCommandAssembler.toPrice(command),
                 command.active(),
                 command.availabilityRule()
         );
@@ -82,7 +81,7 @@ public class ServiceOfferingService implements ServiceOfferingFacade {
                 command.code(),
                 command.name(),
                 command.description(),
-                Money.of(command.priceAmount(), command.priceCurrency()),
+                ServiceOfferingCommandAssembler.toPrice(command),
                 command.active(),
                 command.availabilityRule()
         );

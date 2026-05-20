@@ -20,12 +20,6 @@ public record CreatePublicReservationCommand(
     public CreatePublicReservationCommand {
         require(hotelId, "hotelId is required");
         require(roomTypeId, "roomTypeId is required");
-        require(checkIn, "checkIn is required");
-        require(checkOut, "checkOut is required");
-        if (!checkOut.isAfter(checkIn)) {
-            throw new ValidationException("checkOut must be after checkIn");
-        }
-        require(accommodationParty, "accommodationParty is required");
         serviceOfferings = serviceOfferings == null ? List.of() : List.copyOf(serviceOfferings);
         require(guestContact, "guest contact is required");
     }

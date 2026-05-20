@@ -24,12 +24,6 @@ public record CreateStaffReservationCommand(
         if (guestId == null && guestContact == null) {
             throw new ValidationException("guest contact is required");
         }
-        require(checkIn, "checkIn is required");
-        require(checkOut, "checkOut is required");
-        if (!checkOut.isAfter(checkIn)) {
-            throw new ValidationException("checkOut must be after checkIn");
-        }
-        require(accommodationParty, "accommodationParty is required");
         serviceOfferings = serviceOfferings == null ? List.of() : List.copyOf(serviceOfferings);
     }
 

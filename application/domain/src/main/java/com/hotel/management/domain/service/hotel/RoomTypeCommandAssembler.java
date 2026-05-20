@@ -42,10 +42,12 @@ final class RoomTypeCommandAssembler {
     }
 
     static Money toBasePrice(CreateRoomTypeCommand command) {
+        requireMoney(command.basePriceAmount(), command.basePriceCurrency(), "basePrice");
         return Money.of(command.basePriceAmount(), command.basePriceCurrency());
     }
 
     static Money toBasePrice(UpdateRoomTypeCommand command) {
+        requireMoney(command.basePriceAmount(), command.basePriceCurrency(), "basePrice");
         return Money.of(command.basePriceAmount(), command.basePriceCurrency());
     }
 
@@ -68,5 +70,14 @@ final class RoomTypeCommandAssembler {
             throw new ValidationException("petFee currency is required");
         }
         return Money.of(amount, currencyCode);
+    }
+
+    private static void requireMoney(BigDecimal amount, String currencyCode, String fieldName) {
+        if (amount == null) {
+            throw new ValidationException(fieldName + " amount is required");
+        }
+        if (currencyCode == null || currencyCode.isBlank()) {
+            throw new ValidationException(fieldName + " currency is required");
+        }
     }
 }
