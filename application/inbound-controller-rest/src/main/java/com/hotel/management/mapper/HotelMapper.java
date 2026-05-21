@@ -260,6 +260,12 @@ public class HotelMapper {
         return response;
     }
 
+    public List<RoomTypeResponse> toRoomTypeResponse(List<RoomTypeResult> results) {
+        return results.stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     public RoomResponse toResponse(RoomResult result) {
         return new RoomResponse()
                 .roomId(result.roomId())

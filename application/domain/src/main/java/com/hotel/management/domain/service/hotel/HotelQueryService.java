@@ -2,6 +2,8 @@ package com.hotel.management.domain.service.hotel;
 
 import com.hotel.management.domain.hotel.Hotel;
 import com.hotel.management.domain.hotel.HotelRepository;
+import com.hotel.management.domain.room.RoomTypeRepository;
+import com.hotel.management.domain.room.RoomTypeResult;
 import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
@@ -15,15 +17,18 @@ public class HotelQueryService implements HotelQueryFacade {
 
     private final HotelRepository hotelRepository;
     private final ServiceOfferingRepository serviceOfferingRepository;
+    private final RoomTypeRepository roomTypeRepository;
     private final HotelQueryResultMapper hotelQueryResultMapper;
 
     public HotelQueryService(
             HotelRepository hotelRepository,
             ServiceOfferingRepository serviceOfferingRepository,
+            RoomTypeRepository roomTypeRepository,
             HotelQueryResultMapper hotelQueryResultMapper
     ) {
         this.hotelRepository = hotelRepository;
         this.serviceOfferingRepository = serviceOfferingRepository;
+        this.roomTypeRepository = roomTypeRepository;
         this.hotelQueryResultMapper = hotelQueryResultMapper;
     }
 
@@ -47,6 +52,14 @@ public class HotelQueryService implements HotelQueryFacade {
     public List<HotelServiceOfferingResult> listHotelServices(Long hotelId) {
         var hotel = loadActiveHotel(hotelId);
         return serviceOfferingRepository.findActiveByHotelId(hotel.id()).stream()
+                .map(hotelQueryResultMapper::toResult)
+                .toList();
+    }
+
+    @Override
+    public List<RoomTypeResult> listRoomTypes(Long hotelId) {
+        var hotel = loadActiveHotel(hotelId);
+        return roomTypeRepository.findByHotelIds(List.of(hotel.id())).stream()
                 .map(hotelQueryResultMapper::toResult)
                 .toList();
     }

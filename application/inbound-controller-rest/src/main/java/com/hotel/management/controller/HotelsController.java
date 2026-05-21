@@ -4,6 +4,7 @@ import com.hotel.management.api.HotelsApi;
 import com.hotel.management.api.dto.HotelResponse;
 import com.hotel.management.api.dto.HotelServiceOfferingResponse;
 import com.hotel.management.api.dto.RoomTypeAvailabilityCalendarDayResponse;
+import com.hotel.management.api.dto.RoomTypeResponse;
 import com.hotel.management.mapper.AvailabilityMapper;
 import com.hotel.management.mapper.HotelMapper;
 import com.hotel.management.domain.service.availability.GetRoomTypeAvailabilityCalendarFacade;
@@ -50,6 +51,12 @@ public class HotelsController implements HotelsApi {
     public ResponseEntity<List<HotelServiceOfferingResponse>> listHotelServices(Long hotelId) {
         var result = hotelQueryFacade.listHotelServices(hotelId);
         return ResponseEntity.ok(hotelMapper.toServiceOfferingResponse(result));
+    }
+
+    @Override
+    public ResponseEntity<List<RoomTypeResponse>> listHotelRoomTypes(Long hotelId) {
+        var result = hotelQueryFacade.listRoomTypes(hotelId);
+        return ResponseEntity.ok(hotelMapper.toRoomTypeResponse(result));
     }
 
     @Override

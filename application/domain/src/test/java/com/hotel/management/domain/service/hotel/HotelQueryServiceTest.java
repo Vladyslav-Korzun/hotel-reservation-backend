@@ -4,6 +4,11 @@ import com.hotel.management.domain.hotel.Hotel;
 import com.hotel.management.domain.hotel.HotelPolicy;
 import com.hotel.management.domain.hotel.HotelRepository;
 import com.hotel.management.domain.hotel.HotelStatus;
+import com.hotel.management.domain.room.OccupancyPolicy;
+import com.hotel.management.domain.room.PetPolicy;
+import com.hotel.management.domain.room.RoomType;
+import com.hotel.management.domain.room.RoomTypeFeatures;
+import com.hotel.management.domain.room.RoomTypeRepository;
 import com.hotel.management.domain.serviceoffering.ServiceOffering;
 import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.shared.exception.NotFoundException;
@@ -16,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -32,6 +38,9 @@ class HotelQueryServiceTest {
 
     @Mock
     private ServiceOfferingRepository serviceOfferingRepository;
+
+    @Mock
+    private RoomTypeRepository roomTypeRepository;
 
     @Test
     void shouldListAllActiveHotelsWhenCityIsMissing() {
@@ -101,11 +110,46 @@ class HotelQueryServiceTest {
         assertEquals("EUR", result.getFirst().price().currency().getCurrencyCode());
     }
 
+    @Test
+    void shouldListRoomTypesForActiveHotel() {
+        var service = service();
+        when(hotelRepository.findById(1L)).thenReturn(Optional.of(activeHotel(1L, "Danube Hotel", "Bratislava")));
+        when(roomTypeRepository.findByHotelIds(List.of(1L))).thenReturn(List.of(roomType(2L, 1L, "Standard")));
+
+        var result = service.listRoomTypes(1L);
+
+        assertEquals(1, result.size());
+        assertEquals(2L, result.getFirst().roomTypeId());
+        assertEquals("Standard", result.getFirst().name());
+    }
+
+    @Test
+    void shouldHideRoomTypesOfInactiveHotelAsNotFound() {
+        var service = service();
+        when(hotelRepository.findById(1L)).thenReturn(Optional.of(inactiveHotel(1L)));
+
+        assertThrows(NotFoundException.class, () -> service.listRoomTypes(1L));
+    }
+
     private HotelQueryService service() {
         return new HotelQueryService(
                 hotelRepository,
                 serviceOfferingRepository,
+                roomTypeRepository,
                 new HotelQueryResultMapper()
+        );
+    }
+
+    private static RoomType roomType(Long id, Long hotelId, String name) {
+        return new RoomType(
+                id,
+                hotelId,
+                name,
+                new OccupancyPolicy(2, 1, 1, 3),
+                new PetPolicy(false, 0, Set.of(), null, null),
+                Money.of("100.00", "EUR"),
+                name + " room",
+                RoomTypeFeatures.empty()
         );
     }
 

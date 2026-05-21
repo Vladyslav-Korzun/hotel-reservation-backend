@@ -1,6 +1,7 @@
 package com.hotel.management;
 
 import com.hotel.management.domain.hotel.HotelRepository;
+import com.hotel.management.domain.room.RoomTypeRepository;
 import com.hotel.management.domain.serviceoffering.ServiceOfferingRepository;
 import com.hotel.management.domain.service.hotel.HotelQueryFacade;
 import com.hotel.management.domain.service.mapper.HotelQueryResultMapper;
@@ -20,11 +21,13 @@ public class HotelQueryBeanConfiguration {
     HotelQueryFacade hotelQueryFacade(
             HotelRepository hotelRepository,
             ServiceOfferingRepository serviceOfferingRepository,
+            RoomTypeRepository roomTypeRepository,
             HotelQueryResultMapper hotelQueryResultMapper
     ) {
         return new HotelQueryService(
                 hotelRepository,
                 serviceOfferingRepository,
+                roomTypeRepository,
                 hotelQueryResultMapper
         );
     }

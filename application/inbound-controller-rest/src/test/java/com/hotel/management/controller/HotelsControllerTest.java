@@ -11,11 +11,14 @@ import com.hotel.management.domain.room.RoomTypeAvailabilityCalendarDayResult;
 import com.hotel.management.domain.service.hotel.HotelQueryFacade;
 import com.hotel.management.domain.hotel.HotelResult;
 import com.hotel.management.domain.hotel.HotelServiceOfferingResult;
+import com.hotel.management.domain.room.RoomTypeResult;
+import com.hotel.management.api.dto.RoomTypeResponse;
 import com.hotel.management.domain.service.hotel.ListHotelsQuery;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,6 +72,18 @@ class HotelsControllerTest {
     }
 
     @Test
+    void shouldListHotelRoomTypes() {
+        hotelMapper.roomTypeResponses = List.of(new RoomTypeResponse().roomTypeId(2L));
+
+        var actual = controller.listHotelRoomTypes(1L);
+
+        assertThat(actual.getStatusCode().value()).isEqualTo(200);
+        assertThat(actual.getBody()).isSameAs(hotelMapper.roomTypeResponses);
+        assertThat(hotelQueryFacade.roomTypesHotelId).isEqualTo(1L);
+        assertThat(hotelMapper.roomTypeResults).isSameAs(hotelQueryFacade.roomTypesResult);
+    }
+
+    @Test
     void shouldGetRoomTypeAvailabilityCalendar() {
         var actual = controller.getRoomTypeAvailabilityCalendar(
                 1L,
@@ -102,9 +117,14 @@ class HotelsControllerTest {
                 true,
                 "DAILY"
         ));
+        private final List<RoomTypeResult> roomTypesResult = List.of(new RoomTypeResult(
+                2L, 1L, "Standard", 2, 1, 1, 3, false, 0, Set.of(), null,
+                null, Money.of("100.00", "EUR"), "Standard room", "1 double bed", null, Set.of()
+        ));
         private ListHotelsQuery listHotelsQuery;
         private Long hotelDetailsId;
         private Long hotelServicesId;
+        private Long roomTypesHotelId;
 
         @Override
         public List<HotelResult> listHotels(ListHotelsQuery query) {
@@ -122,6 +142,12 @@ class HotelsControllerTest {
         public List<HotelServiceOfferingResult> listHotelServices(Long hotelId) {
             this.hotelServicesId = hotelId;
             return hotelServicesResult;
+        }
+
+        @Override
+        public List<RoomTypeResult> listRoomTypes(Long hotelId) {
+            this.roomTypesHotelId = hotelId;
+            return roomTypesResult;
         }
     }
 
@@ -150,6 +176,8 @@ class HotelsControllerTest {
         private List<HotelResponse> hotelResponses = List.of();
         private HotelResponse hotelResponse;
         private List<HotelServiceOfferingResponse> serviceOfferingResponses = List.of();
+        private List<RoomTypeResult> roomTypeResults;
+        private List<RoomTypeResponse> roomTypeResponses = List.of();
 
         @Override
         public ListHotelsQuery toQuery(String city) {
@@ -173,6 +201,12 @@ class HotelsControllerTest {
         public List<HotelServiceOfferingResponse> toServiceOfferingResponse(List<HotelServiceOfferingResult> results) {
             this.serviceOfferingResults = results;
             return serviceOfferingResponses;
+        }
+
+        @Override
+        public List<RoomTypeResponse> toRoomTypeResponse(List<RoomTypeResult> results) {
+            this.roomTypeResults = results;
+            return roomTypeResponses;
         }
     }
 

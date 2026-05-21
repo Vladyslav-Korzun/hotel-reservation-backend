@@ -624,6 +624,48 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /hotels/{hotelId}/room-types:
+    get:
+      tags:
+        - Hotels
+      operationId: listHotelRoomTypes
+      summary: List room types of a hotel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hotelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Hotel room types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoomTypeResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Hotel not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /hotels/{hotelId}/room-types/{roomTypeId}/availability-calendar:
     get:
       tags:
