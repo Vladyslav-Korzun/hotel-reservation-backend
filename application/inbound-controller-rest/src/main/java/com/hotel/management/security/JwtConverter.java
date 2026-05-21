@@ -29,7 +29,12 @@ class JwtConverter extends AbstractAuthenticationToken {
 
     @Override
     public Object getPrincipal() {
-        return new AuthenticatedUser(extractUserId(source), extractRoles(source), extractGuestId(source));
+        return new AuthenticatedUser(
+                extractUserId(source),
+                extractRoles(source),
+                extractGuestId(source),
+                source.getSubject()
+        );
     }
 
     private static Collection<? extends GrantedAuthority> toAuthorities(Jwt source) {

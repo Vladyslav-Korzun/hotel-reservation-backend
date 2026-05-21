@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 023-create-staff
+      author: Vladyslav Korzun
+      changes:
+        - createTable:
+            tableName: staff
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_staff
+                    nullable: false
+              - column:
+                  name: external_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hotel_id
+                  type: bigint
+        - addUniqueConstraint:
+            tableName: staff
+            columnNames: external_id
+            constraintName: uk_staff_external_id
+        - addForeignKeyConstraint:
+            baseTableName: staff
+            baseColumnNames: hotel_id
+            constraintName: fk_staff_hotel
+            referencedTableName: hotels
+            referencedColumnNames: id
+  - changeSet:
+      id: 023-add-staff-id-sequence
+      author: Vladyslav Korzun
+      changes:
+        - createSequence:
+            sequenceName: staff_id_seq
+            startValue: 100000
+            incrementBy: 1
