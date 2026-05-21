@@ -6,6 +6,8 @@ import com.hotel.management.domain.service.room.UpdateRoomStatusCommand;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public class TransactionalRoomOperationsFacade implements RoomOperationsFacade {
 
     private final RoomOperationsFacade delegate;
@@ -18,5 +20,11 @@ public class TransactionalRoomOperationsFacade implements RoomOperationsFacade {
     @Transactional
     public RoomOperationResult updateRoomStatus(AuthenticatedUser actor, UpdateRoomStatusCommand command) {
         return delegate.updateRoomStatus(actor, command);
+    }
+
+    @Override
+    @Transactional
+    public List<RoomOperationResult> listRooms(AuthenticatedUser actor, Long hotelId) {
+        return delegate.listRooms(actor, hotelId);
     }
 }

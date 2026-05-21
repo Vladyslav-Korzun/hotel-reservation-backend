@@ -140,6 +140,35 @@ class RoomOperationsServiceTest {
         verify(auditTrail, never()).record(any(), any(), any(), any(), any());
     }
 
+    @Test
+    void shouldListRoomsForStaffHotel() {
+        var service = service();
+        when(roomRepository.findByHotelIds(List.of(10L)))
+                .thenReturn(List.of(room(RoomStatus.AVAILABLE), room(RoomStatus.OCCUPIED)));
+
+        var result = service.listRooms(staff(), null);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void shouldListRoomsForAdminByHotelId() {
+        var service = service();
+        when(roomRepository.findByHotelIds(List.of(7L))).thenReturn(List.of(room(RoomStatus.AVAILABLE)));
+
+        var result = service.listRooms(admin(), 7L);
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void shouldRejectAdminListRoomsWithoutHotelId() {
+        var service = service();
+
+        assertThrows(ValidationException.class, () -> service.listRooms(admin(), null));
+        verify(roomRepository, never()).findByHotelIds(any());
+    }
+
     private RoomOperationsService service() {
         return new RoomOperationsService(
                 roomRepository,
@@ -151,6 +180,10 @@ class RoomOperationsServiceTest {
 
     private static AuthenticatedUser staff() {
         return new AuthenticatedUser("staff-1", Set.of("STAFF"));
+    }
+
+    private static AuthenticatedUser admin() {
+        return new AuthenticatedUser("admin-1", Set.of("ADMIN"));
     }
 
     private static Room room(RoomStatus status) {

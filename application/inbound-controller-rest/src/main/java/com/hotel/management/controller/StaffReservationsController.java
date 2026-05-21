@@ -15,6 +15,8 @@ import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class StaffReservationsController implements StaffApi {
 
@@ -81,6 +83,13 @@ public class StaffReservationsController implements StaffApi {
         var actor = currentUserPort.getCurrentUser();
         var command = roomMapper.toCommand(roomId, updateRoomStatusRequest);
         var result = roomOperationsFacade.updateRoomStatus(actor, command);
+        return ResponseEntity.ok(roomMapper.toResponse(result));
+    }
+
+    @Override
+    public ResponseEntity<List<RoomOperationResponse>> listRooms(Long hotelId) {
+        var actor = currentUserPort.getCurrentUser();
+        var result = roomOperationsFacade.listRooms(actor, hotelId);
         return ResponseEntity.ok(roomMapper.toResponse(result));
     }
 }

@@ -99,6 +99,19 @@ class StaffReservationsControllerTest {
         assertThat(roomMapper.result).isSameAs(roomOperationsFacade.result);
     }
 
+    @Test
+    void shouldListRooms() {
+        roomMapper.roomListResponse = List.of(new RoomOperationResponse().roomId(10L));
+
+        var actual = controller.listRooms(1L);
+
+        assertThat(actual.getStatusCode().value()).isEqualTo(200);
+        assertThat(actual.getBody()).isSameAs(roomMapper.roomListResponse);
+        assertThat(roomOperationsFacade.listRoomsActor).isSameAs(currentUserPort.user);
+        assertThat(roomOperationsFacade.listRoomsHotelId).isEqualTo(1L);
+        assertThat(roomMapper.roomListResult).isSameAs(roomOperationsFacade.listRoomsResult);
+    }
+
     private static final class TestStaffReservationFacade implements StaffReservationFacade {
 
         private final StaffReservationResult checkInResult = null;
@@ -181,14 +194,24 @@ class StaffReservationsControllerTest {
                 3,
                 "CLEANING"
         );
+        private final List<RoomOperationResult> listRoomsResult = List.of();
         private UpdateRoomStatusCommand command;
         private AuthenticatedUser actor;
+        private AuthenticatedUser listRoomsActor;
+        private Long listRoomsHotelId;
 
         @Override
         public RoomOperationResult updateRoomStatus(AuthenticatedUser actor, UpdateRoomStatusCommand command) {
             this.actor = actor;
             this.command = command;
             return result;
+        }
+
+        @Override
+        public List<RoomOperationResult> listRooms(AuthenticatedUser actor, Long hotelId) {
+            this.listRoomsActor = actor;
+            this.listRoomsHotelId = hotelId;
+            return listRoomsResult;
         }
     }
 
@@ -211,6 +234,8 @@ class StaffReservationsControllerTest {
         private UpdateRoomStatusCommand command;
         private RoomOperationResult result;
         private RoomOperationResponse response;
+        private List<RoomOperationResult> roomListResult;
+        private List<RoomOperationResponse> roomListResponse = List.of();
 
         @Override
         public UpdateRoomStatusCommand toCommand(Long roomId, UpdateRoomStatusRequest request) {
@@ -223,6 +248,12 @@ class StaffReservationsControllerTest {
         public RoomOperationResponse toResponse(RoomOperationResult result) {
             this.result = result;
             return response;
+        }
+
+        @Override
+        public List<RoomOperationResponse> toResponse(List<RoomOperationResult> results) {
+            this.roomListResult = results;
+            return roomListResponse;
         }
     }
 

@@ -13,6 +13,8 @@ import com.hotel.management.domain.room.RoomOperationResult;
 import com.hotel.management.domain.service.mapper.RoomOperationResultMapper;
 import com.hotel.management.domain.service.staff.HotelScopePolicy;
 
+import java.util.List;
+
 public class RoomOperationsService implements RoomOperationsFacade {
 
     private final RoomRepository roomRepository;
@@ -51,6 +53,23 @@ public class RoomOperationsService implements RoomOperationsFacade {
                 "Room status changed to " + savedRoom.status().name()
         );
         return roomOperationResultMapper.toResult(savedRoom);
+    }
+
+    @Override
+    public List<RoomOperationResult> listRooms(AuthenticatedUser actor, Long hotelId) {
+        Long scopedHotelId = hotelScopePolicy.resolveAccessibleHotel(actor);
+        Long targetHotelId;
+        if (scopedHotelId != null) {
+            targetHotelId = scopedHotelId;
+        } else {
+            if (hotelId == null) {
+                throw new ValidationException("hotelId is required");
+            }
+            targetHotelId = hotelId;
+        }
+        return roomRepository.findByHotelIds(List.of(targetHotelId)).stream()
+                .map(roomOperationResultMapper::toResult)
+                .toList();
     }
 
     private void requireCommand(UpdateRoomStatusCommand command) {

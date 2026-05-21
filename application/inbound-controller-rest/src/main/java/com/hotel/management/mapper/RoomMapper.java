@@ -7,6 +7,8 @@ import com.hotel.management.domain.room.RoomOperationResult;
 import com.hotel.management.domain.service.room.UpdateRoomStatusCommand;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class RoomMapper {
 
@@ -22,5 +24,11 @@ public class RoomMapper {
                 .roomTypeId(result.roomTypeId())
                 .capacity(result.capacity())
                 .status(RoomOperationResponse.StatusEnum.fromValue(result.status()));
+    }
+
+    public List<RoomOperationResponse> toResponse(List<RoomOperationResult> results) {
+        return results.stream()
+                .map(this::toResponse)
+                .toList();
     }
 }

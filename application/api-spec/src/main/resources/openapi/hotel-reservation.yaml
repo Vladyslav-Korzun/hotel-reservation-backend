@@ -1138,6 +1138,49 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /staff/rooms:
+    get:
+      tags:
+        - Staff Rooms
+      operationId: listRooms
+      summary: List rooms with their current status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hotelId
+          in: query
+          required: false
+          description: Hotel to list rooms for. Required for admins; ignored for staff, who always see their assigned hotel.
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Rooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoomOperationResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /staff/rooms/{roomId}/status:
     patch:
       tags:

@@ -61,6 +61,7 @@ class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/staff/reservations/*/check-in").hasAnyRole("ADMIN", "STAFF")
                 .requestMatchers(HttpMethod.POST, "/staff/reservations/*/check-out").hasAnyRole("ADMIN", "STAFF")
                 .requestMatchers(HttpMethod.POST, "/staff/reservations/*/no-show").hasAnyRole("ADMIN", "STAFF")
+                .requestMatchers(HttpMethod.GET, "/staff/rooms").hasAnyRole("ADMIN", "STAFF")
                 .requestMatchers(HttpMethod.PATCH, "/staff/rooms/*/status").hasAnyRole("ADMIN", "STAFF")
                 .requestMatchers(HttpMethod.GET, "/reservations/*").hasAnyRole("GUEST", "ADMIN", "STAFF")
                 .anyRequest().authenticated();
