@@ -7,6 +7,7 @@ import com.hotel.management.jpa.hotel.JpaHotelEntity;
 import com.hotel.management.jpa.reservation.JpaReservationEntity;
 import com.hotel.management.jpa.room.JpaRoomEntity;
 import com.hotel.management.jpa.room.JpaRoomTypeEntity;
+import com.hotel.management.jpa.staff.JpaStaffEntity;
 import com.hotel.management.jpa.stay.JpaStayEntity;
 import com.hotel.management.domain.shared.value.AccommodationParty;
 import com.hotel.management.domain.shared.value.GuestComposition;
@@ -78,6 +79,7 @@ class CreateReservationFlowIntegrationTest {
         entityManager.createQuery("delete from JpaRoomEntity").executeUpdate();
         entityManager.createQuery("delete from JpaRoomTypeEntity").executeUpdate();
         entityManager.createQuery("delete from JpaGuestEntity").executeUpdate();
+        entityManager.createQuery("delete from JpaStaffEntity").executeUpdate();
         entityManager.createQuery("delete from JpaHotelEntity").executeUpdate();
         seedDefaultCatalog();
         flushAndClear();
@@ -316,7 +318,7 @@ class CreateReservationFlowIntegrationTest {
     }
 
     @Test
-    void shouldAllowStaffAndAdminToListAllReservations() throws Exception {
+    void shouldListReservationsScopedToStaffHotelAndAllForAdmin() throws Exception {
         mockMvc.perform(post("/reservations")
                         .with(jwtFor("guest-one", "GUEST", 10L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -332,7 +334,8 @@ class CreateReservationFlowIntegrationTest {
         mockMvc.perform(get("/reservations")
                         .with(jwtFor("staff-user", "STAFF")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].hotelId").value(1));
 
         mockMvc.perform(get("/reservations")
                         .with(jwtFor("admin-user", "ADMIN")))
@@ -401,6 +404,8 @@ class CreateReservationFlowIntegrationTest {
         save(hotel(5L, "Second Hotel", "Zilina"));
         save(roomType(7L, 5L, "Single", 1));
         save(room(50L, 5L, "201", 7L, 1, "AVAILABLE"));
+
+        save(staffMember(1L, "staff-user-sub", 1L));
     }
 
     private void save(Object entity) {
@@ -519,6 +524,14 @@ class CreateReservationFlowIntegrationTest {
         hotel.setChildMaxAge(12);
         hotel.setAdultEquivalentAge(13);
         return hotel;
+    }
+
+    private static JpaStaffEntity staffMember(Long id, String externalId, Long hotelId) {
+        var staff = new JpaStaffEntity();
+        staff.setId(id);
+        staff.setExternalId(externalId);
+        staff.setHotelId(hotelId);
+        return staff;
     }
 
     private static JpaGuestEntity guest(Long id, String email) {

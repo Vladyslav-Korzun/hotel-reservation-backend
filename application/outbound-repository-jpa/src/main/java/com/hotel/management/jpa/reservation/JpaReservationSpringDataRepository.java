@@ -18,6 +18,8 @@ interface JpaReservationSpringDataRepository extends JpaRepository<JpaReservatio
 
     List<JpaReservationEntity> findByGuestIdOrderByCreatedAtDesc(Long guestId, Pageable pageable);
 
+    List<JpaReservationEntity> findByHotelIdOrderByCreatedAtDesc(Long hotelId, Pageable pageable);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select reservation

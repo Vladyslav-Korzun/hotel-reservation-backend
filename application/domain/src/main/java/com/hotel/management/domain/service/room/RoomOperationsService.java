@@ -11,21 +11,25 @@ import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.room.RoomOperationResult;
 import com.hotel.management.domain.service.mapper.RoomOperationResultMapper;
+import com.hotel.management.domain.service.staff.HotelScopePolicy;
 
 public class RoomOperationsService implements RoomOperationsFacade {
 
     private final RoomRepository roomRepository;
     private final AuditTrail auditTrail;
     private final RoomOperationResultMapper roomOperationResultMapper;
+    private final HotelScopePolicy hotelScopePolicy;
 
     public RoomOperationsService(
             RoomRepository roomRepository,
             AuditTrail auditTrail,
-            RoomOperationResultMapper roomOperationResultMapper
+            RoomOperationResultMapper roomOperationResultMapper,
+            HotelScopePolicy hotelScopePolicy
     ) {
         this.roomRepository = roomRepository;
         this.auditTrail = auditTrail;
         this.roomOperationResultMapper = roomOperationResultMapper;
+        this.hotelScopePolicy = hotelScopePolicy;
     }
 
     @Override
@@ -35,6 +39,7 @@ public class RoomOperationsService implements RoomOperationsFacade {
 
         var room = roomRepository.findById(command.roomId())
                 .orElseThrow(() -> new NotFoundException("Room not found: " + command.roomId()));
+        hotelScopePolicy.assertCanAccessHotel(actor, room.hotelId());
         var updatedRoom = changeStatus(room, command.status());
 
         var savedRoom = roomRepository.save(updatedRoom);

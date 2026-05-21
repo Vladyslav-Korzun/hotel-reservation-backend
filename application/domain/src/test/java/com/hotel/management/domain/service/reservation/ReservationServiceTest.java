@@ -55,6 +55,9 @@ import com.hotel.management.domain.reservation.ReservationQueryPort;
 import com.hotel.management.domain.reservation.RoomInventoryPort;
 import com.hotel.management.domain.reservation.ActiveReservationView;
 import com.hotel.management.domain.service.mapper.ReservationResultMapper;
+import com.hotel.management.domain.service.staff.HotelScopePolicy;
+import com.hotel.management.domain.service.staff.StaffFacade;
+import com.hotel.management.domain.staff.Staff;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationServiceTest {
@@ -92,6 +95,9 @@ class ReservationServiceTest {
     @Mock
     private AuditTrail auditTrail;
 
+    @Mock
+    private StaffFacade staffFacade;
+
     private ReservationCreationValidator reservationCreationValidator;
 
     private ReservationService facade;
@@ -117,7 +123,8 @@ class ReservationServiceTest {
                 new ReservationFactory(),
                 new ReservationPricingCalculator(),
                 new ReservationResultMapper(),
-                auditTrail
+                auditTrail,
+                new HotelScopePolicy(staffFacade)
         );
     }
 
@@ -225,6 +232,7 @@ class ReservationServiceTest {
         when(reservationQueryPort.findActiveOverlapping(any(), any())).thenReturn(List.of());
         when(clockPort.now()).thenReturn(Instant.parse("2026-04-03T12:00:00Z"));
         when(repository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(staffFacade.resolveStaff(any())).thenReturn(new Staff(1L, "staff-sub", 1L));
 
         var result = facade.createStaffReservation(staff(), new CreateStaffReservationCommand(
                 1L,
@@ -338,18 +346,19 @@ class ReservationServiceTest {
     }
 
     @Test
-    void shouldAllowStaffToListAllReservations() {
+    void shouldListReservationsScopedToStaffHotel() {
         Reservation firstReservation = pendingReservation("reservation-1", 1L, null, 2L, "guest-123");
         Reservation secondReservation = reservation(
                 "reservation-2",
-                3L,
+                1L,
                 null,
                 4L,
                 ReservationStatus.CANCELLED,
                 Instant.parse("2026-04-05T12:00:00Z"),
                 "guest-456"
         );
-        when(repository.findAll(100)).thenReturn(List.of(firstReservation, secondReservation));
+        when(staffFacade.resolveStaff(any())).thenReturn(new Staff(1L, "staff-sub", 1L));
+        when(repository.findByHotelId(1L, 100)).thenReturn(List.of(firstReservation, secondReservation));
 
         var result = facade.listReservations(staff(), 100);
 
@@ -422,6 +431,7 @@ class ReservationServiceTest {
     void shouldAllowStaffToReadReservationOwnedByAnotherUser() {
         Reservation reservation = pendingReservation("reservation-1", 1L, null, 2L, "guest-123");
         when(repository.findById("reservation-1")).thenReturn(Optional.of(reservation));
+        when(staffFacade.resolveStaff(any())).thenReturn(new Staff(1L, "staff-sub", 1L));
 
         var result = facade.getReservation(staff(), "reservation-1");
 

@@ -33,7 +33,7 @@ public class SpringSecurityCurrentUserAdapter implements CurrentUserPort {
             String userId = preferredUsername != null && !preferredUsername.isBlank()
                     ? preferredUsername
                     : jwt.getSubject();
-            return new AuthenticatedUser(userId, roles, guestId(jwt));
+            return new AuthenticatedUser(userId, roles, guestId(jwt), jwt.getSubject());
         }
 
         throw new IllegalStateException("Authenticated JWT principal is required");

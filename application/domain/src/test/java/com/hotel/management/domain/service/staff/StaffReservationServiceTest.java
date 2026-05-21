@@ -21,6 +21,8 @@ import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
+import com.hotel.management.domain.staff.Staff;
+import com.hotel.management.domain.staff.StaffResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -261,12 +263,32 @@ class StaffReservationServiceTest {
                 roomAssignmentPort,
                 clockPort,
                 auditTrail,
-                new StaffReservationResultMapper()
+                new StaffReservationResultMapper(),
+                new HotelScopePolicy(staffAssignedToHotel(1L))
         );
     }
 
     private static AuthenticatedUser staff() {
         return new AuthenticatedUser("staff-1", Set.of("STAFF"));
+    }
+
+    private static StaffFacade staffAssignedToHotel(Long hotelId) {
+        return new StaffFacade() {
+            @Override
+            public Staff resolveStaff(AuthenticatedUser actor) {
+                return new Staff(1L, "staff-sub", hotelId);
+            }
+
+            @Override
+            public List<StaffResult> listStaff(AuthenticatedUser actor) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public StaffResult assignStaffToHotel(AuthenticatedUser actor, AssignStaffToHotelCommand command) {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 
     private static Reservation reservation(String id, Long roomId, ReservationStatus status) {

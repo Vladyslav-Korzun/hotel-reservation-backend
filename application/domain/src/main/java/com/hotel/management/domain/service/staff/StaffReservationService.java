@@ -19,6 +19,7 @@ import com.hotel.management.domain.shared.security.AuthenticatedUser;
 
 import java.time.ZoneOffset;
 import com.hotel.management.domain.reservation.RoomAssignmentPort;
+import com.hotel.management.domain.service.staff.HotelScopePolicy;
 import com.hotel.management.domain.reservation.StaffReservationResult;
 import com.hotel.management.domain.service.mapper.StaffReservationResultMapper;
 
@@ -32,6 +33,7 @@ public class StaffReservationService implements StaffReservationFacade {
     private final ClockPort clockPort;
     private final AuditTrail auditTrail;
     private final StaffReservationResultMapper staffReservationResultMapper;
+    private final HotelScopePolicy hotelScopePolicy;
 
     public StaffReservationService(
             ReservationRepository reservationRepository,
@@ -41,7 +43,8 @@ public class StaffReservationService implements StaffReservationFacade {
             RoomAssignmentPort roomAssignmentPort,
             ClockPort clockPort,
             AuditTrail auditTrail,
-            StaffReservationResultMapper staffReservationResultMapper
+            StaffReservationResultMapper staffReservationResultMapper,
+            HotelScopePolicy hotelScopePolicy
     ) {
         this.reservationRepository = reservationRepository;
         this.reservationLockPort = reservationLockPort;
@@ -51,12 +54,14 @@ public class StaffReservationService implements StaffReservationFacade {
         this.clockPort = clockPort;
         this.auditTrail = auditTrail;
         this.staffReservationResultMapper = staffReservationResultMapper;
+        this.hotelScopePolicy = hotelScopePolicy;
     }
 
     @Override
     public StaffReservationResult checkIn(AuthenticatedUser actor, String reservationId) {
         actor.requireStaffOrAdmin();
         var reservation = loadReservationForChange(reservationId);
+        hotelScopePolicy.assertCanAccessHotel(actor, reservation.hotelId());
         assertCheckInDateAllowed(reservation);
         var room = findAvailableRoomFor(reservation);
 
@@ -79,6 +84,7 @@ public class StaffReservationService implements StaffReservationFacade {
     public StaffReservationResult checkOut(AuthenticatedUser actor, String reservationId) {
         actor.requireStaffOrAdmin();
         var reservation = loadReservationForChange(reservationId);
+        hotelScopePolicy.assertCanAccessHotel(actor, reservation.hotelId());
         var checkedOutReservation = reservation.completeCheckOut();
         var stay = stayRepository.findActiveByReservationId(reservation.id())
                 .orElseThrow(() -> new ValidationException("Active stay not found for reservation"));
@@ -103,6 +109,7 @@ public class StaffReservationService implements StaffReservationFacade {
     public StaffReservationResult markNoShow(AuthenticatedUser actor, String reservationId) {
         actor.requireStaffOrAdmin();
         var reservation = loadReservationForChange(reservationId);
+        hotelScopePolicy.assertCanAccessHotel(actor, reservation.hotelId());
         assertNoShowDateAllowed(reservation);
 
         var noShowReservation = reservation.markNoShow();

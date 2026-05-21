@@ -23,6 +23,7 @@ import java.util.UUID;
 import com.hotel.management.domain.reservation.CreateReservationResult;
 import com.hotel.management.domain.reservation.GetReservationResult;
 import com.hotel.management.domain.service.mapper.ReservationResultMapper;
+import com.hotel.management.domain.service.staff.HotelScopePolicy;
 
 public class ReservationService implements ReservationFacade {
 
@@ -35,6 +36,7 @@ public class ReservationService implements ReservationFacade {
     private final ReservationPricingCalculator reservationPricingCalculator;
     private final ReservationResultMapper reservationResultMapper;
     private final AuditTrail auditTrail;
+    private final HotelScopePolicy hotelScopePolicy;
 
     public ReservationService(
             ReservationRepository reservationRepository,
@@ -45,7 +47,8 @@ public class ReservationService implements ReservationFacade {
             ReservationFactory reservationFactory,
             ReservationPricingCalculator reservationPricingCalculator,
             ReservationResultMapper reservationResultMapper,
-            AuditTrail auditTrail
+            AuditTrail auditTrail,
+            HotelScopePolicy hotelScopePolicy
     ) {
         this.reservationRepository = reservationRepository;
         this.guestRepository = guestRepository;
@@ -56,6 +59,7 @@ public class ReservationService implements ReservationFacade {
         this.reservationPricingCalculator = reservationPricingCalculator;
         this.reservationResultMapper = reservationResultMapper;
         this.auditTrail = auditTrail;
+        this.hotelScopePolicy = hotelScopePolicy;
     }
 
     @Override
@@ -86,6 +90,7 @@ public class ReservationService implements ReservationFacade {
             throw new ValidationException("reservation command is required");
         }
         actor.requireStaffOrAdmin();
+        hotelScopePolicy.assertCanAccessHotel(actor, command.hotelId());
         Long guestId = resolveStaffBookingGuestId(command);
         return createResolvedReservation(
                 ResolvedCreateReservationCommand.from(command.toReservationCommand(), guestId),
@@ -143,7 +148,11 @@ public class ReservationService implements ReservationFacade {
         actor.requireStaffOrAdmin();
         validateLimit(limit);
 
-        return reservationRepository.findAll(limit).stream()
+        Long scopedHotelId = hotelScopePolicy.resolveAccessibleHotel(actor);
+        List<Reservation> reservations = scopedHotelId == null
+                ? reservationRepository.findAll(limit)
+                : reservationRepository.findByHotelId(scopedHotelId, limit);
+        return reservations.stream()
                 .map(reservationResultMapper::toGetResult)
                 .toList();
     }
@@ -162,6 +171,9 @@ public class ReservationService implements ReservationFacade {
     public GetReservationResult getReservation(AuthenticatedUser actor, String reservationId) {
         var reservation = loadReservation(reservationId);
         ReservationAccessPolicy.INSTANCE.assertCanView(actor, reservation);
+        if (actor != null && actor.isStaff() && !actor.isAdmin()) {
+            hotelScopePolicy.assertCanAccessHotel(actor, reservation.hotelId());
+        }
         return reservationResultMapper.toGetResult(reservation);
     }
 

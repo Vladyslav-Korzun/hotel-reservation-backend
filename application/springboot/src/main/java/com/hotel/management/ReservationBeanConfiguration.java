@@ -15,6 +15,7 @@ import com.hotel.management.domain.service.reservation.ReservationPricingCalcula
 import com.hotel.management.domain.reservation.ReservationQueryPort;
 import com.hotel.management.domain.service.mapper.ReservationResultMapper;
 import com.hotel.management.domain.service.reservation.ReservationService;
+import com.hotel.management.domain.service.staff.HotelScopePolicy;
 import com.hotel.management.domain.reservation.RoomInventoryPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import org.springframework.context.annotation.Bean;
@@ -71,7 +72,8 @@ public class ReservationBeanConfiguration {
             ReservationFactory reservationFactory,
             ReservationPricingCalculator reservationPricingCalculator,
             ReservationResultMapper reservationResultMapper,
-            AuditTrail auditTrail
+            AuditTrail auditTrail,
+            HotelScopePolicy hotelScopePolicy
     ) {
         var reservationService = new ReservationService(
                 reservationRepository,
@@ -82,7 +84,8 @@ public class ReservationBeanConfiguration {
                 reservationFactory,
                 reservationPricingCalculator,
                 reservationResultMapper,
-                auditTrail
+                auditTrail,
+                hotelScopePolicy
         );
         return new TransactionalReservationFacade(reservationService);
     }

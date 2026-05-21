@@ -10,12 +10,18 @@ import com.hotel.management.domain.shared.exception.NotFoundException;
 import com.hotel.management.domain.shared.exception.ValidationException;
 import com.hotel.management.domain.shared.exception.ForbiddenException;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
+import com.hotel.management.domain.service.staff.AssignStaffToHotelCommand;
+import com.hotel.management.domain.service.staff.HotelScopePolicy;
+import com.hotel.management.domain.service.staff.StaffFacade;
+import com.hotel.management.domain.staff.Staff;
+import com.hotel.management.domain.staff.StaffResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -138,7 +144,8 @@ class RoomOperationsServiceTest {
         return new RoomOperationsService(
                 roomRepository,
                 auditTrail,
-                new RoomOperationResultMapper()
+                new RoomOperationResultMapper(),
+                new HotelScopePolicy(staffAssignedToHotel(10L))
         );
     }
 
@@ -148,5 +155,24 @@ class RoomOperationsServiceTest {
 
     private static Room room(RoomStatus status) {
         return new Room(1L, 10L, "101", 20L, 2, status);
+    }
+
+    private static StaffFacade staffAssignedToHotel(Long hotelId) {
+        return new StaffFacade() {
+            @Override
+            public Staff resolveStaff(AuthenticatedUser actor) {
+                return new Staff(1L, "staff-sub", hotelId);
+            }
+
+            @Override
+            public List<StaffResult> listStaff(AuthenticatedUser actor) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public StaffResult assignStaffToHotel(AuthenticatedUser actor, AssignStaffToHotelCommand command) {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 }

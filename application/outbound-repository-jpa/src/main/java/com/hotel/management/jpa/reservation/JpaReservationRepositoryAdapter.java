@@ -107,6 +107,13 @@ public class JpaReservationRepositoryAdapter implements ReservationRepository {
                 .toList();
     }
 
+    @Override
+    public List<Reservation> findByHotelId(Long hotelId, int limit) {
+        return springDataReservationRepository.findByHotelIdOrderByCreatedAtDesc(hotelId, PageRequest.of(0, limit)).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
     private Reservation toDomain(JpaReservationEntity savedEntity) {
         return Reservation.rehydrate(
             savedEntity.getId(),

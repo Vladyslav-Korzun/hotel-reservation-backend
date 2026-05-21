@@ -7,6 +7,7 @@ import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.reservation.ReservationLockPort;
 import com.hotel.management.domain.reservation.RoomAssignmentPort;
+import com.hotel.management.domain.service.staff.HotelScopePolicy;
 import com.hotel.management.domain.service.staff.StaffReservationFacade;
 import com.hotel.management.domain.service.mapper.StaffReservationResultMapper;
 import com.hotel.management.domain.service.staff.StaffReservationService;
@@ -30,7 +31,8 @@ public class StaffReservationBeanConfiguration {
             RoomAssignmentPort roomAssignmentPort,
             ClockPort clockPort,
             AuditTrail auditTrail,
-            StaffReservationResultMapper staffReservationResultMapper
+            StaffReservationResultMapper staffReservationResultMapper,
+            HotelScopePolicy hotelScopePolicy
     ) {
         var staffReservationService = new StaffReservationService(
                 reservationRepository,
@@ -40,7 +42,8 @@ public class StaffReservationBeanConfiguration {
                 roomAssignmentPort,
                 clockPort,
                 auditTrail,
-                staffReservationResultMapper
+                staffReservationResultMapper,
+                hotelScopePolicy
         );
         return new TransactionalStaffReservationFacade(staffReservationService);
     }

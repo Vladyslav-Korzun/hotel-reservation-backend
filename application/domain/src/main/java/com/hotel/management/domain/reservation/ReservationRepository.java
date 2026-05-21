@@ -12,4 +12,6 @@ public interface ReservationRepository {
     List<Reservation> findAll(int limit);
 
     List<Reservation> findByGuestId(Long guestId, int limit);
+
+    List<Reservation> findByHotelId(Long hotelId, int limit);
 }
