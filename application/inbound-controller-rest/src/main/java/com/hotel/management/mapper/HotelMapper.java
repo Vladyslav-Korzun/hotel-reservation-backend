@@ -13,6 +13,8 @@ import com.hotel.management.api.dto.UpdateHotelRequest;
 import com.hotel.management.api.dto.UpdateRoomRequest;
 import com.hotel.management.api.dto.UpdateRoomTypeRequest;
 import com.hotel.management.api.dto.UpdateServiceOfferingRequest;
+import com.hotel.management.api.dto.AssignStaffToHotelRequest;
+import com.hotel.management.api.dto.StaffResponse;
 import com.hotel.management.domain.hotel.HotelStatus;
 import com.hotel.management.domain.room.RoomAmenity;
 import com.hotel.management.domain.room.RoomStatus;
@@ -31,6 +33,8 @@ import com.hotel.management.domain.service.hotel.UpdateHotelCommand;
 import com.hotel.management.domain.service.hotel.UpdateRoomCommand;
 import com.hotel.management.domain.service.hotel.UpdateRoomTypeCommand;
 import com.hotel.management.domain.service.hotel.UpdateServiceOfferingCommand;
+import com.hotel.management.domain.service.staff.AssignStaffToHotelCommand;
+import com.hotel.management.domain.staff.StaffResult;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -309,5 +313,22 @@ public class HotelMapper {
 
     private Float toFloat(BigDecimal value) {
         return value == null ? null : value.floatValue();
+    }
+
+    public AssignStaffToHotelCommand toAssignStaffCommand(Long staffId, AssignStaffToHotelRequest request) {
+        return new AssignStaffToHotelCommand(staffId, request.getHotelId());
+    }
+
+    public StaffResponse toStaffResponse(StaffResult result) {
+        return new StaffResponse()
+                .id(result.id())
+                .externalId(result.externalId())
+                .hotelId(result.hotelId());
+    }
+
+    public List<StaffResponse> toStaffResponseList(List<StaffResult> results) {
+        return results.stream()
+                .map(this::toStaffResponse)
+                .toList();
     }
 }

@@ -47,6 +47,8 @@ class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/admin/hotels/*/services").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/admin/hotels/*/services/*").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/admin/hotels/*/services/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/admin/staff").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/admin/staff/*/hotel").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/hotels", "/hotels/*", "/hotels/*/services").permitAll()
                 .requestMatchers(HttpMethod.GET, "/hotels/*/room-types/*/availability-calendar").permitAll()
                 .requestMatchers(HttpMethod.POST, "/public/reservations").permitAll()

@@ -1190,6 +1190,87 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/staff:
+    get:
+      tags:
+        - Admin Staff
+      operationId: listStaff
+      summary: List staff members
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Staff members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaffResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/staff/{staffId}/hotel:
+    put:
+      tags:
+        - Admin Staff
+      operationId: assignStaffToHotel
+      summary: Assign a staff member to a hotel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignStaffToHotelRequest'
+      responses:
+        '200':
+          description: Staff member assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffResponse'
+        '400':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Staff or hotel not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -1197,6 +1278,31 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    StaffResponse:
+      type: object
+      required:
+        - id
+        - externalId
+      properties:
+        id:
+          type: integer
+          format: int64
+        externalId:
+          type: string
+          description: Stable Keycloak subject identifying the staff member.
+        hotelId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Hotel the staff member is assigned to. Null when not yet assigned.
+    AssignStaffToHotelRequest:
+      type: object
+      required:
+        - hotelId
+      properties:
+        hotelId:
+          type: integer
+          format: int64
     HotelResponse:
       type: object
       required:
