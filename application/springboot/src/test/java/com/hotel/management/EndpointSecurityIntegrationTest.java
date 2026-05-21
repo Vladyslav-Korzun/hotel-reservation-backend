@@ -58,6 +58,32 @@ class EndpointSecurityIntegrationTest {
     }
 
     @Test
+    void shouldAllowHotelListWithoutToken() throws Exception {
+        mockMvc.perform(get("/hotels"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldAllowHotelDetailsWithoutToken() throws Exception {
+        mockMvc.perform(get("/hotels/1001"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldAllowHotelServicesWithoutToken() throws Exception {
+        mockMvc.perform(get("/hotels/1001/services"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldAllowRoomSearchWithoutToken() throws Exception {
+        mockMvc.perform(post("/rooms/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldRejectReservationCreationWithoutToken() throws Exception {
         mockMvc.perform(post("/reservations")
                         .contentType(MediaType.APPLICATION_JSON)
