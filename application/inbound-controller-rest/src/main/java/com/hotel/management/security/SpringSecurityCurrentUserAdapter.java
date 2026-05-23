@@ -2,6 +2,7 @@ package com.hotel.management.security;
 
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,6 +38,14 @@ public class SpringSecurityCurrentUserAdapter implements CurrentUserPort {
         }
 
         throw new IllegalStateException("Authenticated JWT principal is required");
+    }
+
+    @Override
+    public boolean isAnonymous() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken;
     }
 
     private Long guestId(Jwt jwt) {

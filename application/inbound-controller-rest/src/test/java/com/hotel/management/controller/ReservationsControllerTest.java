@@ -144,5 +144,10 @@ class ReservationsControllerTest {
         public AuthenticatedUser getCurrentUser() {
             return user;
         }
+
+        @Override
+        public boolean isAnonymous() {
+            return false;
+        }
     }
 }

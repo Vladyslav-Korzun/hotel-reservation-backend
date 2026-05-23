@@ -4,4 +4,6 @@ import com.hotel.management.domain.shared.security.AuthenticatedUser;
 public interface CurrentUserPort {
 
     AuthenticatedUser getCurrentUser();
+
+    boolean isAnonymous();
 }

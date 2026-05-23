@@ -12,8 +12,6 @@ import com.hotel.management.domain.shared.security.CurrentUserPort;
 import com.hotel.management.mapper.ReservationMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -75,10 +73,7 @@ public class ReservationsController implements ReservationsApi, PublicApi {
     }
 
     private void assertAnonymousCheckout() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null
-                && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken)) {
+        if (!currentUserPort.isAnonymous()) {
             throw new ConflictException("Authenticated users must use POST /reservations");
         }
     }
