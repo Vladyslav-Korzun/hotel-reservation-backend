@@ -5,6 +5,7 @@ import com.hotel.management.domain.service.staff.StaffFacade;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.staff.Staff;
 import com.hotel.management.domain.staff.StaffResult;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class TransactionalStaffFacade implements StaffFacade {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Staff resolveStaff(AuthenticatedUser actor) {
         return delegate.resolveStaff(actor);
     }
