@@ -44,6 +44,18 @@ public class StaffService implements StaffFacade {
     }
 
     @Override
+    public StaffResult unassignStaffFromHotel(AuthenticatedUser actor, Long staffId) {
+        requireActor(actor).requireAdmin();
+        if (staffId == null) {
+            throw new ValidationException("staffId is required");
+        }
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new NotFoundException("Staff not found: " + staffId));
+        Staff unassigned = staffRepository.save(staff.unassignFromHotel());
+        return toResult(unassigned);
+    }
+
+    @Override
     public Staff resolveStaff(AuthenticatedUser actor) {
         requireActor(actor).requireStaff();
         String subject = actor.subject();

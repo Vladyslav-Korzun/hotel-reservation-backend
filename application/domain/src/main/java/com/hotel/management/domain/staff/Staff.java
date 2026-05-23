@@ -25,6 +25,10 @@ public final class Staff {
         return new Staff(id, externalId, hotelId);
     }
 
+    public Staff unassignFromHotel() {
+        return new Staff(id, externalId, null);
+    }
+
     public boolean isAssigned() {
         return hotelId != null;
     }

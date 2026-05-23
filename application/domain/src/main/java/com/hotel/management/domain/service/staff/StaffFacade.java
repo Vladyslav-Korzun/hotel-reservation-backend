@@ -12,5 +12,7 @@ public interface StaffFacade {
 
     StaffResult assignStaffToHotel(AuthenticatedUser actor, AssignStaffToHotelCommand command);
 
+    StaffResult unassignStaffFromHotel(AuthenticatedUser actor, Long staffId);
+
     Staff resolveStaff(AuthenticatedUser actor);
 }

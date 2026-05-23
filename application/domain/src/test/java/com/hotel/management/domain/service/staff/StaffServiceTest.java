@@ -100,6 +100,35 @@ class StaffServiceTest {
     }
 
     @Test
+    void shouldUnassignStaffFromHotel() {
+        when(staffRepository.findById(1L)).thenReturn(Optional.of(new Staff(1L, "sub-1", 5L)));
+        when(staffRepository.save(any(Staff.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        StaffResult result = staffService.unassignStaffFromHotel(admin(), 1L);
+
+        assertEquals(1L, result.id());
+        assertEquals(null, result.hotelId());
+    }
+
+    @Test
+    void shouldRejectUnassignForNonAdmin() {
+        assertThrows(
+                ForbiddenException.class,
+                () -> staffService.unassignStaffFromHotel(staff("sub-1"), 1L)
+        );
+    }
+
+    @Test
+    void shouldRejectUnassignWhenStaffNotFound() {
+        when(staffRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(
+                NotFoundException.class,
+                () -> staffService.unassignStaffFromHotel(admin(), 1L)
+        );
+    }
+
+    @Test
     void shouldProvisionStaffOnFirstResolve() {
         when(staffRepository.findByExternalId("sub-new")).thenReturn(Optional.empty());
         when(staffRepository.save(any(Staff.class))).thenAnswer(invocation -> invocation.getArgument(0));

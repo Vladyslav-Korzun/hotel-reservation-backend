@@ -114,6 +114,19 @@ class HotelAdministrationControllerTest {
         assertThat(hotelMapper.staffResult).isSameAs(staffFacade.assignResult);
     }
 
+    @Test
+    void shouldUnassignStaffFromHotel() {
+        hotelMapper.staffResponse = new StaffResponse().id(1L);
+
+        var actual = controller.unassignStaffFromHotel(1L);
+
+        assertThat(actual.getStatusCode().value()).isEqualTo(200);
+        assertThat(actual.getBody()).isSameAs(hotelMapper.staffResponse);
+        assertThat(staffFacade.unassignActor).isSameAs(currentUserPort.user);
+        assertThat(staffFacade.unassignStaffId).isEqualTo(1L);
+        assertThat(hotelMapper.staffResult).isSameAs(staffFacade.unassignResult);
+    }
+
     private static final class TestHotelFacade implements HotelFacade {
 
         private final HotelResult hotelResult = hotelResult();
@@ -186,9 +199,12 @@ class HotelAdministrationControllerTest {
 
         private final List<StaffResult> staffList = List.of(new StaffResult(1L, "sub-1", 5L));
         private final StaffResult assignResult = new StaffResult(1L, "sub-1", 7L);
+        private final StaffResult unassignResult = new StaffResult(1L, "sub-1", null);
         private AuthenticatedUser listStaffActor;
         private AuthenticatedUser assignActor;
         private AssignStaffToHotelCommand assignCommand;
+        private AuthenticatedUser unassignActor;
+        private Long unassignStaffId;
 
         @Override
         public List<StaffResult> listStaff(AuthenticatedUser actor) {
@@ -201,6 +217,13 @@ class HotelAdministrationControllerTest {
             this.assignActor = actor;
             this.assignCommand = command;
             return assignResult;
+        }
+
+        @Override
+        public StaffResult unassignStaffFromHotel(AuthenticatedUser actor, Long staffId) {
+            this.unassignActor = actor;
+            this.unassignStaffId = staffId;
+            return unassignResult;
         }
 
         @Override

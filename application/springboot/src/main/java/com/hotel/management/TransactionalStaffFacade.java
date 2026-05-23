@@ -31,6 +31,12 @@ public class TransactionalStaffFacade implements StaffFacade {
     }
 
     @Override
+    @Transactional
+    public StaffResult unassignStaffFromHotel(AuthenticatedUser actor, Long staffId) {
+        return delegate.unassignStaffFromHotel(actor, staffId);
+    }
+
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Staff resolveStaff(AuthenticatedUser actor) {
         return delegate.resolveStaff(actor);

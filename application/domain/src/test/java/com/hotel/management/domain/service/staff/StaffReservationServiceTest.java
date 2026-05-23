@@ -288,6 +288,11 @@ class StaffReservationServiceTest {
             public StaffResult assignStaffToHotel(AuthenticatedUser actor, AssignStaffToHotelCommand command) {
                 throw new UnsupportedOperationException();
             }
+
+            @Override
+            public StaffResult unassignStaffFromHotel(AuthenticatedUser actor, Long staffId) {
+                throw new UnsupportedOperationException();
+            }
         };
     }
 

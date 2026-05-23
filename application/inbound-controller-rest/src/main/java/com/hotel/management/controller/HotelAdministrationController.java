@@ -157,4 +157,11 @@ public class HotelAdministrationController implements AdminApi {
         );
         return ResponseEntity.ok(hotelMapper.toStaffResponse(result));
     }
+
+    @Override
+    public ResponseEntity<StaffResponse> unassignStaffFromHotel(Long staffId) {
+        var actor = currentUserPort.getCurrentUser();
+        var result = staffFacade.unassignStaffFromHotel(actor, staffId);
+        return ResponseEntity.ok(hotelMapper.toStaffResponse(result));
+    }
 }
