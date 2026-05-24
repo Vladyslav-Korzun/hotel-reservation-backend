@@ -23,7 +23,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -43,7 +44,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
-@Transactional
 class CreateReservationFlowIntegrationTest {
 
     @Container
@@ -61,6 +61,9 @@ class CreateReservationFlowIntegrationTest {
     @Autowired
     private SearchAvailabilityFacade searchAvailabilityFacade;
 
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
@@ -71,18 +74,21 @@ class CreateReservationFlowIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        entityManager.createQuery("delete from JpaAuditLogEntity").executeUpdate();
-        entityManager.createQuery("delete from JpaStayEntity").executeUpdate();
-        entityManager.createQuery("delete from JpaReservationServiceItemEntity").executeUpdate();
-        entityManager.createQuery("delete from JpaReservationEntity").executeUpdate();
-        entityManager.createQuery("delete from JpaServiceOfferingEntity").executeUpdate();
-        entityManager.createQuery("delete from JpaRoomEntity").executeUpdate();
-        entityManager.createQuery("delete from JpaRoomTypeEntity").executeUpdate();
-        entityManager.createQuery("delete from JpaGuestEntity").executeUpdate();
-        entityManager.createQuery("delete from JpaStaffEntity").executeUpdate();
-        entityManager.createQuery("delete from JpaHotelEntity").executeUpdate();
-        seedDefaultCatalog();
-        flushAndClear();
+        transactionTemplate.executeWithoutResult(status -> {
+            entityManager.createQuery("delete from JpaAuditLogEntity").executeUpdate();
+            entityManager.createQuery("delete from JpaStayEntity").executeUpdate();
+            entityManager.createQuery("delete from JpaReservationServiceItemEntity").executeUpdate();
+            entityManager.createQuery("delete from JpaReservationEntity").executeUpdate();
+            entityManager.createQuery("delete from JpaServiceOfferingEntity").executeUpdate();
+            entityManager.createQuery("delete from JpaRoomEntity").executeUpdate();
+            entityManager.createQuery("delete from JpaRoomTypeEntity").executeUpdate();
+            entityManager.createQuery("delete from JpaGuestEntity").executeUpdate();
+            entityManager.createQuery("delete from JpaStaffEntity").executeUpdate();
+            entityManager.createQuery("delete from JpaHotelEntity").executeUpdate();
+            seedDefaultCatalog();
+            entityManager.flush();
+            entityManager.clear();
+        });
     }
 
     @Test
@@ -409,11 +415,18 @@ class CreateReservationFlowIntegrationTest {
     }
 
     private void save(Object entity) {
-        entityManager.merge(entity);
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            entityManager.merge(entity);
+            return;
+        }
+
+        transactionTemplate.executeWithoutResult(status -> entityManager.merge(entity));
     }
 
     private void flushAndClear() {
-        entityManager.flush();
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            entityManager.flush();
+        }
         entityManager.clear();
     }
 
