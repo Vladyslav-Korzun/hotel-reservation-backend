@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 025-fix-seed-amenities
+      author: Vladyslav Korzun
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              -- Fix RIVER_VIEW (not a valid RoomAmenity) — replace with CITY_VIEW for Bratislava
+              -- Riverside room types where it was used in the 024 seed.
+              update room_types
+              set amenities_json = replace(amenities_json, '"RIVER_VIEW"', '"CITY_VIEW"')
+              where amenities_json like '%RIVER_VIEW%';

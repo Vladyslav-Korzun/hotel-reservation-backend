@@ -45,3 +45,5 @@ databaseChangeLog:
       file: db/changelog/changes/023-create-staff.yaml
   - include:
       file: db/changelog/changes/024-fresh-realistic-seed.yaml
+  - include:
+      file: db/changelog/changes/025-fix-seed-amenities.yaml
