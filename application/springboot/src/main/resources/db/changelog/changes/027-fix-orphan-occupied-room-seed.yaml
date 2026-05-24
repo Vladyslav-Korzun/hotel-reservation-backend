@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 027-fix-orphan-occupied-room-seed
+      author: Vladyslav Korzun
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              -- Room 210202 was seeded as OCCUPIED without a CHECKED_IN reservation
+              -- or an ACTIVE stay. Keep demo room occupancy derived from active stays.
+              update rooms r
+              set status = 'AVAILABLE'
+              where r.status = 'OCCUPIED'
+                and not exists (
+                  select 1
+                  from reservations res
+                  where res.room_id = r.id
+                    and res.status = 'CHECKED_IN'
+                )
+                and not exists (
+                  select 1
+                  from stays s
+                  where s.room_id = r.id
+                    and s.status = 'ACTIVE'
+                );

@@ -49,3 +49,5 @@ databaseChangeLog:
       file: db/changelog/changes/025-fix-seed-amenities.yaml
   - include:
       file: db/changelog/changes/026-seed-staying-guests.yaml
+  - include:
+      file: db/changelog/changes/027-fix-orphan-occupied-room-seed.yaml
