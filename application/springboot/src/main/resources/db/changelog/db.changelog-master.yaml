@@ -43,3 +43,5 @@ databaseChangeLog:
       file: db/changelog/changes/022-add-reservation-staying-guests.yaml
   - include:
       file: db/changelog/changes/023-create-staff.yaml
+  - include:
+      file: db/changelog/changes/024-fresh-realistic-seed.yaml

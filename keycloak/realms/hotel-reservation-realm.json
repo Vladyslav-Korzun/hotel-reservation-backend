@@ -107,23 +107,166 @@
       "username": "guest1",
       "enabled": true,
       "emailVerified": true,
-      "firstName": "Guest",
-      "lastName": "User",
-      "attributes": {
-        "guest_id": [
-          "11"
-        ]
-      },
-      "credentials": [
-        {
-          "type": "password",
-          "value": "guest123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": [
-        "GUEST"
-      ]
+      "firstName": "Martin",
+      "lastName": "Novák",
+      "email": "martin.novak@example.sk",
+      "attributes": { "guest_id": ["101"] },
+      "credentials": [{ "type": "password", "value": "guest1", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest2",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Anna",
+      "lastName": "Horváthová",
+      "email": "anna.horvathova@example.sk",
+      "attributes": { "guest_id": ["102"] },
+      "credentials": [{ "type": "password", "value": "guest2", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest3",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Peter",
+      "lastName": "Kováč",
+      "email": "peter.kovac@example.sk",
+      "attributes": { "guest_id": ["103"] },
+      "credentials": [{ "type": "password", "value": "guest3", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest4",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Mária",
+      "lastName": "Tóthová",
+      "email": "maria.tothova@example.sk",
+      "attributes": { "guest_id": ["104"] },
+      "credentials": [{ "type": "password", "value": "guest4", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest5",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Juraj",
+      "lastName": "Šimko",
+      "email": "juraj.simko@example.sk",
+      "attributes": { "guest_id": ["105"] },
+      "credentials": [{ "type": "password", "value": "guest5", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest6",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Lucia",
+      "lastName": "Poláková",
+      "email": "lucia.polakova@example.sk",
+      "attributes": { "guest_id": ["106"] },
+      "credentials": [{ "type": "password", "value": "guest6", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest7",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tomáš",
+      "lastName": "Varga",
+      "email": "tomas.varga@example.sk",
+      "attributes": { "guest_id": ["107"] },
+      "credentials": [{ "type": "password", "value": "guest7", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest8",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Katarína",
+      "lastName": "Molnárová",
+      "email": "katarina.molnarova@example.sk",
+      "attributes": { "guest_id": ["108"] },
+      "credentials": [{ "type": "password", "value": "guest8", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest9",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Marek",
+      "lastName": "Baláž",
+      "email": "marek.balaz@example.sk",
+      "attributes": { "guest_id": ["109"] },
+      "credentials": [{ "type": "password", "value": "guest9", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest10",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Veronika",
+      "lastName": "Dudášová",
+      "email": "veronika.dudasova@example.sk",
+      "attributes": { "guest_id": ["110"] },
+      "credentials": [{ "type": "password", "value": "guest10", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest11",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Andrej",
+      "lastName": "Krištofík",
+      "email": "andrej.kristofik@example.sk",
+      "attributes": { "guest_id": ["111"] },
+      "credentials": [{ "type": "password", "value": "guest11", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest12",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Eva",
+      "lastName": "Janáčová",
+      "email": "eva.janacova@example.sk",
+      "attributes": { "guest_id": ["112"] },
+      "credentials": [{ "type": "password", "value": "guest12", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest13",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Pavol",
+      "lastName": "Sedlák",
+      "email": "pavol.sedlak@example.sk",
+      "attributes": { "guest_id": ["113"] },
+      "credentials": [{ "type": "password", "value": "guest13", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest14",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Zuzana",
+      "lastName": "Bartošová",
+      "email": "zuzana.bartosova@example.sk",
+      "attributes": { "guest_id": ["114"] },
+      "credentials": [{ "type": "password", "value": "guest14", "temporary": false }],
+      "realmRoles": ["GUEST"]
+    },
+    {
+      "username": "guest15",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Michal",
+      "lastName": "Urban",
+      "email": "michal.urban@example.sk",
+      "attributes": { "guest_id": ["115"] },
+      "credentials": [{ "type": "password", "value": "guest15", "temporary": false }],
+      "realmRoles": ["GUEST"]
     },
     {
       "username": "staff1",
