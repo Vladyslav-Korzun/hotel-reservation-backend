@@ -1,0 +1,142 @@
+databaseChangeLog:
+  - changeSet:
+      id: 026-seed-staying-guests
+      author: Vladyslav Korzun
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              -- Populate staying_guests_json for all 024 seed reservations.
+              -- Names are realistic Slovak names; 2nd adult is usually a spouse,
+              -- children match the ages from children_ages_json.
+
+              update reservations set staying_guests_json =
+                '[{"firstName":"Martin","lastName":"Novák","age":35,"gender":"MALE"}]'
+                where id = 'R-2026-101';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Anna","lastName":"Horváthová","age":28,"gender":"FEMALE"}]'
+                where id = 'R-2026-102';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Peter","lastName":"Kováč","age":40,"gender":"MALE"}]'
+                where id = 'R-2026-103';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Mária","lastName":"Tóthová","age":32,"gender":"FEMALE"}]'
+                where id = 'R-2026-104';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Juraj","lastName":"Šimko","age":29,"gender":"MALE"}]'
+                where id = 'R-2026-105';
+
+              update reservations set staying_guests_json =
+                '[{"firstName":"Lucia","lastName":"Poláková","age":31,"gender":"FEMALE"},{"firstName":"Adam","lastName":"Polák","age":33,"gender":"MALE"}]'
+                where id = 'R-2026-106';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Tomáš","lastName":"Varga","age":42,"gender":"MALE"},{"firstName":"Jana","lastName":"Vargová","age":40,"gender":"FEMALE"}]'
+                where id = 'R-2026-107';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Katarína","lastName":"Molnárová","age":36,"gender":"FEMALE"},{"firstName":"Štefan","lastName":"Molnár","age":38,"gender":"MALE"},{"firstName":"Filip","lastName":"Molnár","age":7,"gender":"MALE"}]'
+                where id = 'R-2026-108';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Marek","lastName":"Baláž","age":34,"gender":"MALE"},{"firstName":"Petra","lastName":"Balážová","age":32,"gender":"FEMALE"}]'
+                where id = 'R-2026-109';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Veronika","lastName":"Dudášová","age":30,"gender":"FEMALE"},{"firstName":"Igor","lastName":"Dudáš","age":33,"gender":"MALE"}]'
+                where id = 'R-2026-110';
+
+              update reservations set staying_guests_json =
+                '[{"firstName":"Andrej","lastName":"Krištofík","age":45,"gender":"MALE"},{"firstName":"Silvia","lastName":"Krištofíková","age":43,"gender":"FEMALE"}]'
+                where id = 'R-2026-111';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Eva","lastName":"Janáčová","age":27,"gender":"FEMALE"},{"firstName":"Dávid","lastName":"Janáč","age":29,"gender":"MALE"}]'
+                where id = 'R-2026-112';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Pavol","lastName":"Sedlák","age":50,"gender":"MALE"},{"firstName":"Helena","lastName":"Sedláková","age":48,"gender":"FEMALE"}]'
+                where id = 'R-2026-113';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Zuzana","lastName":"Bartošová","age":38,"gender":"FEMALE"},{"firstName":"Roman","lastName":"Bartoš","age":40,"gender":"MALE"}]'
+                where id = 'R-2026-114';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Michal","lastName":"Urban","age":37,"gender":"MALE"},{"firstName":"Daniela","lastName":"Urbanová","age":35,"gender":"FEMALE"},{"firstName":"Adam","lastName":"Urban","age":8,"gender":"MALE"},{"firstName":"Ema","lastName":"Urbanová","age":5,"gender":"FEMALE"}]'
+                where id = 'R-2026-115';
+
+              update reservations set staying_guests_json =
+                '[{"firstName":"Martin","lastName":"Novák","age":35,"gender":"MALE"},{"firstName":"Lenka","lastName":"Nováková","age":33,"gender":"FEMALE"},{"firstName":"Jozef","lastName":"Novák","age":62,"gender":"MALE"},{"firstName":"Sebastian","lastName":"Novák","age":10,"gender":"MALE"}]'
+                where id = 'R-2026-116';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Anna","lastName":"Horváthová","age":28,"gender":"FEMALE"},{"firstName":"Miroslav","lastName":"Horváth","age":30,"gender":"MALE"},{"firstName":"Karolína","lastName":"Horváthová","age":6,"gender":"FEMALE"},{"firstName":"Matej","lastName":"Horváth","age":4,"gender":"MALE"},{"firstName":"Nina","lastName":"Horváthová","age":2,"gender":"FEMALE"}]'
+                where id = 'R-2026-117';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Peter","lastName":"Kováč","age":40,"gender":"MALE"},{"firstName":"Monika","lastName":"Kováčová","age":38,"gender":"FEMALE"}]'
+                where id = 'R-2026-118';
+
+              update reservations set staying_guests_json =
+                '[{"firstName":"Mária","lastName":"Tóthová","age":32,"gender":"FEMALE"}]'
+                where id = 'R-2026-120';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Juraj","lastName":"Šimko","age":29,"gender":"MALE"},{"firstName":"Alžbeta","lastName":"Šimková","age":27,"gender":"FEMALE"}]'
+                where id = 'R-2026-121';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Lucia","lastName":"Poláková","age":31,"gender":"FEMALE"}]'
+                where id = 'R-2026-122';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Tomáš","lastName":"Varga","age":42,"gender":"MALE"},{"firstName":"Jana","lastName":"Vargová","age":40,"gender":"FEMALE"}]'
+                where id = 'R-2026-123';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Katarína","lastName":"Molnárová","age":36,"gender":"FEMALE"}]'
+                where id = 'R-2026-124';
+
+              -- CONFIRMED (future)
+              update reservations set staying_guests_json =
+                '[{"firstName":"Marek","lastName":"Baláž","age":34,"gender":"MALE"},{"firstName":"Petra","lastName":"Balážová","age":32,"gender":"FEMALE"}]'
+                where id = 'R-2026-201';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Veronika","lastName":"Dudášová","age":30,"gender":"FEMALE"},{"firstName":"Igor","lastName":"Dudáš","age":33,"gender":"MALE"},{"firstName":"Šimon","lastName":"Dudáš","age":7,"gender":"MALE"},{"firstName":"Tereza","lastName":"Dudášová","age":4,"gender":"FEMALE"}]'
+                where id = 'R-2026-202';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Andrej","lastName":"Krištofík","age":45,"gender":"MALE"},{"firstName":"Silvia","lastName":"Krištofíková","age":43,"gender":"FEMALE"}]'
+                where id = 'R-2026-203';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Eva","lastName":"Janáčová","age":27,"gender":"FEMALE"},{"firstName":"Dávid","lastName":"Janáč","age":29,"gender":"MALE"}]'
+                where id = 'R-2026-204';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Pavol","lastName":"Sedlák","age":50,"gender":"MALE"},{"firstName":"Helena","lastName":"Sedláková","age":48,"gender":"FEMALE"},{"firstName":"Lukáš","lastName":"Sedlák","age":9,"gender":"MALE"},{"firstName":"Sofia","lastName":"Sedláková","age":6,"gender":"FEMALE"}]'
+                where id = 'R-2026-205';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Zuzana","lastName":"Bartošová","age":38,"gender":"FEMALE"},{"firstName":"Roman","lastName":"Bartoš","age":40,"gender":"MALE"}]'
+                where id = 'R-2026-206';
+
+              -- CHECKED_OUT (past)
+              update reservations set staying_guests_json =
+                '[{"firstName":"Michal","lastName":"Urban","age":37,"gender":"MALE"},{"firstName":"Daniela","lastName":"Urbanová","age":35,"gender":"FEMALE"}]'
+                where id = 'R-2026-301';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Martin","lastName":"Novák","age":35,"gender":"MALE"},{"firstName":"Lenka","lastName":"Nováková","age":33,"gender":"FEMALE"}]'
+                where id = 'R-2026-302';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Anna","lastName":"Horváthová","age":28,"gender":"FEMALE"},{"firstName":"Miroslav","lastName":"Horváth","age":30,"gender":"MALE"}]'
+                where id = 'R-2026-303';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Peter","lastName":"Kováč","age":40,"gender":"MALE"},{"firstName":"Monika","lastName":"Kováčová","age":38,"gender":"FEMALE"}]'
+                where id = 'R-2026-304';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Mária","lastName":"Tóthová","age":32,"gender":"FEMALE"},{"firstName":"Lukáš","lastName":"Tóth","age":34,"gender":"MALE"}]'
+                where id = 'R-2026-305';
+
+              -- CANCELLED
+              update reservations set staying_guests_json =
+                '[{"firstName":"Juraj","lastName":"Šimko","age":29,"gender":"MALE"},{"firstName":"Alžbeta","lastName":"Šimková","age":27,"gender":"FEMALE"}]'
+                where id = 'R-2026-401';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Lucia","lastName":"Poláková","age":31,"gender":"FEMALE"},{"firstName":"Adam","lastName":"Polák","age":33,"gender":"MALE"}]'
+                where id = 'R-2026-402';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Tomáš","lastName":"Varga","age":42,"gender":"MALE"},{"firstName":"Jana","lastName":"Vargová","age":40,"gender":"FEMALE"}]'
+                where id = 'R-2026-403';
+
+              -- NO_SHOW
+              update reservations set staying_guests_json =
+                '[{"firstName":"Katarína","lastName":"Molnárová","age":36,"gender":"FEMALE"},{"firstName":"Štefan","lastName":"Molnár","age":38,"gender":"MALE"}]'
+                where id = 'R-2026-501';
+              update reservations set staying_guests_json =
+                '[{"firstName":"Marek","lastName":"Baláž","age":34,"gender":"MALE"}]'
+                where id = 'R-2026-502';
