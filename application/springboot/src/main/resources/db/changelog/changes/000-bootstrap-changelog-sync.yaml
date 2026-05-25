@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 000-bootstrap-changelog-sync
+      author: Vladyslav Korzun
+      comment: >
+        Bootstrap: ak tabulky uz existuju ale DATABASECHANGELOG je prazdna
+        (strata tracking), oznac vsetky changesety ako EXECUTED s md5sum=NULL.
+        Na cistej DB neurobi nic - tabulka reservations tam este neexistuje.
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              INSERT INTO databasechangelog
+                (id, author, filename, dateexecuted, orderexecuted, exectype, md5sum, description, comments)
+              SELECT
+                v.id,
+                v.author,
+                v.filename,
+                NOW(),
+                ROW_NUMBER() OVER (ORDER BY v.ord),
+                'EXECUTED',
+                NULL,
+                '',
+                ''
+              FROM (VALUES
+                (1,  '001-create-reservations-table',                'Vladyslav Korzun', 'db/changelog/changes/001-create-reservations-table.yaml'),
+                (2,  '002-alter-reservations-for-cancel',            'Vladyslav Korzun', 'db/changelog/changes/002-alter-reservations-for-cancel.yaml'),
+                (3,  '003-extend-reservation-statuses',              'Vladyslav Korzun', 'db/changelog/changes/003-extend-reservation-statuses.yaml'),
+                (4,  '004-create-hotel-room-catalog',                'Vladyslav Korzun', 'db/changelog/changes/004-create-hotel-room-catalog.yaml'),
+                (5,  '005-add-reservation-room-assignment',          'Vladyslav Korzun', 'db/changelog/changes/005-add-reservation-room-assignment.yaml'),
+                (6,  '006-add-reservation-foreign-keys',             'Vladyslav Korzun', 'db/changelog/changes/006-add-reservation-foreign-keys.yaml'),
+                (7,  '007-strengthen-reservation-room-constraints',  'Vladyslav Korzun', 'db/changelog/changes/007-strengthen-reservation-room-constraints.yaml'),
+                (8,  '008-seed-demo-hotel-catalog',                  'Vladyslav Korzun', 'db/changelog/changes/008-seed-demo-hotel-catalog.yaml'),
+                (9,  '009-add-accommodation-policies',               'Vladyslav Korzun', 'db/changelog/changes/009-add-accommodation-policies.yaml'),
+                (10, '010-add-service-offerings-and-price-snapshot', 'Vladyslav Korzun', 'db/changelog/changes/010-add-service-offerings-and-price-snapshot.yaml'),
+                (11, '011-create-audit-log',                         'Vladyslav Korzun', 'db/changelog/changes/011-create-audit-log.yaml'),
+                (12, '012-extend-hotel-statuses',                    'Vladyslav Korzun', 'db/changelog/changes/012-extend-hotel-statuses.yaml'),
+                (13, '014-add-reservation-guest-id',                 'Vladyslav Korzun', 'db/changelog/changes/014-add-reservation-guest-id.yaml'),
+                (14, '015-create-guests',                            'Vladyslav Korzun', 'db/changelog/changes/015-create-guests.yaml'),
+                (15, '016-create-stays',                             'Vladyslav Korzun', 'db/changelog/changes/016-create-stays.yaml'),
+                (16, '017-seed-ui-working-data',                     'Vladyslav Korzun', 'db/changelog/changes/017-seed-ui-working-data.yaml'),
+                (17, '018-add-adult-equivalent-age',                 'Vladyslav Korzun', 'db/changelog/changes/018-add-adult-equivalent-age.yaml'),
+                (18, '019-add-guest-id-sequence',                    'Vladyslav Korzun', 'db/changelog/changes/019-add-guest-id-sequence.yaml'),
+                (19, '020-add-room-type-features',                   'Vladyslav Korzun', 'db/changelog/changes/020-add-room-type-features.yaml'),
+                (20, '021-add-reservation-contact-fields',           'Vladyslav Korzun', 'db/changelog/changes/021-add-reservation-contact-fields.yaml'),
+                (21, '022-add-reservation-staying-guests',           'Vladyslav Korzun', 'db/changelog/changes/022-add-reservation-staying-guests.yaml'),
+                (22, '023-create-staff',                             'Vladyslav Korzun', 'db/changelog/changes/023-create-staff.yaml'),
+                (23, '024-fresh-realistic-seed',                     'Vladyslav Korzun', 'db/changelog/changes/024-fresh-realistic-seed.yaml'),
+                (24, '025-fix-seed-amenities',                       'Vladyslav Korzun', 'db/changelog/changes/025-fix-seed-amenities.yaml'),
+                (25, '026-seed-staying-guests',                      'Vladyslav Korzun', 'db/changelog/changes/026-seed-staying-guests.yaml'),
+                (26, '027-fix-orphan-occupied-room-seed',            'Vladyslav Korzun', 'db/changelog/changes/027-fix-orphan-occupied-room-seed.yaml')
+              ) AS v(ord, id, author, filename)
+              WHERE
+                (SELECT COUNT(*) FROM databasechangelog) = 0
+                AND EXISTS (
+                  SELECT 1 FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                    AND table_name = 'reservations'
+                );
