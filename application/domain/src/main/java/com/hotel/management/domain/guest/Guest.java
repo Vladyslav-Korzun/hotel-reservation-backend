@@ -49,6 +49,13 @@ public final class Guest {
         return keycloakId;
     }
 
+    public static Guest register(String keycloakId, String email, String firstName, String lastName) {
+        String resolvedEmail = email     != null ? email     : keycloakId + "@keycloak.local";
+        String resolvedFirst = firstName != null ? firstName : "Guest";
+        String resolvedLast  = lastName  != null ? lastName  : "User";
+        return new Guest(null, resolvedFirst, resolvedLast, new EmailAddress(resolvedEmail), null, keycloakId);
+    }
+
     public Guest withKeycloakId(String keycloakId) {
         return new Guest(this.id, this.firstName, this.lastName, this.email, this.phone, keycloakId);
     }

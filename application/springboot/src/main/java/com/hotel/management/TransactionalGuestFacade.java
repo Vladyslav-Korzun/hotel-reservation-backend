@@ -1,6 +1,8 @@
 package com.hotel.management;
 
+import com.hotel.management.domain.guest.Guest;
 import com.hotel.management.domain.service.guest.GuestFacade;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import org.springframework.transaction.annotation.Transactional;
 
 public class TransactionalGuestFacade implements GuestFacade {
@@ -13,8 +15,7 @@ public class TransactionalGuestFacade implements GuestFacade {
 
     @Override
     @Transactional
-    public Long findOrCreateByKeycloakId(String keycloakId, Long legacyGuestId,
-                                          String email, String firstName, String lastName) {
-        return delegate.findOrCreateByKeycloakId(keycloakId, legacyGuestId, email, firstName, lastName);
+    public Guest resolveGuest(AuthenticatedUser actor) {
+        return delegate.resolveGuest(actor);
     }
 }

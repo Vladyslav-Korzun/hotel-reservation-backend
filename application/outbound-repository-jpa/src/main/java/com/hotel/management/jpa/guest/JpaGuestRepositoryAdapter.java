@@ -49,7 +49,8 @@ public class JpaGuestRepositoryAdapter implements GuestRepository {
                 guest.firstName(),
                 guest.lastName(),
                 guest.email(),
-                guest.phone()
+                guest.phone(),
+                guest.keycloakId()
         );
     }
 

@@ -61,6 +61,42 @@ class JwtConverterTest {
                 .isInstanceOfSatisfying(AuthenticatedUser.class, user -> assertThat(user.guestId()).isEqualTo(11L));
     }
 
+    @Test
+    void shouldExtractEmailAndNameClaimsIntoAuthenticatedUser() {
+        Jwt jwt = baseJwt()
+                .claim("roles", List.of("GUEST"))
+                .claim("email", "alice@example.com")
+                .claim("given_name", "Alice")
+                .claim("family_name", "Smith")
+                .build();
+
+        var authentication = new JwtConverter(jwt);
+
+        assertThat(authentication.getPrincipal())
+                .isInstanceOfSatisfying(AuthenticatedUser.class, user -> {
+                    assertThat(user.email()).isEqualTo("alice@example.com");
+                    assertThat(user.firstName()).isEqualTo("Alice");
+                    assertThat(user.lastName()).isEqualTo("Smith");
+                    assertThat(user.subject()).isEqualTo("subject-1");
+                });
+    }
+
+    @Test
+    void shouldTolerateAbsentEmailAndNameClaims() {
+        Jwt jwt = baseJwt()
+                .claim("roles", List.of("GUEST"))
+                .build();
+
+        var authentication = new JwtConverter(jwt);
+
+        assertThat(authentication.getPrincipal())
+                .isInstanceOfSatisfying(AuthenticatedUser.class, user -> {
+                    assertThat(user.email()).isNull();
+                    assertThat(user.firstName()).isNull();
+                    assertThat(user.lastName()).isNull();
+                });
+    }
+
     private Jwt.Builder baseJwt() {
         return Jwt.withTokenValue("token")
                 .header("alg", "none")

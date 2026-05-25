@@ -1,18 +1,17 @@
 package com.hotel.management.domain.service.guest;
 
+import com.hotel.management.domain.guest.Guest;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
+
 public interface GuestFacade {
 
     /**
-     * Finds an existing guest by Keycloak UUID, or creates one from the provided JWT claims.
-     * Also handles legacy accounts by binding keycloakId on first login.
+     * Resolves the guest record for the authenticated user.
+     * Finds an existing guest by Keycloak UUID, binds a legacy account on first login,
+     * or auto-creates a new guest from JWT claims.
      *
-     * @param keycloakId    Keycloak subject UUID — always present in JWT sub claim
-     * @param legacyGuestId guest_id from JWT claim — present only for pre-created accounts
-     * @param email         email claim from JWT
-     * @param firstName     given_name claim from JWT
-     * @param lastName      family_name claim from JWT
-     * @return the resolved guest DB id
+     * @param actor authenticated user with GUEST role — subject, guestId, email, firstName, lastName are read from it
+     * @return the resolved Guest domain entity
      */
-    Long findOrCreateByKeycloakId(String keycloakId, Long legacyGuestId,
-                                   String email, String firstName, String lastName);
+    Guest resolveGuest(AuthenticatedUser actor);
 }

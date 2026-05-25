@@ -2,7 +2,10 @@ package com.hotel.management.domain.service.guest;
 
 import com.hotel.management.domain.guest.Guest;
 import com.hotel.management.domain.guest.GuestRepository;
-import com.hotel.management.domain.shared.value.EmailAddress;
+import com.hotel.management.domain.shared.exception.ForbiddenException;
+import com.hotel.management.domain.shared.security.AuthenticatedUser;
+
+import java.util.Optional;
 
 public class GuestService implements GuestFacade {
 
@@ -13,60 +16,30 @@ public class GuestService implements GuestFacade {
     }
 
     @Override
-    public Long findOrCreateByKeycloakId(String keycloakId, Long legacyGuestId,
-                                          String email, String firstName, String lastName) {
-        // 1. Primary: find by Keycloak UUID (fast path for returning users)
-        if (keycloakId != null) {
-            var byKeycloak = guestRepository.findByKeycloakId(keycloakId);
-            if (byKeycloak.isPresent()) {
-                return byKeycloak.get().id();
-            }
+    public Guest resolveGuest(AuthenticatedUser actor) {
+        requireActor(actor).requireGuest();
+        String keycloakId = actor.subject();
+        if (keycloakId == null || keycloakId.isBlank()) {
+            throw new ForbiddenException("keycloak subject claim is required");
         }
-
-        // 2. Fallback: legacy demo accounts that have guest_id claim in JWT
-        if (legacyGuestId != null) {
-            var byId = guestRepository.findById(legacyGuestId);
-            if (byId.isPresent()) {
-                Guest guest = byId.get();
-                // Bind keycloakId so future logins skip this fallback
-                if (keycloakId != null && guest.keycloakId() == null) {
-                    guest = guestRepository.save(guest.withKeycloakId(keycloakId));
-                }
-                return guest.id();
-            }
-        }
-
-        // 3. Check by email to avoid duplicate guest records
-        if (email != null && !email.isBlank()) {
-            try {
-                var byEmail = guestRepository.findByEmail(new EmailAddress(email));
-                if (byEmail.isPresent()) {
-                    Guest guest = byEmail.get();
-                    if (keycloakId != null && guest.keycloakId() == null) {
-                        guest = guestRepository.save(guest.withKeycloakId(keycloakId));
-                    }
-                    return guest.id();
-                }
-            } catch (Exception ignored) {
-                // invalid email format — skip email lookup
-            }
-        }
-
-        // 4. Create new guest record for self-registered Keycloak users
-        String resolvedEmail    = email != null && !email.isBlank() ? email : keycloakId + "@keycloak.local";
-        String resolvedFirst    = firstName != null && !firstName.isBlank() ? firstName : firstNameFrom(resolvedEmail);
-        String resolvedLast     = lastName  != null && !lastName.isBlank()  ? lastName  : "User";
-
-        return guestRepository.save(
-                new Guest(null, resolvedFirst, resolvedLast, new EmailAddress(resolvedEmail), null, keycloakId)
-        ).id();
+        return guestRepository.findByKeycloakId(keycloakId)
+                .or(() -> bindLegacyGuest(actor.guestId(), keycloakId))
+                .orElseGet(() -> guestRepository.save(
+                        Guest.register(keycloakId, actor.email(), actor.firstName(), actor.lastName())));
     }
 
-    private static String firstNameFrom(String email) {
-        if (!email.contains("@")) {
-            return "Guest";
+    private Optional<Guest> bindLegacyGuest(Long legacyGuestId, String keycloakId) {
+        if (legacyGuestId == null) return Optional.empty();
+        return guestRepository.findById(legacyGuestId)
+                .map(guest -> guest.keycloakId() == null
+                        ? guestRepository.save(guest.withKeycloakId(keycloakId))
+                        : guest);
+    }
+
+    private static AuthenticatedUser requireActor(AuthenticatedUser actor) {
+        if (actor == null) {
+            throw new ForbiddenException("authentication is required");
         }
-        String local = email.split("@")[0];
-        return Character.toUpperCase(local.charAt(0)) + local.substring(1);
+        return actor;
     }
 }

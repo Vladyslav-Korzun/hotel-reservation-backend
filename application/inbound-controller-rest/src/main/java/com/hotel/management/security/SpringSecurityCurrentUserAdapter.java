@@ -1,5 +1,6 @@
 package com.hotel.management.security;
 
+import com.hotel.management.domain.guest.Guest;
 import com.hotel.management.domain.service.guest.GuestFacade;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
@@ -31,17 +32,11 @@ public class SpringSecurityCurrentUserAdapter implements CurrentUserPort {
         if (principal instanceof AuthenticatedUser authenticatedUser) {
             // For GUEST role: resolve (or auto-create) the DB guest record
             if (authenticatedUser.isGuest()) {
-                Long resolvedGuestId = guestFacade.findOrCreateByKeycloakId(
-                        authenticatedUser.subject(),
-                        authenticatedUser.guestId(),
-                        authenticatedUser.email(),
-                        authenticatedUser.firstName(),
-                        authenticatedUser.lastName()
-                );
+                Guest resolved = guestFacade.resolveGuest(authenticatedUser);
                 return new AuthenticatedUser(
                         authenticatedUser.userId(),
                         authenticatedUser.roles(),
-                        resolvedGuestId,
+                        resolved.id(),
                         authenticatedUser.subject(),
                         authenticatedUser.email(),
                         authenticatedUser.firstName(),

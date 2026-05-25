@@ -5,6 +5,7 @@
   "sslRequired": "external",
   "registrationAllowed": true,
   "registrationEmailAsUsername": false,
+  "defaultRoles": ["GUEST"],
   "rememberMe": false,
   "verifyEmail": false,
   "loginWithEmailAllowed": true,
