@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 028-add-guest-keycloak-id
+      author: Vladyslav Korzun
+      comment: >
+        Add keycloak_id column to guests table so self-registered users are
+        linked by their Keycloak UUID (sub claim) instead of a manual attribute.
+      changes:
+        - addColumn:
+            tableName: guests
+            columns:
+              - column:
+                  name: keycloak_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: true
+                    unique: true

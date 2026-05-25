@@ -33,7 +33,10 @@ class JwtConverter extends AbstractAuthenticationToken {
                 extractUserId(source),
                 extractRoles(source),
                 extractGuestId(source),
-                source.getSubject()
+                source.getSubject(),
+                source.getClaimAsString("email"),
+                source.getClaimAsString("given_name"),
+                source.getClaimAsString("family_name")
         );
     }
 

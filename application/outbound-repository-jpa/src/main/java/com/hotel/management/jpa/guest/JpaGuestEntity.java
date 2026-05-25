@@ -25,6 +25,9 @@ public class JpaGuestEntity {
     @Column(name = "phone", length = 64)
     private String phone;
 
+    @Column(name = "keycloak_id", length = 36, unique = true)
+    private String keycloakId;
+
     public Long getId() {
         return id;
     }
@@ -63,5 +66,13 @@ public class JpaGuestEntity {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getKeycloakId() {
+        return keycloakId;
+    }
+
+    public void setKeycloakId(String keycloakId) {
+        this.keycloakId = keycloakId;
     }
 }

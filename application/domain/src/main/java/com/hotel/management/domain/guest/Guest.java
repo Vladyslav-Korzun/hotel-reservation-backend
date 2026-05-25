@@ -10,13 +10,19 @@ public final class Guest {
     private final String lastName;
     private final EmailAddress email;
     private final String phone;
+    private final String keycloakId;
 
-    public Guest(Long id, String firstName, String lastName, EmailAddress email, String phone) {
+    public Guest(Long id, String firstName, String lastName, EmailAddress email, String phone, String keycloakId) {
         this.id = id;
         this.firstName = requireText(firstName, "firstName is required");
         this.lastName = requireText(lastName, "lastName is required");
         this.email = require(email, "email is required");
         this.phone = normalizePhone(phone);
+        this.keycloakId = keycloakId;
+    }
+
+    public Guest(Long id, String firstName, String lastName, EmailAddress email, String phone) {
+        this(id, firstName, lastName, email, phone, null);
     }
 
     public Long id() {
@@ -37,6 +43,14 @@ public final class Guest {
 
     public String phone() {
         return phone;
+    }
+
+    public String keycloakId() {
+        return keycloakId;
+    }
+
+    public Guest withKeycloakId(String keycloakId) {
+        return new Guest(this.id, this.firstName, this.lastName, this.email, this.phone, keycloakId);
     }
 
     private static String normalizePhone(String phone) {

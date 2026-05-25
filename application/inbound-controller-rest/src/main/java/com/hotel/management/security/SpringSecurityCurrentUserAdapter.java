@@ -1,5 +1,6 @@
 package com.hotel.management.security;
 
+import com.hotel.management.domain.service.guest.GuestFacade;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 import com.hotel.management.domain.shared.security.CurrentUserPort;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -16,12 +17,37 @@ import java.util.stream.Collectors;
 @Component
 public class SpringSecurityCurrentUserAdapter implements CurrentUserPort {
 
+    private final GuestFacade guestFacade;
+
+    public SpringSecurityCurrentUserAdapter(GuestFacade guestFacade) {
+        this.guestFacade = guestFacade;
+    }
+
     @Override
     public AuthenticatedUser getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
 
         if (principal instanceof AuthenticatedUser authenticatedUser) {
+            // For GUEST role: resolve (or auto-create) the DB guest record
+            if (authenticatedUser.isGuest()) {
+                Long resolvedGuestId = guestFacade.findOrCreateByKeycloakId(
+                        authenticatedUser.subject(),
+                        authenticatedUser.guestId(),
+                        authenticatedUser.email(),
+                        authenticatedUser.firstName(),
+                        authenticatedUser.lastName()
+                );
+                return new AuthenticatedUser(
+                        authenticatedUser.userId(),
+                        authenticatedUser.roles(),
+                        resolvedGuestId,
+                        authenticatedUser.subject(),
+                        authenticatedUser.email(),
+                        authenticatedUser.firstName(),
+                        authenticatedUser.lastName()
+                );
+            }
             return authenticatedUser;
         }
 
@@ -34,7 +60,10 @@ public class SpringSecurityCurrentUserAdapter implements CurrentUserPort {
             String userId = preferredUsername != null && !preferredUsername.isBlank()
                     ? preferredUsername
                     : jwt.getSubject();
-            return new AuthenticatedUser(userId, roles, guestId(jwt), jwt.getSubject());
+            return new AuthenticatedUser(userId, roles, guestId(jwt), jwt.getSubject(),
+                    jwt.getClaimAsString("email"),
+                    jwt.getClaimAsString("given_name"),
+                    jwt.getClaimAsString("family_name"));
         }
 
         throw new IllegalStateException("Authenticated JWT principal is required");

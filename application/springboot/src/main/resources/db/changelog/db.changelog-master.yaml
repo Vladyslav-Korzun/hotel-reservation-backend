@@ -53,3 +53,5 @@ databaseChangeLog:
       file: db/changelog/changes/026-seed-staying-guests.yaml
   - include:
       file: db/changelog/changes/027-fix-orphan-occupied-room-seed.yaml
+  - include:
+      file: db/changelog/changes/028-add-guest-keycloak-id.yaml

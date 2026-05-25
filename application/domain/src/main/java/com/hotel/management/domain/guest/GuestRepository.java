@@ -10,5 +10,7 @@ public interface GuestRepository {
 
     Optional<Guest> findByEmail(EmailAddress email);
 
+    Optional<Guest> findByKeycloakId(String keycloakId);
+
     Guest save(Guest guest);
 }

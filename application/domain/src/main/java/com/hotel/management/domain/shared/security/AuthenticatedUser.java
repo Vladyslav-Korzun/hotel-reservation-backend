@@ -4,14 +4,19 @@ import com.hotel.management.domain.shared.exception.ForbiddenException;
 
 import java.util.Set;
 
-public record AuthenticatedUser(String userId, Set<String> roles, Long guestId, String subject) {
+public record AuthenticatedUser(String userId, Set<String> roles, Long guestId, String subject,
+                                String email, String firstName, String lastName) {
 
     public AuthenticatedUser(String userId, Set<String> roles) {
-        this(userId, roles, null, null);
+        this(userId, roles, null, null, null, null, null);
     }
 
     public AuthenticatedUser(String userId, Set<String> roles, Long guestId) {
-        this(userId, roles, guestId, null);
+        this(userId, roles, guestId, null, null, null, null);
+    }
+
+    public AuthenticatedUser(String userId, Set<String> roles, Long guestId, String subject) {
+        this(userId, roles, guestId, subject, null, null, null);
     }
 
     public boolean hasRole(String role) {

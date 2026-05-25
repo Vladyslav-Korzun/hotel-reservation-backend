@@ -30,6 +30,11 @@ public class JpaGuestRepositoryAdapter implements GuestRepository {
     }
 
     @Override
+    public Optional<Guest> findByKeycloakId(String keycloakId) {
+        return repository.findByKeycloakId(keycloakId).map(this::toDomain);
+    }
+
+    @Override
     public Guest save(Guest guest) {
         Guest guestWithId = guest.id() == null ? withGeneratedId(guest) : guest;
         return toDomain(repository.save(toEntity(guestWithId)));
@@ -54,7 +59,8 @@ public class JpaGuestRepositoryAdapter implements GuestRepository {
                 entity.getFirstName(),
                 entity.getLastName(),
                 new EmailAddress(entity.getEmail()),
-                entity.getPhone()
+                entity.getPhone(),
+                entity.getKeycloakId()
         );
     }
 
@@ -65,6 +71,7 @@ public class JpaGuestRepositoryAdapter implements GuestRepository {
         entity.setLastName(guest.lastName());
         entity.setEmail(guest.email().value());
         entity.setPhone(guest.phone());
+        entity.setKeycloakId(guest.keycloakId());
         return entity;
     }
 }
