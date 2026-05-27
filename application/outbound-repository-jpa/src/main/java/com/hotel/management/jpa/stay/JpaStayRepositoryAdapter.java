@@ -12,7 +12,7 @@ public class JpaStayRepositoryAdapter implements StayRepository {
 
     private final JpaStaySpringDataRepository repository;
 
-    public JpaStayRepositoryAdapter(JpaStaySpringDataRepository repository) {
+    JpaStayRepositoryAdapter(JpaStaySpringDataRepository repository) {
         this.repository = repository;
     }
 

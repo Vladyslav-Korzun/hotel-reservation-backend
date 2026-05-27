@@ -13,7 +13,7 @@ public class JpaRoomRepositoryAdapter implements RoomRepository {
 
     private final JpaRoomSpringDataRepository roomSpringDataRepository;
 
-    public JpaRoomRepositoryAdapter(JpaRoomSpringDataRepository roomSpringDataRepository) {
+    JpaRoomRepositoryAdapter(JpaRoomSpringDataRepository roomSpringDataRepository) {
         this.roomSpringDataRepository = roomSpringDataRepository;
     }
 

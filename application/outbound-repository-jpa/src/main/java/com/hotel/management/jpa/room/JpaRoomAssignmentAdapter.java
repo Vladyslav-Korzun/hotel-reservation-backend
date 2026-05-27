@@ -12,7 +12,7 @@ public class JpaRoomAssignmentAdapter implements RoomAssignmentPort {
 
     private final JpaRoomSpringDataRepository roomSpringDataRepository;
 
-    public JpaRoomAssignmentAdapter(JpaRoomSpringDataRepository roomSpringDataRepository) {
+    JpaRoomAssignmentAdapter(JpaRoomSpringDataRepository roomSpringDataRepository) {
         this.roomSpringDataRepository = roomSpringDataRepository;
     }
 

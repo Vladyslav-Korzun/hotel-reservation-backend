@@ -13,7 +13,7 @@ public class JpaReservationServiceItemRepositoryAdapter implements ReservationSe
 
     private final JpaReservationServiceItemSpringDataRepository repository;
 
-    public JpaReservationServiceItemRepositoryAdapter(JpaReservationServiceItemSpringDataRepository repository) {
+    JpaReservationServiceItemRepositoryAdapter(JpaReservationServiceItemSpringDataRepository repository) {
         this.repository = repository;
     }
 

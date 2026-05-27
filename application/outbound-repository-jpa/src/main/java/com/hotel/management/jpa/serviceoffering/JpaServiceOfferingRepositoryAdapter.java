@@ -14,7 +14,7 @@ public class JpaServiceOfferingRepositoryAdapter implements ServiceOfferingRepos
 
     private final JpaServiceOfferingSpringDataRepository repository;
 
-    public JpaServiceOfferingRepositoryAdapter(JpaServiceOfferingSpringDataRepository repository) {
+    JpaServiceOfferingRepositoryAdapter(JpaServiceOfferingSpringDataRepository repository) {
         this.repository = repository;
     }
 

@@ -23,7 +23,7 @@ public class JpaReservationLockAdapter implements ReservationLockPort {
 
     private final JpaReservationSpringDataRepository springDataReservationRepository;
 
-    public JpaReservationLockAdapter(JpaReservationSpringDataRepository springDataReservationRepository) {
+    JpaReservationLockAdapter(JpaReservationSpringDataRepository springDataReservationRepository) {
         this.springDataReservationRepository = springDataReservationRepository;
     }
 

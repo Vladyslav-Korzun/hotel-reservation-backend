@@ -14,7 +14,7 @@ public class JpaGuestRepositoryAdapter implements GuestRepository {
     private final JpaGuestSpringDataRepository repository;
     private final EntityManager entityManager;
 
-    public JpaGuestRepositoryAdapter(JpaGuestSpringDataRepository repository, EntityManager entityManager) {
+    JpaGuestRepositoryAdapter(JpaGuestSpringDataRepository repository, EntityManager entityManager) {
         this.repository = repository;
         this.entityManager = entityManager;
     }

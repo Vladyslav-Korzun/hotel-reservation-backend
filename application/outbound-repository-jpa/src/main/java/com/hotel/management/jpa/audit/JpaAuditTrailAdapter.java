@@ -14,7 +14,7 @@ public class JpaAuditTrailAdapter implements AuditTrail {
     private final JpaAuditLogSpringDataRepository repository;
     private final ClockPort clockPort;
 
-    public JpaAuditTrailAdapter(JpaAuditLogSpringDataRepository repository, ClockPort clockPort) {
+    JpaAuditTrailAdapter(JpaAuditLogSpringDataRepository repository, ClockPort clockPort) {
         this.repository = repository;
         this.clockPort = clockPort;
     }

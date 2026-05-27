@@ -26,7 +26,7 @@ public class JpaReservationRepositoryAdapter implements ReservationRepository {
     private final JpaReservationSpringDataRepository springDataReservationRepository;
     private final ReservationServiceItemRepository reservationServiceItemRepository;
 
-    public JpaReservationRepositoryAdapter(
+    JpaReservationRepositoryAdapter(
             JpaReservationSpringDataRepository springDataReservationRepository,
             ReservationServiceItemRepository reservationServiceItemRepository
     ) {

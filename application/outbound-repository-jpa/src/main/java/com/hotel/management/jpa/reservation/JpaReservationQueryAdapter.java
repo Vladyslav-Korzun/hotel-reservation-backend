@@ -15,7 +15,7 @@ public class JpaReservationQueryAdapter implements ReservationQueryPort {
 
     private final JpaReservationSpringDataRepository springDataReservationRepository;
 
-    public JpaReservationQueryAdapter(JpaReservationSpringDataRepository springDataReservationRepository) {
+    JpaReservationQueryAdapter(JpaReservationSpringDataRepository springDataReservationRepository) {
         this.springDataReservationRepository = springDataReservationRepository;
     }
 

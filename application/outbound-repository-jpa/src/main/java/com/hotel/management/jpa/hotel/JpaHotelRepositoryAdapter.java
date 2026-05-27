@@ -14,7 +14,7 @@ public class JpaHotelRepositoryAdapter implements HotelRepository {
 
     private final JpaHotelSpringDataRepository hotelSpringDataRepository;
 
-    public JpaHotelRepositoryAdapter(JpaHotelSpringDataRepository hotelSpringDataRepository) {
+    JpaHotelRepositoryAdapter(JpaHotelSpringDataRepository hotelSpringDataRepository) {
         this.hotelSpringDataRepository = hotelSpringDataRepository;
     }
 

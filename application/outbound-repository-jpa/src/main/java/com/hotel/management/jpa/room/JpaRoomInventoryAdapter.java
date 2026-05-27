@@ -8,7 +8,7 @@ public class JpaRoomInventoryAdapter implements RoomInventoryPort {
 
     private final JpaRoomSpringDataRepository roomSpringDataRepository;
 
-    public JpaRoomInventoryAdapter(JpaRoomSpringDataRepository roomSpringDataRepository) {
+    JpaRoomInventoryAdapter(JpaRoomSpringDataRepository roomSpringDataRepository) {
         this.roomSpringDataRepository = roomSpringDataRepository;
     }
 
