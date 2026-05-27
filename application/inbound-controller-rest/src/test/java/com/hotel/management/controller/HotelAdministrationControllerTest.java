@@ -197,9 +197,9 @@ class HotelAdministrationControllerTest {
 
     private static final class TestStaffFacade implements StaffFacade {
 
-        private final List<StaffResult> staffList = List.of(new StaffResult(1L, "sub-1", 5L));
-        private final StaffResult assignResult = new StaffResult(1L, "sub-1", 7L);
-        private final StaffResult unassignResult = new StaffResult(1L, "sub-1", null);
+        private final List<StaffResult> staffList = List.of(new StaffResult(1L, "sub-1", 5L, "alice", "alice@hotel.com"));
+        private final StaffResult assignResult = new StaffResult(1L, "sub-1", 7L, "alice", "alice@hotel.com");
+        private final StaffResult unassignResult = new StaffResult(1L, "sub-1", null, "alice", "alice@hotel.com");
         private AuthenticatedUser listStaffActor;
         private AuthenticatedUser assignActor;
         private AssignStaffToHotelCommand assignCommand;

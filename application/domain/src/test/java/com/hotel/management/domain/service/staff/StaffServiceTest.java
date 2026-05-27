@@ -141,13 +141,28 @@ class StaffServiceTest {
     }
 
     @Test
-    void shouldReturnExistingStaffOnResolve() {
-        when(staffRepository.findByExternalId("sub-1")).thenReturn(Optional.of(new Staff(1L, "sub-1", 5L)));
+    void shouldReturnExistingStaffOnResolveWhenDisplayNameUnchanged() {
+        // Existing record already has the same username/email as the JWT — no save expected.
+        var existing = new Staff(1L, "sub-1", 5L, "staff-1", null);
+        when(staffRepository.findByExternalId("sub-1")).thenReturn(Optional.of(existing));
 
         Staff resolved = staffService.resolveStaff(staff("sub-1"));
 
         assertEquals(5L, resolved.hotelId());
         verify(staffRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldUpdateDisplayNameOnResolveWhenChanged() {
+        // Existing record has a stale username — should be updated on login.
+        var stale = new Staff(1L, "sub-1", 5L, "old-name", null);
+        when(staffRepository.findByExternalId("sub-1")).thenReturn(Optional.of(stale));
+        when(staffRepository.save(any(Staff.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Staff resolved = staffService.resolveStaff(staff("sub-1"));
+
+        assertEquals("staff-1", resolved.username());
+        verify(staffRepository).save(any(Staff.class));
     }
 
     @Test

@@ -1426,6 +1426,14 @@ components:
           format: int64
           nullable: true
           description: Hotel the staff member is assigned to. Null when not yet assigned.
+        username:
+          type: string
+          nullable: true
+          description: Preferred username from Keycloak. Populated on first login.
+        email:
+          type: string
+          nullable: true
+          description: Email address from Keycloak JWT. Populated on first login.
     AssignStaffToHotelRequest:
       type: object
       required:

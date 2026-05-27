@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 029-add-staff-username
+      author: Vladyslav Korzun
+      changes:
+        - addColumn:
+            tableName: staff
+            columns:
+              - column:
+                  name: username
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+  - changeSet:
+      id: 029-add-staff-email
+      author: Vladyslav Korzun
+      changes:
+        - addColumn:
+            tableName: staff
+            columns:
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: true

@@ -14,7 +14,7 @@ public class JpaStaffRepositoryAdapter implements StaffRepository {
     private final JpaStaffSpringDataRepository repository;
     private final EntityManager entityManager;
 
-    public JpaStaffRepositoryAdapter(JpaStaffSpringDataRepository repository, EntityManager entityManager) {
+    JpaStaffRepositoryAdapter(JpaStaffSpringDataRepository repository, EntityManager entityManager) {
         this.repository = repository;
         this.entityManager = entityManager;
     }
@@ -46,11 +46,13 @@ public class JpaStaffRepositoryAdapter implements StaffRepository {
         Number nextId = (Number) entityManager
                 .createNativeQuery("select nextval('staff_id_seq')")
                 .getSingleResult();
-        return new Staff(nextId.longValue(), staff.externalId(), staff.hotelId());
+        return new Staff(nextId.longValue(), staff.externalId(), staff.hotelId(),
+                staff.username(), staff.email());
     }
 
     private Staff toDomain(JpaStaffEntity entity) {
-        return new Staff(entity.getId(), entity.getExternalId(), entity.getHotelId());
+        return new Staff(entity.getId(), entity.getExternalId(), entity.getHotelId(),
+                entity.getUsername(), entity.getEmail());
     }
 
     private JpaStaffEntity toEntity(Staff staff) {
@@ -58,6 +60,8 @@ public class JpaStaffRepositoryAdapter implements StaffRepository {
         entity.setId(staff.id());
         entity.setExternalId(staff.externalId());
         entity.setHotelId(staff.hotelId());
+        entity.setUsername(staff.username());
+        entity.setEmail(staff.email());
         return entity;
     }
 }

@@ -63,7 +63,14 @@ public class StaffService implements StaffFacade {
             throw new ForbiddenException("staff subject claim is required");
         }
         return staffRepository.findByExternalId(subject)
-                .orElseGet(() -> staffRepository.save(Staff.unassigned(subject)));
+                .map(existing -> saveIfDisplayNameChanged(existing, actor.userId(), actor.email()))
+                .orElseGet(() -> staffRepository.save(
+                        Staff.unassigned(subject).withDisplayName(actor.userId(), actor.email())));
+    }
+
+    private Staff saveIfDisplayNameChanged(Staff existing, String username, String email) {
+        Staff updated = existing.withUpdatedDisplayName(username, email);
+        return updated != existing ? staffRepository.save(updated) : existing;
     }
 
     private static AuthenticatedUser requireActor(AuthenticatedUser actor) {
@@ -74,6 +81,7 @@ public class StaffService implements StaffFacade {
     }
 
     private static StaffResult toResult(Staff staff) {
-        return new StaffResult(staff.id(), staff.externalId(), staff.hotelId());
+        return new StaffResult(staff.id(), staff.externalId(), staff.hotelId(),
+                staff.username(), staff.email());
     }
 }

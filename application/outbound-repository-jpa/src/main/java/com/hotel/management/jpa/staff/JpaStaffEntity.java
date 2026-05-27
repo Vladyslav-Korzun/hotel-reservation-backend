@@ -19,6 +19,12 @@ public class JpaStaffEntity {
     @Column(name = "hotel_id")
     private Long hotelId;
 
+    @Column(name = "username", length = 255)
+    private String username;
+
+    @Column(name = "email", length = 255)
+    private String email;
+
     public Long getId() {
         return id;
     }
@@ -41,5 +47,21 @@ public class JpaStaffEntity {
 
     public void setHotelId(Long hotelId) {
         this.hotelId = hotelId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

@@ -329,7 +329,9 @@ public class HotelMapper {
         return new StaffResponse()
                 .id(result.id())
                 .externalId(result.externalId())
-                .hotelId(result.hotelId());
+                .hotelId(result.hotelId())
+                .username(result.username())
+                .email(result.email());
     }
 
     public List<StaffResponse> toStaffResponseList(List<StaffResult> results) {
