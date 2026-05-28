@@ -43,6 +43,7 @@ The goal of the application is to cover the complete guest journey from room dis
 - **RQ31** System umozni adminovi priradit clena personalu k hotelu.
 - **RQ32** System umozni adminovi odvolat clena personalu z hotela.
 - **RQ33** System bude evidovat audit log klucovych akcii v systeme.
+- **RQ34** System umozni adminovi zobrazit posledne zaznamy audit logu.
 
 # Slovnik pojmov
 
@@ -91,6 +92,7 @@ The goal of the application is to cover the complete guest journey from room dis
 - **UC-20** Zobrazenie zoznamu personalu
 - **UC-21** Priradenie clena personalu k hotelu
 - **UC-22** Odvolanie clena personalu z hotela
+- **UC-23** Zobrazenie audit logu
 
 ## UC-07 Vyhladavanie dostupnych izieb
 
@@ -300,11 +302,11 @@ mvn clean test
 System je overeny pomocou:
 
 - domenovych testov entit (`RoomTest`, `GuestTest`, `StayTest`, `AuditLogEntryTest`, `ServiceOfferingTest`),
-- testov domenovych sluzieb (`ReservationServiceTest`, `SearchAvailabilityServiceTest`, `RoomOperationsServiceTest`),
+- testov domenovych sluzieb (`ReservationServiceTest`, `SearchAvailabilityServiceTest`, `RoomOperationsServiceTest`, `GuestServiceTest`),
 - testov factory (`ReservationFactoryTest`),
 - testov predicate pravidiel (`DomainPredicateTest`, `ReservationPredicateTest`),
 - testov pristupovych politik (`ReservationAccessPolicyTest`, `HotelScopePolicyTest`),
-- testov REST controllerov (`HotelsControllerTest`, `ReservationsControllerTest`, `StaffReservationsControllerTest`),
+- testov REST controllerov (`HotelsControllerTest`, `HotelAdministrationControllerTest`, `ReservationsControllerTest`, `MeReservationsControllerTest`, `StaffReservationsControllerTest`, `RoomsControllerTest`),
 - testov bezpecnostnej vrstvy (`JwtConverterTest`, `SpringSecurityCurrentUserAdapterTest`),
 - integracnych testov s Testcontainers (`JpaRepositoryAdapterIntegrationTest`, `CreateReservationFlowIntegrationTest`),
 - ArchUnit testu hexagonalnej architektury.

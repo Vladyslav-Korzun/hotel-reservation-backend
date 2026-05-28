@@ -123,6 +123,37 @@ class GuestServiceTest {
     }
 
     @Test
+    void shouldBindKeycloakIdToGuestFoundByEmail() {
+        Guest unlinked = new Guest(42L, "Ivan", "Petrov", new EmailAddress("ivan@mail.com"), null, null);
+        when(guestRepository.findByKeycloakId("kc-uuid-new")).thenReturn(Optional.empty());
+        when(guestRepository.findByEmail(new EmailAddress("ivan@mail.com"))).thenReturn(Optional.of(unlinked));
+        when(guestRepository.save(any(Guest.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Guest result = guestService.resolveGuest(actor(null, "kc-uuid-new", "ivan@mail.com", "Ivan", "Petrov"));
+
+        assertEquals(42L, result.id());
+        ArgumentCaptor<Guest> captor = ArgumentCaptor.forClass(Guest.class);
+        verify(guestRepository).save(captor.capture());
+        assertEquals("kc-uuid-new", captor.getValue().keycloakId());
+    }
+
+    @Test
+    void shouldNotLinkByEmailWhenGuestAlreadyHasKeycloakId() {
+        Guest alreadyBound = new Guest(42L, "Ivan", "Petrov", new EmailAddress("ivan@mail.com"), null, "kc-uuid-other");
+        when(guestRepository.findByKeycloakId("kc-uuid-new")).thenReturn(Optional.empty());
+        when(guestRepository.findByEmail(new EmailAddress("ivan@mail.com"))).thenReturn(Optional.of(alreadyBound));
+        when(guestRepository.save(any(Guest.class))).thenAnswer(inv -> {
+            Guest g = inv.getArgument(0);
+            return new Guest(99L, g.firstName(), g.lastName(), g.email(), g.phone(), g.keycloakId());
+        });
+
+        Guest result = guestService.resolveGuest(actor(null, "kc-uuid-new", "ivan@mail.com", "Ivan", "Petrov"));
+
+        assertEquals(99L, result.id());
+        assertEquals("kc-uuid-new", result.keycloakId());
+    }
+
+    @Test
     void shouldThrowWhenActorIsNull() {
         assertThrows(ForbiddenException.class, () -> guestService.resolveGuest(null));
     }

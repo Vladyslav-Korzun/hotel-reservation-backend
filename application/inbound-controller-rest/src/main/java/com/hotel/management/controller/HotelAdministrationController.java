@@ -1,6 +1,7 @@
 package com.hotel.management.controller;
 
 import com.hotel.management.api.AdminApi;
+import com.hotel.management.api.dto.AuditLogEntryResponse;
 import com.hotel.management.api.dto.CreateHotelRequest;
 import com.hotel.management.api.dto.CreateRoomRequest;
 import com.hotel.management.api.dto.CreateRoomTypeRequest;
@@ -15,6 +16,7 @@ import com.hotel.management.api.dto.UpdateRoomTypeRequest;
 import com.hotel.management.api.dto.UpdateServiceOfferingRequest;
 import com.hotel.management.api.dto.AssignStaffToHotelRequest;
 import com.hotel.management.api.dto.StaffResponse;
+import com.hotel.management.domain.service.audit.AuditFacade;
 import com.hotel.management.mapper.HotelMapper;
 import com.hotel.management.domain.service.hotel.HotelFacade;
 import com.hotel.management.domain.service.hotel.RoomAdministrationFacade;
@@ -35,6 +37,7 @@ public class HotelAdministrationController implements AdminApi {
     private final RoomAdministrationFacade roomAdministrationFacade;
     private final ServiceOfferingFacade serviceOfferingFacade;
     private final StaffFacade staffFacade;
+    private final AuditFacade auditFacade;
     private final CurrentUserPort currentUserPort;
     private final HotelMapper hotelMapper;
 
@@ -44,6 +47,7 @@ public class HotelAdministrationController implements AdminApi {
             RoomAdministrationFacade roomAdministrationFacade,
             ServiceOfferingFacade serviceOfferingFacade,
             StaffFacade staffFacade,
+            AuditFacade auditFacade,
             CurrentUserPort currentUserPort,
             HotelMapper hotelMapper
     ) {
@@ -52,6 +56,7 @@ public class HotelAdministrationController implements AdminApi {
         this.roomAdministrationFacade = roomAdministrationFacade;
         this.serviceOfferingFacade = serviceOfferingFacade;
         this.staffFacade = staffFacade;
+        this.auditFacade = auditFacade;
         this.currentUserPort = currentUserPort;
         this.hotelMapper = hotelMapper;
     }
@@ -163,5 +168,13 @@ public class HotelAdministrationController implements AdminApi {
         var actor = currentUserPort.getCurrentUser();
         var result = staffFacade.unassignStaffFromHotel(actor, staffId);
         return ResponseEntity.ok(hotelMapper.toStaffResponse(result));
+    }
+
+    @Override
+    public ResponseEntity<List<AuditLogEntryResponse>> listAuditLog(Integer limit) {
+        var actor = currentUserPort.getCurrentUser();
+        int resolvedLimit = (limit != null && limit > 0) ? limit : 50;
+        var entries = auditFacade.listAuditLog(actor, resolvedLimit);
+        return ResponseEntity.ok(hotelMapper.toAuditLogEntryResponseList(entries));
     }
 }

@@ -21,6 +21,8 @@ skinparam class {
   BorderColor<<Res>>           #C62828
   BackgroundColor<<Stay>>      #E3F2FD
   BorderColor<<Stay>>          #1565C0
+  BackgroundColor<<Staff>>     #F1F3F4
+  BorderColor<<Staff>>         #546E7A
   BackgroundColor<<Service>>   #F3E5F5
   BorderColor<<Service>>       #6A1B9A
   BackgroundColor<<Audit>>     #EFEBE9
@@ -43,6 +45,8 @@ skinparam package {
   BorderColor<<Res>>           #C62828
   BackgroundColor<<Stay>>      #EBF5FB
   BorderColor<<Stay>>          #1565C0
+  BackgroundColor<<Staff>>     #F8F9FA
+  BorderColor<<Staff>>         #546E7A
   BackgroundColor<<Service>>   #F9F0FF
   BorderColor<<Service>>       #6A1B9A
   BackgroundColor<<Audit>>     #F5F0EE
@@ -107,6 +111,13 @@ package "Persistence (Repository Ports)" <<Port>> as Persistence {
     +findByKeycloakId(keycloakId: String): Optional<Guest>
   }
 
+  interface StaffRepository <<Port>> {
+    +save(staff: Staff): Staff
+    +findById(id: Long): Optional<Staff>
+    +findByExternalId(externalId: String): Optional<Staff>
+    +findAll(): List<Staff>
+  }
+
   interface ReservationLockPort <<Port>> {
     +findReservationForChange(reservationId: String): Optional<Reservation>
   }
@@ -126,11 +137,9 @@ package "Persistence (Repository Ports)" <<Port>> as Persistence {
 
   interface AuditTrail <<Port>> {
     +record(actor: AuthenticatedUser, action: AuditActionType, entityType: AuditEntityType, entityId: String, details: String): void
+    +findRecent(limit: int): List<AuditLogEntry>
   }
 
-  interface ClockPort <<Port>> {
-    +now(): Instant
-  }
 }
 
 ' ═══════════════════════════════════════════════════════════════
@@ -188,6 +197,7 @@ package "Hotel Management" <<Hotel>> as HotelMgmt {
   enum HotelStatus <<Hotel>> {
     ACTIVE
     INACTIVE
+    UNDER_MAINTENANCE
   }
 }
 
@@ -375,6 +385,29 @@ package "Reservation" <<Res>> as ResMgmt {
 }
 
 ' ═══════════════════════════════════════════════════════════════
+package "Staff Management" <<Staff>> as StaffMgmt {
+
+  class Staff <<Staff>> {
+    -id: Long
+    -externalId: String
+    -hotelId: Long
+    -username: String
+    -email: String
+    +{static} unassigned(externalId: String): Staff
+    +assignToHotel(hotelId: Long): Staff
+    +unassignFromHotel(): Staff
+    +withDisplayName(username: String, email: String): Staff
+    +withUpdatedDisplayName(username: String, email: String): Staff
+    +isAssigned(): boolean
+    +id(): Long
+    +externalId(): String
+    +hotelId(): Long
+    +username(): String
+    +email(): String
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════
 package "Stay" <<Stay>> as StayMgmt {
 
   class Stay <<Stay>> {
@@ -506,12 +539,6 @@ package "Shared Value Objects" <<Shared>> as Shared {
     +overlaps(other: StayPeriod): boolean
   }
 
-  record DateRange <<Shared>> {
-    +from: LocalDate
-    +to: LocalDate
-    +overlaps(other: DateRange): boolean
-  }
-
   record EmailAddress <<Shared>> {
     +value: String
   }
@@ -526,10 +553,18 @@ package "Shared Value Objects" <<Shared>> as Shared {
     +userId: String
     +roles: Set<String>
     +guestId: Long
+    +subject: String
+    +email: String
+    +firstName: String
+    +lastName: String
+    +hasRole(role: String): boolean
     +isAdmin(): boolean
     +isStaff(): boolean
     +isGuest(): boolean
+    +requireAdmin(): void
+    +requireStaff(): void
     +requireStaffOrAdmin(): void
+    +requireGuest(): void
     +requireGuestId(): Long
   }
 
@@ -561,9 +596,11 @@ ReservationServiceItemRepository ..> ReservationServiceItem
 StayRepository ..> Stay
 ServiceOfferingRepository ..> ServiceOffering
 GuestRepository ..> Guest
+StaffRepository ..> Staff
 ReservationLockPort ..> Reservation
 ReservationQueryPort ..> ActiveReservationView
 ReservationQueryPort ..> BookedRoomTypePeriodView
+RoomInventoryPort ..> Room
 RoomAssignmentPort ..> Room
 AuditTrail ..> AuditLogEntry
 
@@ -593,6 +630,7 @@ RoomType "1" *-- "1" RoomTypeFeatures              : features
 RoomType --> Money                                 : basePrice
 PetPolicy --> PetType                              : allowedPetTypes
 PetPolicy --> Money                                : petFee
+RoomTypeFeatures --> RoomAmenity                   : amenities
 
 ' ── Reservation ──────────────────────────────────────────────
 Reservation "0..*" --> "1" Hotel                   : hotelId
@@ -609,6 +647,9 @@ ReservationServiceItem --> Money                   : priceSnapshot
 ReservationPriceSnapshot --> Money                 : basePrice / servicesPrice / discountAmount / finalPrice
 ReservationPricingCalculator ..> ReservationPriceSnapshot : calculates
 
+' ── Staff Management ─────────────────────────────────────────
+Staff "0..*" --> "0..1" Hotel                      : hotelId
+
 ' ── Stay ─────────────────────────────────────────────────────
 Stay "0..*" --> "1" Reservation                    : reservationId
 Stay "0..*" --> "1" Room                           : roomId
@@ -622,8 +663,13 @@ ReservationFactory --> ServiceOfferingSelection    : uses
 ' ── Audit ────────────────────────────────────────────────────
 AuditLogEntry --> AuditActionType                  : actionType
 AuditLogEntry --> AuditEntityType                  : entityType
+AuditTrail ..> AuthenticatedUser                   : actor
+ReservationAccessPolicy ..> AuthenticatedUser      : actor
 
 ' ── Shared ───────────────────────────────────────────────────
+Reservation ..> StayPeriod                         : stayPeriod / overlaps
+ReservationQueryPort ..> StayPeriod                : findActiveOverlapping
+ReservationPricingCalculator ..> StayPeriod        : calculate
 AccommodationParty "1" *-- "1" GuestComposition    : guests
 AccommodationParty "1" *-- "0..*" StayingGuest     : stayingGuests
 AccommodationParty "1" *-- "0..*" PetDetails       : pets

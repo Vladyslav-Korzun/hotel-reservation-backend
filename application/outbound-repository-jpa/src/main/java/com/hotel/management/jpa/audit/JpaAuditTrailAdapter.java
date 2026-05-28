@@ -6,7 +6,11 @@ import com.hotel.management.domain.audit.AuditLogEntry;
 import com.hotel.management.domain.audit.AuditTrail;
 import com.hotel.management.domain.shared.ClockPort;
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class JpaAuditTrailAdapter implements AuditTrail {
@@ -37,6 +41,26 @@ public class JpaAuditTrailAdapter implements AuditTrail {
                 clockPort.now(),
                 details
         ));
+    }
+
+    @Override
+    public List<AuditLogEntry> findRecent(int limit) {
+        return repository.findAll(
+                PageRequest.of(0, limit, Sort.by("timestamp").descending())
+        ).stream().map(this::toDomain).toList();
+    }
+
+    private AuditLogEntry toDomain(JpaAuditLogEntity entity) {
+        return new AuditLogEntry(
+                entity.getId(),
+                entity.getActorId(),
+                entity.getActorRole(),
+                AuditActionType.valueOf(entity.getActionType()),
+                AuditEntityType.valueOf(entity.getEntityType()),
+                entity.getEntityId(),
+                entity.getTimestamp(),
+                entity.getDetails()
+        );
     }
 
     private void append(AuditLogEntry entry) {

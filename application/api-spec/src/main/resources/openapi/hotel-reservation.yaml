@@ -1402,6 +1402,42 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/audit-log:
+    get:
+      tags:
+        - Admin Audit
+      operationId: listAuditLog
+      summary: List recent audit log entries
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntryResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -1409,6 +1445,36 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    AuditLogEntryResponse:
+      type: object
+      required:
+        - id
+        - actorId
+        - actorRole
+        - actionType
+        - entityType
+        - entityId
+        - timestamp
+      properties:
+        id:
+          type: integer
+          format: int64
+        actorId:
+          type: string
+        actorRole:
+          type: string
+        actionType:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: string
+          nullable: true
     StaffResponse:
       type: object
       required:

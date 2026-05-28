@@ -25,6 +25,8 @@ import com.hotel.management.domain.service.hotel.UpdateServiceOfferingCommand;
 import com.hotel.management.api.dto.AssignStaffToHotelRequest;
 import com.hotel.management.api.dto.StaffResponse;
 import com.hotel.management.domain.service.staff.AssignStaffToHotelCommand;
+import com.hotel.management.domain.audit.AuditLogResult;
+import com.hotel.management.domain.service.audit.AuditFacade;
 import com.hotel.management.domain.service.staff.StaffFacade;
 import com.hotel.management.domain.staff.Staff;
 import com.hotel.management.domain.staff.StaffResult;
@@ -43,12 +45,14 @@ class HotelAdministrationControllerTest {
     private final TestCurrentUserPort currentUserPort = new TestCurrentUserPort();
     private final TestHotelMapper hotelMapper = new TestHotelMapper();
     private final TestStaffFacade staffFacade = new TestStaffFacade();
+    private final TestAuditFacade auditFacade = new TestAuditFacade();
     private final HotelAdministrationController controller = new HotelAdministrationController(
             hotelFacade,
             new TestRoomTypeFacade(),
             new TestRoomAdministrationFacade(),
             new TestServiceOfferingFacade(),
             staffFacade,
+            auditFacade,
             currentUserPort,
             hotelMapper
     );
@@ -341,6 +345,14 @@ class HotelAdministrationControllerTest {
                 12,
                 13
         );
+    }
+
+    private static final class TestAuditFacade implements AuditFacade {
+
+        @Override
+        public List<AuditLogResult> listAuditLog(AuthenticatedUser actor, int limit) {
+            return List.of();
+        }
     }
 
     private static final class TestCurrentUserPort implements CurrentUserPort {

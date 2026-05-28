@@ -2,6 +2,8 @@ package com.hotel.management.domain.audit;
 
 import com.hotel.management.domain.shared.security.AuthenticatedUser;
 
+import java.util.List;
+
 public interface AuditTrail {
 
     void record(
@@ -11,4 +13,6 @@ public interface AuditTrail {
             String entityId,
             String details
     );
+
+    List<AuditLogEntry> findRecent(int limit);
 }

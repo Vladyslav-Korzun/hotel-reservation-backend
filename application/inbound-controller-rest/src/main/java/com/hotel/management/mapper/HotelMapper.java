@@ -14,6 +14,7 @@ import com.hotel.management.api.dto.UpdateRoomRequest;
 import com.hotel.management.api.dto.UpdateRoomTypeRequest;
 import com.hotel.management.api.dto.UpdateServiceOfferingRequest;
 import com.hotel.management.api.dto.AssignStaffToHotelRequest;
+import com.hotel.management.api.dto.AuditLogEntryResponse;
 import com.hotel.management.api.dto.StaffResponse;
 import com.hotel.management.domain.hotel.HotelStatus;
 import com.hotel.management.domain.room.RoomAmenity;
@@ -34,6 +35,7 @@ import com.hotel.management.domain.service.hotel.UpdateRoomCommand;
 import com.hotel.management.domain.service.hotel.UpdateRoomTypeCommand;
 import com.hotel.management.domain.service.hotel.UpdateServiceOfferingCommand;
 import com.hotel.management.domain.service.staff.AssignStaffToHotelCommand;
+import com.hotel.management.domain.audit.AuditLogResult;
 import com.hotel.management.domain.staff.StaffResult;
 import org.springframework.stereotype.Component;
 
@@ -337,6 +339,24 @@ public class HotelMapper {
     public List<StaffResponse> toStaffResponseList(List<StaffResult> results) {
         return results.stream()
                 .map(this::toStaffResponse)
+                .toList();
+    }
+
+    public AuditLogEntryResponse toAuditLogEntryResponse(AuditLogResult result) {
+        return new AuditLogEntryResponse()
+                .id(result.id())
+                .actorId(result.actorId())
+                .actorRole(result.actorRole())
+                .actionType(result.actionType())
+                .entityType(result.entityType())
+                .entityId(result.entityId())
+                .timestamp(result.timestamp().atOffset(java.time.ZoneOffset.UTC))
+                .details(result.details());
+    }
+
+    public List<AuditLogEntryResponse> toAuditLogEntryResponseList(List<AuditLogResult> results) {
+        return results.stream()
+                .map(this::toAuditLogEntryResponse)
                 .toList();
     }
 }
