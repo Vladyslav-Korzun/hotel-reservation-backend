@@ -1,0 +1,93 @@
+@startuml
+title Hotel Reservation System Backend - Hexagonal Architecture
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+left to right direction
+
+package "application/api-spec" as APISPEC {
+  component "hotel-reservation.yaml" as openapi
+  component "Generated API interfaces" as api
+  component "Generated DTO classes" as dto
+}
+
+package "application/inbound-controller-rest" as INBOUND {
+  component "REST Controllers\nHotelsController, HotelAdministrationController\nReservationsController, MeReservationsController\nStaffReservationsController, RoomsController" as controllers
+  component "MapStruct Mappers\nHotelMapper, RoomMapper\nReservationMapper, AvailabilityMapper" as mappers
+  component "Security\nSecurityConfiguration, JwtConverter\nJwtDecoderConfiguration\nSpringSecurityCurrentUserAdapter\nCorsConfiguration, RestSecurityExceptionHandler" as security
+  component "GlobalExceptionHandler" as errors
+}
+
+package "application/domain" as DOMAIN {
+  component "Entities\nHotel, RoomType, Room\nReservation, Stay, ServiceOffering\nGuest, Staff, AuditLogEntry" as entities
+
+  component "Factories & Validators\nHotelFactory, RoomTypeFactory, RoomFactory\nServiceOfferingFactory, ReservationFactory\nReservationPricingCalculator\nAccommodationPolicyValidator\nHotelScopePolicy" as factories
+
+  component "Facades (interfaces)\nHotelFacade, HotelQueryFacade\nRoomAdministrationFacade, RoomTypeFacade\nServiceOfferingFacade, ReservationFacade\nStaffReservationFacade, StaffFacade\nSearchAvailabilityFacade\nGetRoomTypeAvailabilityCalendarFacade\nRoomOperationsFacade, GuestFacade" as facades
+
+  component "Services (implements facades)\nHotelService, HotelQueryService\nRoomAdministrationService, RoomTypeService\nServiceOfferingService, ReservationService\nStaffReservationService, StaffService\nSearchAvailabilityService\nGetRoomTypeAvailabilityCalendarService\nRoomOperationsService, GuestService" as services
+
+  component "Repository Ports\nHotelRepository, RoomRepository\nRoomTypeRepository, ReservationRepository\nStayRepository, ServiceOfferingRepository\nGuestRepository, StaffRepository\nReservationServiceItemRepository\nReservationLockPort, RoomInventoryPort\nRoomAssignmentPort, ReservationQueryPort\nAuditTrail, ClockPort" as ports
+
+  component "Predicates\nIsActiveHotelPredicate\nIsBookableRoomPredicate\nCanCancelReservationPredicate\nFitsRoomCapacityPredicate\nIsActiveReservationPredicate\nBelongsToHotelPredicate\nIsActiveServiceOfferingPredicate\nIsCheckInDateReachedPredicate\nIsBeforeReservationCheckOutDatePredicate" as predicates
+}
+
+package "application/outbound-repository-jpa" as JPA {
+  component "JPA Repository Adapters\nJpaHotelRepositoryAdapter\nJpaRoomRepositoryAdapter\nJpaRoomTypeRepositoryAdapter\nJpaReservationRepositoryAdapter\nJpaStayRepositoryAdapter\nJpaReservationLockAdapter\nJpaReservationQueryAdapter\nJpaRoomInventoryAdapter\nJpaRoomAssignmentAdapter\nJpaAuditTrailAdapter\nJpaGuestRepositoryAdapter\nJpaStaffRepositoryAdapter\nJpaReservationServiceItemRepositoryAdapter" as jpaAdapters
+  component "Spring Data Repositories\nJpaHotelSpringDataRepository\nJpaRoomSpringDataRepository\nJpaRoomTypeSpringDataRepository\nJpaReservationSpringDataRepository\nJpaStaySpringDataRepository, ..." as springData
+  database "PostgreSQL" as db
+}
+
+package "application/springboot" as BOOT {
+  component "HotelReservationApplication" as app
+
+  component "Bean Configurations\nCommonBeanConfiguration\nAccommodationBeanConfiguration\nHotelAdministrationBeanConfiguration\nHotelQueryBeanConfiguration\nAvailabilityBeanConfiguration\nReservationBeanConfiguration\nStaffReservationBeanConfiguration\nStaffBeanConfiguration\nGuestBeanConfiguration\nRoomOperationsBeanConfiguration" as config
+
+  component "Transactional Facades\n(@Transactional decorator pattern)\nTransactionalReservationFacade\nTransactionalStaffReservationFacade\nTransactionalHotelFacade\nTransactionalRoomTypeFacade\nTransactionalRoomAdministrationFacade\nTransactionalServiceOfferingFacade\nTransactionalRoomOperationsFacade\nTransactionalStaffFacade\nTransactionalGuestFacade" as txFacades
+
+  component "Liquibase Changelogs\n(000..029 changesets)" as liquibase
+}
+
+cloud "Keycloak\n(OAuth2 / JWT)" as keycloak
+
+' api-spec
+openapi ..> api  : generates
+openapi ..> dto  : generates
+api --> dto
+
+' inbound
+controllers --> api  : implements
+controllers --> mappers
+controllers --> facades
+controllers --> security
+controllers --> errors
+mappers --> dto
+mappers --> entities
+
+' security
+security --> keycloak : validates JWT
+
+' domain internal
+facades <|.. services
+services --> entities
+services --> factories
+services --> ports
+services --> predicates
+factories --> entities
+factories --> ports
+
+' outbound
+jpaAdapters ..|> ports
+jpaAdapters --> springData
+springData --> db
+
+' springboot
+app --> config
+config --> services    : assembles
+txFacades ..|> facades : @Transactional
+txFacades --> services : delegates
+config --> txFacades   : registers as beans
+liquibase --> db
+
+@enduml

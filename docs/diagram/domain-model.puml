@@ -1,0 +1,634 @@
+@startuml
+title Hotel Reservation System — Domain Model
+
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 70
+skinparam ranksep 90
+skinparam classAttributeIconSize 0
+
+skinparam class {
+  BackgroundColor<<Guest>>     #FFF3E0
+  BorderColor<<Guest>>         #E65100
+  BackgroundColor<<Hotel>>     #FFF8E1
+  BorderColor<<Hotel>>         #F9A825
+  BackgroundColor<<Room>>      #E8F5E9
+  BorderColor<<Room>>          #388E3C
+  BackgroundColor<<Res>>       #FCE4EC
+  BorderColor<<Res>>           #C62828
+  BackgroundColor<<Stay>>      #E3F2FD
+  BorderColor<<Stay>>          #1565C0
+  BackgroundColor<<Service>>   #F3E5F5
+  BorderColor<<Service>>       #6A1B9A
+  BackgroundColor<<Audit>>     #EFEBE9
+  BorderColor<<Audit>>         #4E342E
+  BackgroundColor<<Shared>>    #E0F2F1
+  BorderColor<<Shared>>        #00695C
+  BackgroundColor<<Port>>      #E8EAF6
+  BorderColor<<Port>>          #283593
+  ArrowColor                   #444444
+}
+
+skinparam package {
+  BackgroundColor<<Guest>>     #FFF8F0
+  BorderColor<<Guest>>         #E65100
+  BackgroundColor<<Hotel>>     #FFFDE7
+  BorderColor<<Hotel>>         #F9A825
+  BackgroundColor<<Room>>      #F1F8E9
+  BorderColor<<Room>>          #388E3C
+  BackgroundColor<<Res>>       #FFF0F3
+  BorderColor<<Res>>           #C62828
+  BackgroundColor<<Stay>>      #EBF5FB
+  BorderColor<<Stay>>          #1565C0
+  BackgroundColor<<Service>>   #F9F0FF
+  BorderColor<<Service>>       #6A1B9A
+  BackgroundColor<<Audit>>     #F5F0EE
+  BorderColor<<Audit>>         #4E342E
+  BackgroundColor<<Shared>>    #E8F5F3
+  BorderColor<<Shared>>        #00695C
+  BackgroundColor<<Port>>      #EDEEF7
+  BorderColor<<Port>>          #283593
+}
+
+' ═══════════════════════════════════════════════════════════════
+package "Persistence (Repository Ports)" <<Port>> as Persistence {
+
+  interface HotelRepository <<Port>> {
+    +save(hotel: Hotel): Hotel
+    +findById(id: Long): Optional<Hotel>
+    +findAllActive(): List<Hotel>
+    +findActiveByCity(city: String): List<Hotel>
+  }
+
+  interface RoomRepository <<Port>> {
+    +save(room: Room): Room
+    +findById(id: Long): Optional<Room>
+    +findByHotelIds(hotelIds: List<Long>): List<Room>
+  }
+
+  interface RoomTypeRepository <<Port>> {
+    +save(roomType: RoomType): RoomType
+    +findById(id: Long): Optional<RoomType>
+    +findByHotelIds(hotelIds: List<Long>): List<RoomType>
+  }
+
+  interface ReservationRepository <<Port>> {
+    +save(reservation: Reservation): Reservation
+    +findById(id: String): Optional<Reservation>
+    +findAll(limit: int): List<Reservation>
+    +findByGuestId(guestId: Long, limit: int): List<Reservation>
+    +findByHotelId(hotelId: Long, limit: int): List<Reservation>
+  }
+
+  interface ReservationServiceItemRepository <<Port>> {
+    +findByReservationId(reservationId: String): List<ReservationServiceItem>
+    +replaceForReservation(reservationId: String, items: List<ReservationServiceItem>): void
+  }
+
+  interface StayRepository <<Port>> {
+    +save(stay: Stay): Stay
+    +findActiveByReservationId(reservationId: String): Optional<Stay>
+  }
+
+  interface ServiceOfferingRepository <<Port>> {
+    +findById(id: Long): Optional<ServiceOffering>
+    +findByHotelId(hotelId: Long): List<ServiceOffering>
+    +findActiveByHotelId(hotelId: Long): List<ServiceOffering>
+    +save(offering: ServiceOffering): ServiceOffering
+  }
+
+  interface GuestRepository <<Port>> {
+    +save(guest: Guest): Guest
+    +findById(id: Long): Optional<Guest>
+    +findByEmail(email: EmailAddress): Optional<Guest>
+    +findByKeycloakId(keycloakId: String): Optional<Guest>
+  }
+
+  interface ReservationLockPort <<Port>> {
+    +findReservationForChange(reservationId: String): Optional<Reservation>
+  }
+
+  interface ReservationQueryPort <<Port>> {
+    +findActiveOverlapping(hotelIds: List<Long>, period: StayPeriod): List<ActiveReservationView>
+    +findBookedRoomTypePeriods(hotelId: Long, roomTypeId: Long, from: LocalDate, to: LocalDate): List<BookedRoomTypePeriodView>
+  }
+
+  interface RoomInventoryPort <<Port>> {
+    +countBookableRoomsForReservation(hotelId: Long, roomTypeId: Long): long
+  }
+
+  interface RoomAssignmentPort <<Port>> {
+    +findAvailableRoomForCheckIn(hotelId: Long, roomTypeId: Long): Optional<Room>
+  }
+
+  interface AuditTrail <<Port>> {
+    +record(actor: AuthenticatedUser, action: AuditActionType, entityType: AuditEntityType, entityId: String, details: String): void
+  }
+
+  interface ClockPort <<Port>> {
+    +now(): Instant
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════
+package "Guest Management" <<Guest>> as GuestMgmt {
+
+  class Guest <<Guest>> {
+    -id: Long
+    -firstName: String
+    -lastName: String
+    -email: EmailAddress
+    -phone: String
+    -keycloakId: String
+    +{static} register(keycloakId: String, email: String, firstName: String, lastName: String): Guest
+    +withKeycloakId(keycloakId: String): Guest
+    +id(): Long
+    +email(): EmailAddress
+    +phone(): String
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════
+package "Hotel Management" <<Hotel>> as HotelMgmt {
+
+  class Hotel <<Hotel>> {
+    -id: Long
+    -name: String
+    -city: String
+    -country: String
+    -address: String
+    -stars: int
+    -description: String
+    -status: HotelStatus
+    -policy: HotelPolicy
+    +isActive(): boolean
+    +updateDetails(name, city, country, address, stars, description, status, policy): Hotel
+  }
+
+  class HotelFactory <<Hotel>> {
+    +create(command: CreateHotelCommand): Hotel
+    +update(existing: Hotel, command: UpdateHotelCommand): Hotel
+  }
+
+  record HotelPolicy <<Hotel>> {
+    +childrenAllowed: boolean
+    +petsAllowed: boolean
+    +infantMaxAge: int
+    +childMaxAge: int
+    +adultEquivalentAge: int
+    +isInfant(age: int): boolean
+    +isChild(age: int): boolean
+    +isAdultEquivalentMinor(age: int): boolean
+    +isSupportedMinorAge(age: int): boolean
+  }
+
+  enum HotelStatus <<Hotel>> {
+    ACTIVE
+    INACTIVE
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════
+package "Room Management" <<Room>> as RoomMgmt {
+
+  class RoomType <<Room>> {
+    -id: Long
+    -hotelId: Long
+    -name: String
+    -occupancyPolicy: OccupancyPolicy
+    -petPolicy: PetPolicy
+    -basePrice: Money
+    -description: String
+    -features: RoomTypeFeatures
+    +updateDetails(name, occupancyPolicy, petPolicy, basePrice, description, features): RoomType
+  }
+
+  class Room <<Room>> {
+    -id: Long
+    -hotelId: Long
+    -number: String
+    -roomTypeId: Long
+    -capacity: int
+    -status: RoomStatus
+    +isBookable(): boolean
+    +occupy(): Room
+    +markCleaningAfterCheckOut(): Room
+    +markAvailable(): Room
+    +markCleaning(): Room
+    +markMaintenance(): Room
+    +markOutOfService(): Room
+    +updateDetails(hotelId, number, roomTypeId, capacity, status): Room
+  }
+
+  record OccupancyPolicy <<Room>> {
+    +maxAdults: int
+    +maxChildren: int
+    +maxInfants: int
+    +maxTotalGuests: int
+  }
+
+  record PetPolicy <<Room>> {
+    +petsAllowed: boolean
+    +maxPets: int
+    +allowedPetTypes: Set<PetType>
+    +maxPetWeightKg: BigDecimal
+    +petFee: Money
+  }
+
+  record RoomTypeFeatures <<Room>> {
+    +bedSetup: String
+    +roomSizeSqm: BigDecimal
+    +amenities: Set<RoomAmenity>
+    +{static} empty(): RoomTypeFeatures
+  }
+
+  class RoomTypeFactory <<Room>> {
+    +create(command: CreateRoomTypeCommand): RoomType
+    +update(existing: RoomType, command: UpdateRoomTypeCommand): RoomType
+  }
+
+  class RoomFactory <<Room>> {
+    +create(command: CreateRoomCommand): Room
+    +update(existing: Room, command: UpdateRoomCommand): Room
+  }
+
+  enum RoomStatus <<Room>> {
+    AVAILABLE
+    OCCUPIED
+    CLEANING
+    MAINTENANCE
+    OUT_OF_SERVICE
+  }
+
+  enum RoomAmenity <<Room>> {
+    WIFI
+    AIR_CONDITIONING
+    HEATING
+    PRIVATE_BATHROOM
+    BATHTUB
+    SHOWER
+    HAIRDRYER
+    SAFE
+    MINIBAR
+    COFFEE_MACHINE
+    SMART_TV
+    SOUNDPROOFING
+    BALCONY
+    SEA_VIEW
+    CITY_VIEW
+    MOUNTAIN_VIEW
+    WORKSPACE
+    WHEELCHAIR_ACCESSIBLE
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════
+package "Reservation" <<Res>> as ResMgmt {
+
+  class Reservation <<Res>> {
+    -id: String
+    -hotelId: Long
+    -guestId: Long
+    -roomId: Long
+    -roomTypeId: Long
+    -checkIn: LocalDate
+    -checkOut: LocalDate
+    -accommodationParty: AccommodationParty
+    -contactEmail: EmailAddress
+    -contactPhone: String
+    -specialRequests: String
+    -priceSnapshot: ReservationPriceSnapshot
+    -serviceItems: List<ReservationServiceItem>
+    -status: ReservationStatus
+    -createdAt: Instant
+    -cancelledAt: Instant
+    -createdBy: String
+    +{static} createPending(...): Reservation
+    +{static} rehydrate(...): Reservation
+    +cancel(cancelledAt: Instant): Reservation
+    +checkIn(roomId: Long): Reservation
+    +completeCheckOut(): Reservation
+    +markNoShow(): Reservation
+    +isOwnedBy(guestId: Long): boolean
+    +isActiveForAvailability(): boolean
+    +overlaps(period: StayPeriod): boolean
+    +stayPeriod(): StayPeriod
+  }
+
+  record ReservationPriceSnapshot <<Res>> {
+    +basePrice: Money
+    +servicesPrice: Money
+    +discountAmount: Money
+    +finalPrice: Money
+  }
+
+  class ReservationServiceItem <<Res>> {
+    -id: Long
+    -reservationId: String
+    -serviceOfferingId: Long
+    -serviceNameSnapshot: String
+    -priceSnapshot: Money
+    -quantity: int
+    +{static} snapshot(reservationId: String, serviceOffering: ServiceOffering, quantity: int): ReservationServiceItem
+    +totalPrice(): Money
+  }
+
+  class ReservationFactory <<Res>> {
+    +createPendingReservation(...): Reservation
+    +createServiceItems(reservationId: String, offerings: List<ServiceOffering>, selections: List<ServiceOfferingSelection>): List<ReservationServiceItem>
+  }
+
+  class ReservationPricingCalculator <<Res>> {
+    +calculate(roomType: RoomType, period: StayPeriod, serviceItems: List<ReservationServiceItem>): ReservationPriceSnapshot
+    +calculate(roomType, period, serviceItems, discount: Money): ReservationPriceSnapshot
+    +calculateSubtotal(roomType, period, serviceItems): Money
+  }
+
+  class ReservationAccessPolicy <<Res>> {
+    +{static} INSTANCE: ReservationAccessPolicy
+    +assertCanView(actor: AuthenticatedUser, reservation: Reservation): void
+    +assertCanCancel(actor: AuthenticatedUser, reservation: Reservation): void
+  }
+
+  record ActiveReservationView <<Res>> {
+    +hotelId: Long
+    +roomTypeId: Long
+  }
+
+  record BookedRoomTypePeriodView <<Res>> {
+    +reservationId: String
+    +checkIn: LocalDate
+    +checkOut: LocalDate
+  }
+
+  enum ReservationStatus <<Res>> {
+    PENDING
+    CONFIRMED
+    CANCELLED
+    CHECKED_IN
+    CHECKED_OUT
+    NO_SHOW
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════
+package "Stay" <<Stay>> as StayMgmt {
+
+  class Stay <<Stay>> {
+    -id: Long
+    -reservationId: String
+    -roomId: Long
+    -checkedInAt: Instant
+    -checkedOutAt: Instant
+    -status: StayStatus
+    +{static} start(id: Long, reservationId: String, roomId: Long, checkedInAt: Instant): Stay
+    +{static} rehydrate(...): Stay
+    +complete(checkedOutAt: Instant): Stay
+  }
+
+  enum StayStatus <<Stay>> {
+    ACTIVE
+    COMPLETED
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════
+package "Service Offering" <<Service>> as ServiceMgmt {
+
+  class ServiceOffering <<Service>> {
+    -id: Long
+    -hotelId: Long
+    -code: String
+    -name: String
+    -description: String
+    -price: Money
+    -active: boolean
+    -availabilityRule: String
+    +activate(): ServiceOffering
+    +deactivate(): ServiceOffering
+    +belongsToHotel(hotelId: Long): boolean
+    +updateDetails(code, name, description, price, active, availabilityRule): ServiceOffering
+  }
+
+  record ServiceOfferingSelection <<Service>> {
+    +serviceOfferingId: Long
+    +quantity: int
+  }
+
+  class ServiceOfferingFactory <<Service>> {
+    +create(command: CreateServiceOfferingCommand): ServiceOffering
+    +update(existing: ServiceOffering, command: UpdateServiceOfferingCommand): ServiceOffering
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════
+package "Audit" <<Audit>> as AuditMgmt {
+
+  class AuditLogEntry <<Audit>> {
+    -id: Long
+    -actorId: String
+    -actorRole: String
+    -actionType: AuditActionType
+    -entityType: AuditEntityType
+    -entityId: String
+    -timestamp: Instant
+    -details: String
+  }
+
+  enum AuditActionType <<Audit>> {
+    CREATE_RESERVATION
+    CANCEL_RESERVATION
+    CHECK_IN
+    CHECK_OUT
+    MARK_NO_SHOW
+    UPDATE_ROOM_STATUS
+    CREATE_HOTEL
+    UPDATE_HOTEL
+    CREATE_ROOM
+    UPDATE_ROOM
+    CREATE_ROOM_TYPE
+    UPDATE_ROOM_TYPE
+    CREATE_SERVICE_OFFERING
+    UPDATE_SERVICE_OFFERING
+    DEACTIVATE_SERVICE_OFFERING
+  }
+
+  enum AuditEntityType <<Audit>> {
+    HOTEL
+    ROOM
+    ROOM_TYPE
+    RESERVATION
+    SERVICE_OFFERING
+    GUEST
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════
+package "Shared Value Objects" <<Shared>> as Shared {
+
+  record Money <<Shared>> {
+    +amount: BigDecimal
+    +currency: Currency
+    +plus(other: Money): Money
+    +minus(other: Money): Money
+    +multiply(multiplier: int): Money
+    +{static} zero(currencyCode: String): Money
+    +{static} of(amount: String, currencyCode: String): Money
+  }
+
+  record AccommodationParty <<Shared>> {
+    +guests: GuestComposition
+    +pets: List<PetDetails>
+    +stayingGuests: List<StayingGuest>
+    +{static} fromComposition(guests: GuestComposition, pets: List<PetDetails>): AccommodationParty
+    +{static} fromStayingGuests(stayingGuests: List<StayingGuest>, pets: List<PetDetails>): AccommodationParty
+  }
+
+  record GuestComposition <<Shared>> {
+    +adults: int
+    +childrenAges: List<Integer>
+  }
+
+  record StayingGuest <<Shared>> {
+    +firstName: String
+    +lastName: String
+    +age: Integer
+    +gender: GuestGender
+  }
+
+  record StayPeriod <<Shared>> {
+    +checkIn: LocalDate
+    +checkOut: LocalDate
+    +nights(): int
+    +overlaps(other: StayPeriod): boolean
+  }
+
+  record DateRange <<Shared>> {
+    +from: LocalDate
+    +to: LocalDate
+    +overlaps(other: DateRange): boolean
+  }
+
+  record EmailAddress <<Shared>> {
+    +value: String
+  }
+
+  record PetDetails <<Shared>> {
+    +type: PetType
+    +size: PetSize
+    +weightKg: BigDecimal
+  }
+
+  record AuthenticatedUser <<Shared>> {
+    +userId: String
+    +roles: Set<String>
+    +guestId: Long
+    +isAdmin(): boolean
+    +isStaff(): boolean
+    +isGuest(): boolean
+    +requireStaffOrAdmin(): void
+    +requireGuestId(): Long
+  }
+
+  enum GuestGender <<Shared>> {
+    MALE
+    FEMALE
+    OTHER
+  }
+
+  enum PetType <<Shared>> {
+    DOG
+    CAT
+    OTHER
+  }
+
+  enum PetSize <<Shared>> {
+    SMALL
+    MEDIUM
+    LARGE
+  }
+}
+
+' ── Repositories → Entities ──────────────────────────────────
+HotelRepository ..> Hotel
+RoomRepository ..> Room
+RoomTypeRepository ..> RoomType
+ReservationRepository ..> Reservation
+ReservationServiceItemRepository ..> ReservationServiceItem
+StayRepository ..> Stay
+ServiceOfferingRepository ..> ServiceOffering
+GuestRepository ..> Guest
+ReservationLockPort ..> Reservation
+ReservationQueryPort ..> ActiveReservationView
+ReservationQueryPort ..> BookedRoomTypePeriodView
+RoomAssignmentPort ..> Room
+AuditTrail ..> AuditLogEntry
+
+' ── Factories ────────────────────────────────────────────────
+HotelFactory ..> Hotel                             : creates
+RoomTypeFactory ..> RoomType                       : creates
+RoomFactory ..> Room                               : creates
+ReservationFactory ..> Reservation                 : creates
+ReservationFactory ..> ReservationServiceItem      : creates
+ServiceOfferingFactory ..> ServiceOffering         : creates
+
+' ── Guest Management ─────────────────────────────────────────
+Guest --> EmailAddress                             : email
+
+' ── Hotel Management ─────────────────────────────────────────
+Hotel "1" *-- "1" HotelPolicy                      : policy
+Hotel --> HotelStatus                              : status
+
+' ── Room Management ──────────────────────────────────────────
+RoomType "0..*" --> "1" Hotel                      : hotelId
+Room "0..*" --> "1" Hotel                          : hotelId
+Room "0..*" --> "1" RoomType                       : roomTypeId
+Room --> RoomStatus                                : status
+RoomType "1" *-- "1" OccupancyPolicy               : occupancyPolicy
+RoomType "1" *-- "1" PetPolicy                     : petPolicy
+RoomType "1" *-- "1" RoomTypeFeatures              : features
+RoomType --> Money                                 : basePrice
+PetPolicy --> PetType                              : allowedPetTypes
+PetPolicy --> Money                                : petFee
+
+' ── Reservation ──────────────────────────────────────────────
+Reservation "0..*" --> "1" Hotel                   : hotelId
+Reservation "0..*" --> "1" RoomType                : roomTypeId
+Reservation "0..*" --> "0..1" Room                 : roomId
+Reservation "0..*" --> "1" Guest                   : guestId
+Reservation "1" *-- "1" ReservationPriceSnapshot   : priceSnapshot
+Reservation "1" *-- "0..*" ReservationServiceItem  : serviceItems
+Reservation "1" *-- "1" AccommodationParty         : accommodationParty
+Reservation --> ReservationStatus                  : status
+Reservation --> EmailAddress                       : contactEmail
+ReservationServiceItem "0..*" --> "1" ServiceOffering : serviceOfferingId
+ReservationServiceItem --> Money                   : priceSnapshot
+ReservationPriceSnapshot --> Money                 : basePrice / servicesPrice / discountAmount / finalPrice
+ReservationPricingCalculator ..> ReservationPriceSnapshot : calculates
+
+' ── Stay ─────────────────────────────────────────────────────
+Stay "0..*" --> "1" Reservation                    : reservationId
+Stay "0..*" --> "1" Room                           : roomId
+Stay --> StayStatus                                : status
+
+' ── Service Offering ─────────────────────────────────────────
+ServiceOffering "0..*" --> "1" Hotel               : hotelId
+ServiceOffering --> Money                          : price
+ReservationFactory --> ServiceOfferingSelection    : uses
+
+' ── Audit ────────────────────────────────────────────────────
+AuditLogEntry --> AuditActionType                  : actionType
+AuditLogEntry --> AuditEntityType                  : entityType
+
+' ── Shared ───────────────────────────────────────────────────
+AccommodationParty "1" *-- "1" GuestComposition    : guests
+AccommodationParty "1" *-- "0..*" StayingGuest     : stayingGuests
+AccommodationParty "1" *-- "0..*" PetDetails       : pets
+PetDetails --> PetType
+PetDetails --> PetSize
+StayingGuest --> GuestGender
+
+@enduml

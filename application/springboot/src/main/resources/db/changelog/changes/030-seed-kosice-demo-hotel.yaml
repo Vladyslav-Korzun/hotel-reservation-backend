@@ -1,0 +1,94 @@
+databaseChangeLog:
+  - changeSet:
+      id: 030-seed-kosice-demo-hotel
+      author: Vladyslav Korzun
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              -- =========================================================================
+              -- Demo hotel for presentation: Hotel Dóm Palace, Košice city centre
+              -- 1 hotel · 3 room types · 18 rooms · 5 service offerings
+              -- =========================================================================
+
+              -- 1. HOTEL
+              insert into hotels (id, name, city, country, address, stars, description, status,
+                                  children_allowed, pets_allowed, infant_max_age, child_max_age, adult_equivalent_age)
+              values (
+                1004,
+                'Hotel Dóm Palace',
+                'Košice',
+                'Slovakia',
+                'Alžbetina 3, 040 01 Košice',
+                5,
+                'Luxury five-star hotel steps from the Cathedral of St. Elisabeth in the heart of Košice historic centre. Panoramic city views, full-service wellness, fine dining restaurant and exclusive concierge.',
+                'ACTIVE',
+                true,
+                true,
+                2,
+                12,
+                13
+              );
+
+              -- 2. ROOM TYPES
+              insert into room_types (id, hotel_id, name, base_price_amount, base_price_currency, description,
+                                     max_adults, max_children, max_infants, max_total_guests,
+                                     pets_allowed, max_pets, allowed_pet_types_json,
+                                     max_pet_weight_kg, pet_fee_amount, pet_fee_currency,
+                                     bed_setup, room_size_sqm, amenities_json)
+              values
+                (1401, 1004, 'Standard Single', 120.00, 'EUR',
+                 'Elegant single room with city view over the historic centre.',
+                 1, 1, 1, 2,
+                 true, 1, '["DOG","CAT"]', 10.00, 15.00, 'EUR',
+                 '1 queen bed', 25.0,
+                 '["WIFI","AIR_CONDITIONING","HEATING","PRIVATE_BATHROOM","BATHTUB","SHOWER","HAIRDRYER","SAFE","MINIBAR","COFFEE_MACHINE","SMART_TV","SOUNDPROOFING","BALCONY","CITY_VIEW","WORKSPACE"]'),
+
+                (1402, 1004, 'Deluxe Double', 190.00, 'EUR',
+                 'Spacious double room with views of the Cathedral and pedestrian zone.',
+                 2, 2, 1, 4,
+                 true, 1, '["DOG","CAT"]', 15.00, 20.00, 'EUR',
+                 '1 king bed', 38.0,
+                 '["WIFI","AIR_CONDITIONING","HEATING","PRIVATE_BATHROOM","BATHTUB","SHOWER","HAIRDRYER","SAFE","MINIBAR","COFFEE_MACHINE","SMART_TV","SOUNDPROOFING","BALCONY","CITY_VIEW","WORKSPACE"]'),
+
+                (1403, 1004, 'Junior Triple Suite', 260.00, 'EUR',
+                 'Generous suite with separate seating area, ideal for families or groups.',
+                 3, 2, 2, 5,
+                 true, 2, '["DOG","CAT","OTHER"]', 20.00, 25.00, 'EUR',
+                 '1 king bed + 1 twin bed', 52.0,
+                 '["WIFI","AIR_CONDITIONING","HEATING","PRIVATE_BATHROOM","BATHTUB","SHOWER","HAIRDRYER","SAFE","MINIBAR","COFFEE_MACHINE","SMART_TV","SOUNDPROOFING","BALCONY","CITY_VIEW","WORKSPACE"]');
+
+              -- 3. ROOMS
+              -- 10 Single rooms (floor 1)
+              insert into rooms (id, hotel_id, room_number, room_type_id, capacity, status) values
+                (140101, 1004, '101', 1401, 1, 'AVAILABLE'),
+                (140102, 1004, '102', 1401, 1, 'AVAILABLE'),
+                (140103, 1004, '103', 1401, 1, 'AVAILABLE'),
+                (140104, 1004, '104', 1401, 1, 'AVAILABLE'),
+                (140105, 1004, '105', 1401, 1, 'AVAILABLE'),
+                (140106, 1004, '106', 1401, 1, 'AVAILABLE'),
+                (140107, 1004, '107', 1401, 1, 'AVAILABLE'),
+                (140108, 1004, '108', 1401, 1, 'AVAILABLE'),
+                (140109, 1004, '109', 1401, 1, 'AVAILABLE'),
+                (140110, 1004, '110', 1401, 1, 'AVAILABLE'),
+              -- 5 Double rooms (floor 2)
+                (140201, 1004, '201', 1402, 2, 'AVAILABLE'),
+                (140202, 1004, '202', 1402, 2, 'AVAILABLE'),
+                (140203, 1004, '203', 1402, 2, 'AVAILABLE'),
+                (140204, 1004, '204', 1402, 2, 'AVAILABLE'),
+                (140205, 1004, '205', 1402, 2, 'AVAILABLE'),
+              -- 3 Triple rooms (floor 3)
+                (140301, 1004, '301', 1403, 3, 'AVAILABLE'),
+                (140302, 1004, '302', 1403, 3, 'AVAILABLE'),
+                (140303, 1004, '303', 1403, 3, 'AVAILABLE');
+
+              -- 4. SERVICE OFFERINGS
+              insert into hotel_service_offerings (id, hotel_id, code, name, description,
+                                                   price_amount, price_currency, active, availability_rule)
+              values
+                (10041, 1004, 'BREAKFAST',       'Breakfast (per person, per night)',  'Full buffet breakfast 7:00–10:30 with local specialities',       18.00, 'EUR', true, 'DAILY'),
+                (10042, 1004, 'PARKING',         'Parking (per night)',                'Secure underground parking with 24h access',                     12.00, 'EUR', true, 'DAILY'),
+                (10043, 1004, 'WELCOME_PACKAGE', 'Welcome package',                    'Bottle of Tokaj wine, local sweets and fresh fruit basket',       35.00, 'EUR', true, 'ON_ARRIVAL'),
+                (10044, 1004, 'WELLNESS_PASS',   'Wellness pass (per night)',          'Unlimited access to sauna, steam room and indoor pool',           25.00, 'EUR', true, 'DAILY'),
+                (10045, 1004, 'FLOWERS_IN_ROOM', 'Flowers in room',                    'Fresh seasonal bouquet arranged in room before arrival',          20.00, 'EUR', true, 'ON_ARRIVAL');
